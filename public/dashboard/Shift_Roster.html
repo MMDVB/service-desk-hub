@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+<link rel="stylesheet" href="shared/tokens.css">
 <style>
   :root{
     --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F1F4F9; --border:#E3E8F0;
@@ -320,7 +321,7 @@
   td.shift-td.editable:hover{ box-shadow:inset 0 0 0 1.5px var(--teal); border-radius:8px; }
   td.shift-td.droppable.drag-over{ background:#D1FAE5 !important; box-shadow:inset 0 0 0 2px var(--teal); border-radius:8px; }
 
-  .cell-chips{ display:flex; flex-wrap:wrap; gap:4px; min-height:26px; align-items:center; }
+  .cell-chips{ display:flex; flex-direction:column; gap:4px; min-height:26px; align-items:center; justify-content:center; }
   .cell-chip{ display:inline-flex; align-items:center; gap:4px; font-size:10.3px; font-weight:700; padding:3px 8px 3px 4px; border-radius:999px; white-space:nowrap; }
   html[dir="rtl"] .cell-chip{ padding:3px 4px 3px 8px; }
   .cell-chip .chip-avatar{ width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,0.65); font-size:7px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
@@ -448,13 +449,39 @@
   .cal-day.today{ background:var(--teal); color:#fff; font-weight:800; }
   .cal-day.other-month{ color:#CBD5E1; }
   .cal-day.has-holiday{ color:var(--rc-holiday); font-weight:800; }
+
+/* === Visual refresh: keep existing Roster controls/logic; HUB owns auth and language === */
+html,body{background:#f5f7fb!important;}
+.sidebar{background:#071b49!important;width:214px!important;}
+.brand{padding:16px!important;border-bottom:1px solid rgba(255,255,255,.08)!important;}
+.brand-icon{background:linear-gradient(135deg,#5b55ff,#765cff)!important;box-shadow:0 8px 20px rgba(92,86,255,.28)!important;}
+.nav{padding:12px 10px!important;gap:3px!important}.nav-group-label{color:#7186ae!important;letter-spacing:.1em!important}
+.nav-item{border-radius:10px!important;padding:9px 11px!important}.nav-item.active{background:linear-gradient(90deg,#5145e8,#4937d7)!important;box-shadow:0 6px 16px rgba(74,58,215,.22)!important}.nav-item.active::before{background:#fff!important;width:0!important}
+.main{background:#f5f7fb!important;}
+.topbar{height:72px!important;background:#fff!important;border-bottom:1px solid #e6ebf3!important;padding:0 24px!important;}
+.content{padding:22px!important;}
+.std-header{background:#fff!important;border-bottom:1px solid #e3e8f0!important;}
+.std-header .brand-title{font-size:21px!important;color:#16213b!important}.std-header .brand-sub{color:#73819a!important}
+.std-body{padding:20px 22px 32px!important;max-width:1600px!important;margin:auto!important}
+.roster-action-bar{display:flex!important;justify-content:flex-end!important;gap:8px!important;margin-bottom:12px!important}
+.roster-action-bar .tbtn,.roster-action-bar button{border-radius:10px!important}
+.shift-strip,.roster-search-bar,.roster-wrap,.summary-panel{background:#fff!important;border:1px solid #dfe6ef!important;border-radius:14px!important;box-shadow:0 4px 14px rgba(15,23,42,.04)!important}
+.roster-table{font-size:11px!important}.roster-table th{background:#fbfcfe!important;color:#23345b!important;border-bottom:1px solid #e1e7ef!important}.roster-table td{border-bottom:1px solid #edf0f5!important}
+.roster-table tr:hover td{background:#fbfdff!important}
+@media(max-width:900px){.std-body{padding:14px!important}.std-header{padding:0 14px!important}}
+
+
+/* Standalone feature: no local language switch, login or HUB navigation. */
+.roster-feature-header{justify-content:flex-start!important;}
+.roster-feature-header .std-header-actions{display:none!important;}
+#leadOverlay{display:none!important;}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
-<header class="std-header">
+<header class="std-header roster-feature-header">
   <div class="brand">
     <div class="brand-icon">🗓️</div>
     <div>
@@ -462,20 +489,14 @@
       <div class="brand-sub" data-i18n="rosterDesc">Weekly shift plan for the service desk team.</div>
     </div>
   </div>
-  <div class="std-header-actions">
-    <div class="lang-switch">
-      <button id="langEnBtn" class="active">EN</button>
-      <button id="langFaBtn">فا</button>
-    </div>
-    <button class="lead-btn" id="leadBtn" style="width:auto; padding:9px 16px;">👑 <span data-i18n="leadBtnLocked">Leadership</span></button>
-    <a class="tbtn" href="index.html">↩ <span data-i18n="backToHub">Back to hub</span></a>
-  </div>
 </header>
 
 <div class="std-body">
   <div id="roster-lock-note" class="lead-note" style="display:none;">
-    🔒 <span data-i18n="rosterLocked">You're in view-only mode. Unlock Leadership to edit the roster.</span>
+    🔒 <span data-i18n="rosterLocked">You're in view-only mode. Sign in to the HUB with an Admin or Leadership account to edit the roster.</span>
   </div>
+
+
 
   <div class="roster-action-bar" id="roster-action-bar"></div>
   <div class="shift-strip" id="shift-strip"></div>
@@ -506,20 +527,6 @@
   <div class="roster-bottom-row" id="roster-bottom-row"></div>
 </div>
 
-<!-- ===================== LEADERSHIP GATE ===================== -->
-<div class="lead-overlay" id="leadOverlay">
-  <div class="lead-modal">
-    <h3 data-i18n="gateTitle">🔐 Leadership Access</h3>
-    <p data-i18n="gateText">This area lets you edit the roster. Please enter the passcode.</p>
-    <input type="password" id="leadPassInput" data-i18n-placeholder="gatePlaceholder" placeholder="Passcode">
-    <div class="err-msg" id="leadErr" data-i18n="gateErr">Incorrect passcode</div>
-    <div class="lead-actions">
-      <button class="tbtn" id="leadCancelBtn" type="button" data-i18n="cancel">Cancel</button>
-      <button class="tbtn" id="leadSubmitBtn" type="button" style="background:var(--teal); color:#fff; border-color:var(--teal);" data-i18n="submit">Enter</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const SHELL_I18N = {
   en: {
@@ -527,7 +534,7 @@ const SHELL_I18N = {
     navGroupReports:"Specialized reports", navSdcm:"SDCM Registration", navSdcmSub:"Inbound / outbound calls",
     navAicc:"AICC Performance", navAiccSub:"Answer & occupancy rate", navSla:"SLA Incident", navSlaSub:"Incident & OOSLA distribution",
     navGroupTeam:"Team", navRoster:"Shift Roster", navRosterSub:"Plan agent shifts",
-    leadBtnLocked:"Leadership", leadBtnUnlocked:"Leadership (unlocked)",
+    leadBtnLocked:"Sign in", leadBtnUnlocked:"Signed in",
     heroEyebrow:"Service Desk Reporting Platform",
     heroTitle:"Three independent reports, one control center — synced automatically from your own folders",
     heroText:"Each report is a fully independent, ready-to-use page. Leadership can point each report at a local folder once — from then on it refreshes on its own, no re-selecting a file or folder every time.",
@@ -558,7 +565,7 @@ const SHELL_I18N = {
     frameSlaDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
     fullscreen:"Fullscreen", openNewTab:"Open in new tab",
     rosterDesc:"Weekly shift plan for the service desk team. Click a cell to cycle through AM / PM / Off. Only Leadership can edit.",
-    rosterLocked:"You're in view-only mode. Open the Leadership panel (bottom-left) to edit the roster.",
+    rosterLocked:"You're in view-only mode. Sign in to the HUB with an Admin or Leadership account to edit the roster.",
     rosterHint:"Tip: click any shift cell to cycle AM → PM → Off.",
     gateTitle:"🔐 Leadership Access", gateText:"This area lets you connect report folders and edit the roster. Please enter the passcode.",
     gatePlaceholder:"Passcode", gateErr:"Incorrect passcode", cancel:"Cancel", submit:"Enter",
@@ -605,7 +612,7 @@ const SHELL_I18N = {
     navGroupReports:"گزارش‌های تخصصی", navSdcm:"ثبت SDCM", navSdcmSub:"تماس‌های ورودی/خروجی",
     navAicc:"عملکرد AICC", navAiccSub:"نرخ پاسخ‌گویی و اشغالی", navSla:"SLA Incident", navSlaSub:"توزیع Incident و OOSLA",
     navGroupTeam:"تیم", navRoster:"راستر شیفت", navRosterSub:"چیدمان شیفت پرسنل",
-    leadBtnLocked:"لیدرشیپ", leadBtnUnlocked:"لیدرشیپ (باز)",
+    leadBtnLocked:"ورود", leadBtnUnlocked:"وارد شده",
     heroEyebrow:"پلتفرم گزارش‌گیری سرویس دسک",
     heroTitle:"سه گزارش مستقل، یک مرکز کنترل — با همگام‌سازی خودکار از پوشه‌های شما",
     heroText:"هر گزارش یک صفحه کاملاً مستقل و آماده است. لیدرشیپ فقط یک‌بار هر گزارش را به پوشه‌ی محلی متصل می‌کند و از آن پس بدون انتخاب دوباره‌ی فایل یا پوشه، خودش به‌روزرسانی می‌شود.",
@@ -683,67 +690,49 @@ let currentLang = localStorage.getItem('sdhub_lang') || 'en';
 
 function t(key){ return (SHELL_I18N[currentLang] && SHELL_I18N[currentLang][key]) || (SHELL_I18N.en[key]) || key; }
 
-const LEAD_PASSCODE = "leadership2026"; // ⚠️ same passcode as the hub — change it here AND in index.html
-const IS_EMBEDDED = (window.parent !== window);
-let embeddedUnlocked = false;
-function isLeadUnlocked(){ return IS_EMBEDDED ? embeddedUnlocked : sessionStorage.getItem('sdhub_lead_unlocked')==='1'; }
-function updateLeadButton(){
-  const btn=document.getElementById('leadBtn');
-  if (!btn) return;
-  btn.classList.toggle('unlocked', isLeadUnlocked());
-  btn.querySelector('span').textContent = isLeadUnlocked() ? t('leadBtnUnlocked') : t('leadBtnLocked');
+/* =========================================================================
+   SHARED AUTH — the HUB owns login. Roster never asks for credentials.
+   The same JWT is used by the backend to decide edit permissions.
+   ========================================================================= */
+const SDW_LS_TOKEN = 'sdhub_api_token';
+const SDW_LS_BASE = 'sdhub_api_base';
+let currentUser = null;
+let rosterLoading = false;
+let rosterApiError = '';
+function sdwApiBase(){ const saved=localStorage.getItem(SDW_LS_BASE); if(saved) return saved; const origin=window.location.origin; return (!origin || origin==='null' || origin==='file://') ? 'http://localhost:4000' : origin; }
+function sdwGetTokenObj(){
+  try{ const raw=localStorage.getItem(SDW_LS_TOKEN); if(!raw) return null; const obj=JSON.parse(raw); if(obj.exp && Date.now()>obj.exp){ localStorage.removeItem(SDW_LS_TOKEN); return null; } return obj; }catch(e){ return null; }
 }
-if (IS_EMBEDDED){
-  // A single Leadership button lives in the hub's sidebar — this page just mirrors that state.
-  document.getElementById('leadBtn').style.display = 'none';
-  window.addEventListener('message', (e)=>{
-    if (!e.data || e.data.type!=='sdhub:lead-state') return;
-    embeddedUnlocked = !!e.data.unlocked;
-    updateLeadButton();
-    renderRoster();
-  });
-  window.parent.postMessage({ type:'sdhub:request-lead-state' }, '*');
-} else {
-  document.getElementById('leadBtn').addEventListener('click', ()=>{
-    if (isLeadUnlocked()){
-      sessionStorage.removeItem('sdhub_lead_unlocked');
-      updateLeadButton();
-      renderRoster();
-    } else {
-      document.getElementById('leadPassInput').value='';
-      document.getElementById('leadErr').style.display='none';
-      document.getElementById('leadOverlay').classList.add('show');
-      setTimeout(()=>document.getElementById('leadPassInput').focus(), 50);
-    }
-  });
+function sdwHeaders(){ const tok=sdwGetTokenObj(); return tok ? {'Authorization':'Bearer '+tok.token} : {}; }
+async function rosterApi(path, opts={}){
+  const res=await fetch(sdwApiBase()+path,{...opts,headers:{...(opts.body?{'Content-Type':'application/json'}:{}),...sdwHeaders(),...(opts.headers||{})}});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||data.detail||('HTTP '+res.status));
+  return data;
 }
-document.getElementById('leadCancelBtn').addEventListener('click', ()=>document.getElementById('leadOverlay').classList.remove('show'));
-document.getElementById('leadOverlay').addEventListener('click', (e)=>{ if(e.target.id==='leadOverlay') document.getElementById('leadOverlay').classList.remove('show'); });
-document.getElementById('leadSubmitBtn').addEventListener('click', submitLeadPass);
-document.getElementById('leadPassInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitLeadPass(); });
-function submitLeadPass(){
-  const val=document.getElementById('leadPassInput').value;
-  if(val===LEAD_PASSCODE){
-    document.getElementById('leadOverlay').classList.remove('show');
-    sessionStorage.setItem('sdhub_lead_unlocked','1');
-    updateLeadButton();
-    renderRoster();
-  } else {
-    document.getElementById('leadErr').style.display='block';
-  }
-}
+function isLeadUnlocked(){ return !!currentUser && ['admin','leadership','supervisor'].includes(currentUser.role); }
+function currentRoleLabel(){ return currentUser?.role==='admin' ? 'Admin' : (['leadership','supervisor'].includes(currentUser?.role) ? 'Leadership' : 'Agent'); }
 
 function applyI18n(){
   document.documentElement.setAttribute('lang', currentLang);
+  document.documentElement.setAttribute('dir', currentLang==='fa' ? 'rtl' : 'ltr');
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder'))); });
-  document.getElementById('langEnBtn').classList.toggle('active', currentLang==='en');
-  document.getElementById('langFaBtn').classList.toggle('active', currentLang==='fa');
-  updateLeadButton();
   renderRoster();
 }
-document.getElementById('langEnBtn').addEventListener('click', ()=>{ currentLang='en'; localStorage.setItem('sdhub_lang','en'); applyI18n(); });
-document.getElementById('langFaBtn').addEventListener('click', ()=>{ currentLang='fa'; localStorage.setItem('sdhub_lang','fa'); applyI18n(); });
+window.addEventListener('message', e=>{
+  if(e.data?.type==='sdhub:language' && (e.data.lang==='en'||e.data.lang==='fa')){
+    currentLang=e.data.lang;
+    localStorage.setItem('sdhub_lang', currentLang);
+    applyI18n();
+  }
+});
+window.addEventListener('storage', e=>{
+  if(e.key==='sdhub_lang' && (e.newValue==='en'||e.newValue==='fa')){
+    currentLang=e.newValue;
+    applyI18n();
+  }
+});
 
 /* =========================================================================
    JALALI (SHAMSI) CALENDAR — pure JS conversion, no network/library needed
@@ -788,38 +777,58 @@ function jalaliStr(d, lang){
    ========================================================================= */
 const ROSTER_KEY = 'sdhub_roster_v4';
 const DEFAULT_COLUMNS = [
-  { key:'day1',     label:{en:'Day_1 (07:00-19:00)',      fa:'روز_۱ (۰۷:۰۰-۱۹:۰۰)'},        color:'#DBEAFE', text:'#1D4ED8', multi:true,  builtin:true },
-  { key:'day2',     label:{en:'Day_2 (07:00-19:00)',      fa:'روز_۲ (۰۷:۰۰-۱۹:۰۰)'},        color:'#DBEAFE', text:'#1D4ED8', multi:true,  builtin:true },
-  { key:'hq',       label:{en:'Day - HQ Office (08-17)',  fa:'حضور HQ (۰۸:۰۰-۱۷:۰۰)'},      color:'#FEF9C3', text:'#854D0E', multi:true,  builtin:true },
-  { key:'night1',   label:{en:'Night_1 (19:00-07:00)',    fa:'شب_۱ (۱۹:۰۰-۰۷:۰۰)'},         color:'#E0E7FF', text:'#3730A3', multi:true,  builtin:true },
-  { key:'night2',   label:{en:'Night_2 (19:00-07:00)',    fa:'شب_۲ (۱۹:۰۰-۰۷:۰۰)'},         color:'#E0E7FF', text:'#3730A3', multi:true,  builtin:true },
-  { key:'oncall',   label:{en:'Leadership On-Call',       fa:'آنکال لیدرشیپ'},              color:'#CCFBF1', text:'#0F766E', multi:false, builtin:true },
-  { key:'off',      label:{en:'Off',                      fa:'آف'},                         color:'#E9D5FF', text:'#6B21A8', multi:true,  builtin:true },
-  { key:'leaveRequest', label:{en:'Leave Request',        fa:'درخواست مرخصی'},              color:'#FBCFE8', text:'#9D174D', multi:true,  builtin:true },
-  { key:'cab',      label:{en:'CAB',                      fa:'CAB'},                         color:'#E2E8F0', text:'#334155', multi:true,  builtin:true },
+  { key:'day1', label:{en:'Day_1 (07:00-19:00)', fa:'روز_۱ (۰۷:۰۰-۱۹:۰۰)'}, color:'#DBEAFE', text:'#1D4ED8', multi:true, builtin:true },
+  { key:'day2', label:{en:'Day_2 (07:00-19:00)', fa:'روز_۲ (۰۷:۰۰-۱۹:۰۰)'}, color:'#DBEAFE', text:'#1D4ED8', multi:true, builtin:true },
+  { key:'hq', label:{en:'Day - HQ Office (08-17)', fa:'حضور HQ (۰۸:۰۰-۱۷:۰۰)'}, color:'#FEF9C3', text:'#854D0E', multi:true, builtin:true },
+  { key:'night1', label:{en:'Night_1 (19:00-07:00)', fa:'شب_۱ (۱۹:۰۰-۰۷:۰۰)'}, color:'#E0E7FF', text:'#3730A3', multi:true, builtin:true },
+  { key:'night2', label:{en:'Night_2 (19:00-07:00)', fa:'شب_۲ (۱۹:۰۰-۰۷:۰۰)'}, color:'#E0E7FF', text:'#3730A3', multi:true, builtin:true },
+  { key:'oncall', label:{en:'Leadership On-Call', fa:'آنکال لیدرشیپ'}, color:'#CCFBF1', text:'#0F766E', multi:false, builtin:true },
+  { key:'off', label:{en:'Off', fa:'آف'}, color:'#E9D5FF', text:'#6B21A8', multi:true, builtin:true },
+  { key:'leaveRequest', label:{en:'Leave Request', fa:'درخواست مرخصی'}, color:'#FBCFE8', text:'#9D174D', multi:true, builtin:true },
+  { key:'cab', label:{en:'CAB', fa:'CAB'}, color:'#E2E8F0', text:'#334155', multi:true, builtin:true },
 ];
-const DEFAULT_AGENTS = [
-  'mohammadali.ar','ali.dava','ali.behr','amirhossein.tagh','parisa.jaf','amirali.am',
-  'yasamin.a','milad.esf','afsaneh.az','hengameh.n','payam.n','arezou.g','anahita.sad',
-  'mohammadmehdi.rajab','kosar.ha','narin.b','mehdi.vali','fatemeh.salim','amirhossein.mohamm','maryam.fall'
-];
+const DEFAULT_AGENTS = [];
+let rosterData = { agents:[], days:{}, holidays:{}, columns:JSON.parse(JSON.stringify(DEFAULT_COLUMNS)), teamMembers:[] };
+function saveRoster(_data){ /* Backend is authoritative; kept as a compatibility shim for legacy call sites. */ }
 
-function loadRoster(){
+async function loadRosterFromBackend(){
+  const tok=sdwGetTokenObj();
+  if(!tok){
+    rosterData={agents:[],days:{},holidays:{},columns:JSON.parse(JSON.stringify(DEFAULT_COLUMNS)),teamMembers:[]};
+    rosterApiError='Please sign in from the HUB to load live roster data.';
+    return false;
+  }
+  rosterLoading=true; rosterApiError='';
   try{
-    const raw = localStorage.getItem(ROSTER_KEY);
-    if (raw){
-      const d = JSON.parse(raw);
-      d.agents = d.agents && d.agents.length ? d.agents : DEFAULT_AGENTS.slice();
-      d.days = d.days || {};
-      d.holidays = d.holidays || {};
-      d.columns = d.columns && d.columns.length ? d.columns : JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
-      return d;
-    }
-  }catch(e){}
-  return { agents: DEFAULT_AGENTS.slice(), days: {}, holidays: {}, columns: JSON.parse(JSON.stringify(DEFAULT_COLUMNS)) };
+    const me=await rosterApi('/api/auth/me');
+    currentUser=me;
+    const dates=currentMonthDates();
+    const from=ymd(dates[0]), to=ymd(dates[dates.length-1]);
+    const state=await rosterApi(`/api/roster/state?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    rosterData.columns=(state.columns||[]).map(c=>({id:c.id,key:c.key,label:{en:c.label_en,fa:c.label_fa||c.label_en},color:c.color,text:c.text_color,multi:!!c.is_multi,builtin:!!c.is_builtin}));
+    rosterData.teamMembers=state.team||[];
+    rosterData.agents=rosterData.teamMembers.map(m=>m.full_name);
+    rosterData.holidays=Object.fromEntries((state.holidays||[]).map(h=>[h.date,h.label]));
+    rosterData.days=state.days||{};
+    if(!rosterData.columns.length) rosterData.columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
+    rosterLoading=false; renderRoster(); return true;
+  }catch(e){
+    rosterLoading=false; rosterApiError=e.message; renderRoster(); return false;
+  }
 }
-function saveRoster(data){ localStorage.setItem(ROSTER_KEY, JSON.stringify(data)); }
-let rosterData = loadRoster();
+async function putRosterEntry(dateKey,colKey){
+  if(!isLeadUnlocked()) throw new Error('Insufficient permissions');
+  const col=getColumn(colKey), cell=dayCell(dateKey);
+  const raw=cell[colKey]; const names=col.multi ? (Array.isArray(raw)?raw:[]) : (raw?[raw]:[]);
+  await rosterApi('/api/roster/entries',{method:'PUT',body:JSON.stringify({date:dateKey,columnKey:colKey,names})});
+}
+async function addTeamMemberApi(name){ return rosterApi('/api/roster/team',{method:'POST',body:JSON.stringify({fullName:name})}); }
+async function deleteTeamMemberApi(id){ return rosterApi('/api/roster/team/'+encodeURIComponent(id),{method:'DELETE'}); }
+async function addHolidayApi(date,label){ return rosterApi('/api/roster/holidays',{method:'POST',body:JSON.stringify({date,label})}); }
+async function deleteHolidayApi(date){ return rosterApi('/api/roster/holidays/'+encodeURIComponent(date),{method:'DELETE'}); }
+async function addColumnApi(c){ return rosterApi('/api/roster/columns',{method:'POST',body:JSON.stringify({key:c.key,labelEn:c.label.en,labelFa:c.label.fa,color:c.color,textColor:c.text,isMulti:c.multi})}); }
+async function patchColumnApi(c){ return rosterApi('/api/roster/columns/'+encodeURIComponent(c.id),{method:'PATCH',body:JSON.stringify({labelEn:c.label.en,labelFa:c.label.fa,color:c.color,textColor:c.text})}); }
+async function deleteColumnApi(id){ return rosterApi('/api/roster/columns/'+encodeURIComponent(id),{method:'DELETE'}); }
 
 function getColumn(key){ return rosterData.columns.find(c=>c.key===key) || { key, label:{en:key,fa:key}, color:'#E2E8F0', text:'#64748B', multi:true, builtin:false }; }
 function colLabel(col){ return col.label[currentLang] || col.label.en; }
@@ -1114,7 +1123,13 @@ function renderMiniCalendar(){
 
 function renderRosterTable(){
   const editable = isLeadUnlocked();
-  document.getElementById('roster-lock-note').style.display = editable ? 'none' : 'block';
+  const lockNote=document.getElementById('roster-lock-note');
+  lockNote.style.display = editable ? 'none' : 'block';
+  if(!editable){
+    lockNote.innerHTML = rosterApiError
+      ? `🔒 ${rosterApiError}`
+      : '🔒 Sign in to the HUB with an Admin or Leadership account to edit the roster.';
+  }
 
   let dates = currentMonthDates();
   const today = new Date();
@@ -1162,7 +1177,7 @@ function renderRosterTable(){
 
     tbody += `<tr class="${rowCls}">
       <td class="date-col">${md}</td>
-      <td class="date-col greg-sub">${jal}</td>
+      <td class="date-col"><span class="greg-sub">${jal}</span></td>
       <td class="date-col">${wd}${badges}</td>`;
 
     rosterData.columns.forEach(c=>{
@@ -1232,7 +1247,7 @@ function openDayDetails(dateKey){
 }
 
 /* ---------- Shared assign/remove helpers (used by drag-drop, chip ✕, and the cell editor modal) ---------- */
-function assignName(dateKey, colKey, name){
+async function assignName(dateKey, colKey, name){
   const col = getColumn(colKey);
   const cell = dayCell(dateKey);
   if (col.multi){
@@ -1242,15 +1257,15 @@ function assignName(dateKey, colKey, name){
   } else {
     cell[colKey] = name;
   }
-  saveRoster(rosterData);
+  try{ await putRosterEntry(dateKey,colKey); }catch(e){ alert(e.message); return; }
   renderRoster();
 }
-function removeName(dateKey, colKey, name){
+async function removeName(dateKey, colKey, name){
   const col = getColumn(colKey);
   const cell = dayCell(dateKey);
   if (col.multi){ cell[colKey] = (cell[colKey]||[]).filter(n=>n!==name); }
   else { cell[colKey] = ''; }
-  saveRoster(rosterData);
+  try{ await putRosterEntry(dateKey,colKey); }catch(e){ alert(e.message); return; }
   renderRoster();
 }
 
@@ -1339,6 +1354,21 @@ function splitNames(raw){
     .filter(s=>s && !IMPORT_PLACEHOLDER_TOKENS.has(s.toLowerCase()));
 }
 
+async function syncImportedRosterToBackend(){
+  if(!isLeadUnlocked()) throw new Error('Sign in to the HUB with an Admin or Leadership account to import roster data.');
+  const existingByName=new Map(rosterData.teamMembers.map(m=>[m.full_name,m]));
+  for(const name of rosterData.agents){ if(!existingByName.has(name)){ const m=await addTeamMemberApi(name); rosterData.teamMembers.push(m); existingByName.set(name,m); } }
+  for(const c of rosterData.columns){
+    if(!c.id){ const saved=await addColumnApi(c); c.id=saved.id; }
+  }
+  for(const [dateKey,cell] of Object.entries(rosterData.days)){
+    for(const col of rosterData.columns){
+      if(cell[col.key]===undefined) continue;
+      await putRosterEntry(dateKey,col.key);
+    }
+  }
+}
+
 async function importFromExcelFile(file){
   if (typeof XLSX === 'undefined'){ alert(t('importLibFail')); return; }
   const buf = await file.arrayBuffer();
@@ -1414,9 +1444,7 @@ async function importFromExcelFile(file){
   }
 
   rosterData.agents = Array.from(newAgents).filter(Boolean);
-  saveRoster(rosterData);
-  renderRoster();
-  alert(t('importDone').replace('{n}', importedDays));
+  try{ await syncImportedRosterToBackend(); renderRoster(); alert(t('importDone').replace('{n}', importedDays)); }catch(e){ alert(e.message); }
 }
 
 /* ---------- Cell editor (works for both multi-name and single-name columns) ---------- */
@@ -1458,7 +1486,7 @@ function renderCellEditor(overlay, dateKey, col){
     </div>
   </div>`;
 
-  function addName(name){
+  async function addName(name){
     if (!name) return;
     if (col.multi){
       const list = Array.isArray(cell[col.key]) ? cell[col.key] : [];
@@ -1467,15 +1495,15 @@ function renderCellEditor(overlay, dateKey, col){
     } else {
       cell[col.key] = name;
     }
-    saveRoster(rosterData);
+    try{ await putRosterEntry(dateKey,col.key); }catch(e){ alert(e.message); return; }
     renderCellEditor(overlay, dateKey, col);
     renderRoster();
   }
-  overlay.querySelectorAll('[data-rm-name]').forEach(btn=>btn.addEventListener('click', ()=>{
+  overlay.querySelectorAll('[data-rm-name]').forEach(btn=>btn.addEventListener('click', async ()=>{
     const name = btn.dataset.rmName;
     if (col.multi){ cell[col.key] = (cell[col.key]||[]).filter(n=>n!==name); }
     else { cell[col.key] = ''; }
-    saveRoster(rosterData);
+    try{ await putRosterEntry(dateKey,col.key); }catch(e){ alert(e.message); return; }
     renderCellEditor(overlay, dateKey, col);
     renderRoster();
   }));
@@ -1523,18 +1551,20 @@ function renderTeamManager(overlay){
       <button class="tbtn" id="teammgr-close">${t('done')}</button>
     </div>
   </div>`;
-  overlay.querySelectorAll('[data-remove-agent]').forEach(btn=>btn.addEventListener('click', ()=>{
+  overlay.querySelectorAll('[data-remove-agent]').forEach(btn=>btn.addEventListener('click', async ()=>{
     rosterData.agents = rosterData.agents.filter(a=>a!==btn.dataset.removeAgent);
-    saveRoster(rosterData);
+    const member=rosterData.teamMembers.find(m=>m.full_name===btn.dataset.removeAgent);
+    if(member){ try{ await deleteTeamMemberApi(member.id); }catch(e){ alert(e.message); return; } }
+    rosterData.teamMembers=rosterData.teamMembers.filter(m=>m.id!==member?.id);
+    rosterData.agents=rosterData.teamMembers.map(m=>m.full_name);
     renderTeamManager(overlay);
   }));
-  document.getElementById('teammgr-add-btn').addEventListener('click', ()=>{
+  document.getElementById('teammgr-add-btn').addEventListener('click', async ()=>{
     const inp = document.getElementById('teammgr-new-name');
     const name = inp.value.trim();
     if (!name) return;
     if (rosterData.agents.includes(name)){ alert(t('alreadyInRoster')); return; }
-    rosterData.agents.push(name);
-    saveRoster(rosterData);
+    try{ const member=await addTeamMemberApi(name); rosterData.teamMembers.push(member); rosterData.agents=rosterData.teamMembers.map(m=>m.full_name); }catch(e){ alert(e.message); return; }
     inp.value='';
     renderTeamManager(overlay);
   });
@@ -1584,13 +1614,13 @@ function renderHolidayManager(overlay){
       <button class="tbtn" id="holidaymgr-close">${t('done')}</button>
     </div>
   </div>`;
-  overlay.querySelectorAll('[data-remove-holiday]').forEach(btn=>btn.addEventListener('click', ()=>{
+  overlay.querySelectorAll('[data-remove-holiday]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    try{ await deleteHolidayApi(btn.dataset.removeHoliday); }catch(e){ alert(e.message); return; }
     delete rosterData.holidays[btn.dataset.removeHoliday];
-    saveRoster(rosterData);
     renderHolidayManager(overlay);
     renderRoster();
   }));
-  document.getElementById('holidaymgr-add-btn').addEventListener('click', ()=>{
+  document.getElementById('holidaymgr-add-btn').addEventListener('click', async ()=>{
     const jy = Number(document.getElementById('holidaymgr-jy').value);
     const jm = Number(document.getElementById('holidaymgr-jm').value);
     const jd = Number(document.getElementById('holidaymgr-jd').value);
@@ -1598,8 +1628,8 @@ function renderHolidayManager(overlay){
     if (!jy || !jm || !jd) return;
     const [gy,gm,gd] = jalaliToGregorian(jy, jm, jd);
     const date = `${gy}-${String(gm).padStart(2,'0')}-${String(gd).padStart(2,'0')}`;
+    try{ await addHolidayApi(date,label); }catch(e){ alert(e.message); return; }
     rosterData.holidays[date] = label;
-    saveRoster(rosterData);
     renderHolidayManager(overlay);
     renderRoster();
   });
@@ -1642,32 +1672,33 @@ function renderColumnManager(overlay){
       <button class="tbtn" id="colmgr-close">${t('done')}</button>
     </div>
   </div>`;
-  overlay.querySelectorAll('[data-color]').forEach(inp=>inp.addEventListener('input', ()=>{
-    getColumn(inp.dataset.color).color = inp.value;
-    saveRoster(rosterData);
+  overlay.querySelectorAll('[data-color]').forEach(inp=>inp.addEventListener('change', async ()=>{
+    const c=getColumn(inp.dataset.color); c.color=inp.value;
+    try{ await patchColumnApi(c); }catch(e){ alert(e.message); return; }
   }));
-  overlay.querySelectorAll('[data-label]').forEach(inp=>inp.addEventListener('change', ()=>{
+  overlay.querySelectorAll('[data-label]').forEach(inp=>inp.addEventListener('change', async ()=>{
     const col = getColumn(inp.dataset.label);
     col.label[currentLang] = inp.value;
-    saveRoster(rosterData);
+    try{ await patchColumnApi(col); }catch(e){ alert(e.message); return; }
   }));
-  overlay.querySelectorAll('[data-remove-col]').forEach(btn=>btn.addEventListener('click', ()=>{
+  overlay.querySelectorAll('[data-remove-col]').forEach(btn=>btn.addEventListener('click', async ()=>{
     if (!confirm(t('confirmRemoveShift'))) return;
     const key = btn.dataset.removeCol;
+    const col=getColumn(key);
+    try{ await deleteColumnApi(col.id); }catch(e){ alert(e.message); return; }
     rosterData.columns = rosterData.columns.filter(c=>c.key!==key);
     Object.values(rosterData.days).forEach(cell=>{ delete cell[key]; });
-    saveRoster(rosterData);
     renderColumnManager(overlay);
     renderRoster();
   }));
-  document.getElementById('colmgr-add-btn').addEventListener('click', ()=>{
+  document.getElementById('colmgr-add-btn').addEventListener('click', async ()=>{
     const label = document.getElementById('colmgr-new-label').value.trim();
     const color = document.getElementById('colmgr-new-color').value;
     const type = document.getElementById('colmgr-new-type').value;
     if (!label) return;
     const key = 'custom_' + Date.now();
-    rosterData.columns.push({ key, label:{en:label, fa:label}, color, text:'#1E293B', multi: type==='multi', builtin:false });
-    saveRoster(rosterData);
+    const c={ key, label:{en:label, fa:label}, color, text:'#1E293B', multi: type==='multi', builtin:false };
+    try{ const saved=await addColumnApi(c); c.id=saved.id; rosterData.columns.push(c); }catch(e){ alert(e.message); return; }
     renderColumnManager(overlay);
     renderRoster();
   });
@@ -1678,6 +1709,7 @@ function renderColumnManager(overlay){
 }
 
 applyI18n();
+loadRosterFromBackend();
 </script>
 </body>
 </html>
