@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Service Desk Hub — تست زنده‌ی API</title>
+<style>
+  body{ font-family: Tahoma, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; background:#f4f6fa; color:#1e293b; }
+  h1{ font-size: 20px; }
+  .card{ background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; margin-bottom:16px; }
+  label{ display:block; font-size:12px; font-weight:700; margin-bottom:4px; }
+  input{ width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px; box-sizing:border-box; }
+  button{ background:#0d9488; color:#fff; border:none; border-radius:8px; padding:9px 16px; font-weight:700; cursor:pointer; }
+  button:hover{ background:#0b7a70; }
+  .status{ font-size:12px; padding:8px 10px; border-radius:8px; margin-top:8px; white-space:pre-wrap; }
+  .status.ok{ background:#ecfdf5; color:#065f46; }
+  .status.err{ background:#fef2f2; color:#991b1b; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  td,th{ padding:6px 8px; border-bottom:1px solid #e2e8f0; text-align:right; }
+  #whoami{ font-size:12px; color:#64748b; }
+</style>
+</head>
+<body>
+  <h1>🔧 تست زنده‌ی Service Desk Hub API</h1>
+  <p id="whoami">وضعیت: هنوز لاگین نکردین</p>
+
+  <div class="card">
+    <h3>۱) لاگین</h3>
+    <label>نام کاربری</label>
+    <input id="username" value="admin">
+    <label>رمز عبور</label>
+    <input id="password" type="password">
+    <button onclick="login()">ورود</button>
+    <div id="loginStatus"></div>
+  </div>
+
+  <div class="card">
+    <h3>۲) ستون‌های راستر (از دیتابیس واقعی خونده می‌شه)</h3>
+    <button onclick="loadColumns()">بارگذاری ستون‌ها</button>
+    <table id="colsTable"><thead><tr><th>Key</th><th>عنوان فارسی</th><th>رنگ</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <h3>۳) افزودن عضو تیم</h3>
+    <label>نام کامل</label>
+    <input id="memberName" placeholder="مثلاً Mehdi Vali">
+    <button onclick="addMember()">افزودن</button>
+    <div id="memberStatus"></div>
+  </div>
+
+<script>
+  // Change this if your backend runs on a different host/port.
+  const API_BASE = 'http://localhost:4000/api';
+  let token = localStorage.getItem('sdhub_test_token') || '';
+  if (token) document.getElementById('whoami').textContent = 'وضعیت: توکن ذخیره‌شده پیدا شد — دکمه‌ها رو امتحان کن';
+
+  async function login(){
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const statusEl = document.getElementById('loginStatus');
+    try{
+      const res = await fetch(API_BASE + '/auth/login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطای ناشناخته');
+      token = data.token;
+      localStorage.setItem('sdhub_test_token', token);
+      statusEl.className='status ok';
+      statusEl.textContent = 'وارد شدی به‌عنوان: ' + data.user.displayName + ' (' + data.user.role + ')';
+      document.getElementById('whoami').textContent = 'وضعیت: لاگین موفق';
+    }catch(e){
+      statusEl.className='status err';
+      statusEl.textContent = 'خطا: ' + e.message;
+    }
+  }
+
+  async function loadColumns(){
+    const tbody = document.querySelector('#colsTable tbody');
+    tbody.innerHTML = '';
+    try{
+      const res = await fetch(API_BASE + '/roster/columns', { headers:{ 'Authorization':'Bearer ' + token } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطای ناشناخته');
+      data.forEach(c=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${c.key}</td><td>${c.label_fa}</td><td><span style="background:${c.color};padding:2px 8px;border-radius:6px;">${c.color}</span></td>`;
+        tbody.appendChild(tr);
+      });
+    }catch(e){ alert('خطا: ' + e.message + ' (اول لاگین کن)'); }
+  }
+
+  async function addMember(){
+    const fullName = document.getElementById('memberName').value.trim();
+    const statusEl = document.getElementById('memberStatus');
+    if (!fullName) return;
+    try{
+      const res = await fetch(API_BASE + '/roster/team', {
+        method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + token },
+        body: JSON.stringify({ fullName })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطای ناشناخته');
+      statusEl.className='status ok';
+      statusEl.textContent = 'اضافه شد: ' + data.full_name;
+      document.getElementById('memberName').value='';
+    }catch(e){
+      statusEl.className='status err';
+      statusEl.textContent = 'خطا: ' + e.message;
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incident Dashboard Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>window.__libStatus = { xlsx: 'cdn', html2canvas: 'cdn' };</script>
+<style>
+  :root{
+    --bg:#F1F4F9;
+    --card:#ffffff;
+    --border:#E3E8F0;
+    --text:#1E293B;
+    --muted:#64748B;
+    --accent:#0D9488;
+    --accent-dark:#0B7A70;
+    --yellow:#f5c344;
+    --green:#8fbf6a;
+    --orange:#f2a25c;
+    --good:#1a8a3d;
+    --bad:#c62828;
+  }
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family: "Vazirmatn", "Segoe UI", Tahoma, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    direction: rtl;
+  }
+  h1{ font-size: 20px; margin: 0 0 4px; }
+  .sub{ color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .container{ max-width: 1100px; margin: 0 auto; }
+  .card{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .step-title{ font-weight:600; font-size:15px; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:50%;
+    background: var(--accent); color:#fff; font-size:12px; flex-shrink:0;
+  }
+  .upload-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  input[type=file]{
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: #fafbfc;
+    font-size: 13px;
+    flex: 1;
+    min-width: 240px;
+  }
+  #fileStatus{ font-size: 13px; color: var(--muted); }
+  #fileStatus.ok{ color: var(--good); font-weight:600; }
+  #fileStatus.err{ color: var(--bad); font-weight:600; white-space: pre-wrap; }
+  .folder-row{ display:none !important; /* moved to Leadership panel in the hub */ } .folder-row-off{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+  .folder-status{ font-size:12px; color:var(--muted); }
+
+  .btn{
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background .15s;
+    direction: rtl;
+  }
+  .btn:hover{ background: var(--accent-dark); }
+  .btn:disabled{ background:#9aa4b2; cursor: not-allowed; }
+  .btn.secondary{ background:#374151; }
+  .btn.secondary:hover{ background:#1f2937; }
+
+  .table-block{ margin-top: 18px; display:none; }
+  .table-block.visible{ display:block; }
+  .table-actions{ margin-bottom:10px; display:flex; gap:10px; justify-content:flex-end; }
+
+  #captureArea1, #captureArea2{
+    background:#fff;
+    padding: 14px;
+    display:inline-block;
+    direction:ltr;
+  }
+
+  table.report{
+    border-collapse: collapse;
+    font-family: Calibri, Arial, sans-serif;
+    direction: ltr;
+  }
+  table.report th, table.report td{
+    border: 2px solid #000000;
+    padding: 10px 30px;
+    text-align: center;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  table.report th{
+    background: var(--yellow);
+    font-weight: 700;
+    color: #1f2937;
+  }
+  table.report td.label{
+    background: var(--yellow);
+    font-weight: 700;
+    text-align: left;
+  }
+  table.report td.pct-good{ color: var(--good); font-weight:700; }
+  table.report td.pct-bad{ color: var(--bad); font-weight:700; }
+
+  .group-title-row th{
+    background: #ddd;
+    font-weight:700;
+    font-size: 14px;
+  }
+  table.sla-table th.minor-head{ background: var(--green); color:#fff; }
+  table.sla-table th.major-head{ background: var(--orange); color:#fff; }
+  table.sla-table th.corner{ background:#e5e7eb; color:#1f2937; }
+  table.sla-table td.assignee-cell{ text-align:left; }
+  table.sla-table td.empty-note{ font-style: italic; color:#777; }
+
+  .two-tables{ display:flex; flex-direction: column; gap: 22px; }
+
+  .diag{ font-size:11.5px; color:#9a3b3b; background:#fff4f4; border:1px solid #f0c9c9; border-radius:6px; padding:8px 10px; margin-top:8px; display:none; }
+  .diag.show{ display:block; }
+
+  footer{ text-align:center; color: var(--muted); font-size:12px; margin-top: 10px; }
+  /* ---- Shared hub strip (Phase 2 unification) ---- */
+  .hub-strip{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:linear-gradient(90deg,#0F172A,#0B2A27); padding:10px 22px; margin:-24px -24px 20px; font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; }
+  .hub-strip-brand{ display:flex; align-items:center; gap:8px; color:#fff; text-decoration:none; font-size:13px; font-weight:800; }
+  .hub-strip-brand .hsb-icon{ width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#0D9488,#14B8A6); display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .hub-strip-back{ color:#CBD5E1; text-decoration:none; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px 12px; transition:.15s; }
+  .hub-strip-back:hover{ background:rgba(255,255,255,0.15); color:#fff; }
+</style>
+
+</head>
+<body>
+<div class="hub-strip">
+  <a href="index.html" class="hub-strip-brand"><span class="hsb-icon">🎧</span>Service Desk Hub</a>
+  <a href="index.html" class="hub-strip-back">↩ Back to hub</a>
+</div>
+<div class="container">
+  <h1>📊 ابزار تولید خودکار جداول Incident SLA Distribution Dashboard</h1>
+  <div class="sub">فایل اکسل خروجی روزانه iCare را بارگذاری کنید تا دو جدول به‌صورت خودکار تولید شود.</div>
+
+  <div class="card">
+    <div class="step-title"><span class="step-num">1</span> بارگذاری فایل اکسل روزانه</div>
+    <div class="upload-row">
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
+      <button class="btn" id="processBtn" disabled>پردازش فایل و تولید جداول</button>
+      <span id="fileStatus">هنوز فایلی انتخاب نشده است.</span>
+    </div>
+    <div id="diagBox" class="diag"></div>
+    <div class="folder-row">
+      <button class="btn secondary" id="folder-pick-btn" type="button">📁 انتخاب پوشه اختصاصی این گزارش</button>
+      <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none">
+      <span class="folder-status" id="folder-status">پوشه‌ای انتخاب نشده (اختیاری، Chrome/Edge/Firefox) — خروجی روزانه iCare را در این پوشه قرار دهید تا جداول خودکار ساخته شوند</span>
+    </div>
+  </div>
+
+  <div class="card table-block" id="block1">
+    <div class="step-title"><span class="step-num">2</span> Incident Type Distribution</div>
+    <div class="table-actions">
+      <button class="btn secondary" id="dl1">⬇ دانلود تصویر این جدول</button>
+    </div>
+    <div id="captureArea1"></div>
+  </div>
+
+  <div class="card table-block" id="block2">
+    <div class="step-title"><span class="step-num">3</span> Incident SLA (OOSLA) Distribution</div>
+    <div class="table-actions">
+      <button class="btn secondary" id="dl2">⬇ دانلود تصویر این جدول</button>
+    </div>
+    <div id="captureArea2"></div>
+  </div>
+
+  <footer>Service Desk - 2026</footer>
+</div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const processBtn = document.getElementById('processBtn');
+const fileStatus = document.getElementById('fileStatus');
+const diagBox = document.getElementById('diagBox');
+let workbookRows = null;
+
+// canonical columns we need, matched leniently (trim + case-insensitive)
+const REQUIRED_CANON = ['p','sla status','group assignee','age of ticket'];
+
+function cleanKey(k){
+  return String(k).replace(/\u00A0/g,' ').trim().toLowerCase();
+}
+
+// Rebuild each row with trimmed/cleaned keys, but keep ORIGINAL casing for the
+// first matching key so the rest of the code (which reads r['P'] etc.) keeps working.
+function normalizeRows(rows){
+  if(!rows.length) return rows;
+  // figure out a mapping from canonical name -> actual key used in the sheet
+  const sampleKeys = Object.keys(rows[0]);
+  const map = {}; // canonical -> actual key
+  sampleKeys.forEach(k => { map[cleanKey(k)] = k; });
+
+  const wantedCanon = {
+    'p':'P', 'sla status':'SLA Status', 'group assignee':'Group Assignee', 'age of ticket':'Age of Ticket'
+  };
+
+  return rows.map(r => {
+    const out = Object.assign({}, r);
+    Object.keys(wantedCanon).forEach(canon => {
+      const actualKey = map[canon];
+      const desiredKey = wantedCanon[canon];
+      if(actualKey && actualKey !== desiredKey && !(desiredKey in out)){
+        out[desiredKey] = r[actualKey];
+      } else if(actualKey && !(desiredKey in out)){
+        out[desiredKey] = r[actualKey];
+      }
+    });
+    return out;
+  });
+}
+
+function rowHasRequired(row){
+  const keys = Object.keys(row).map(cleanKey);
+  return REQUIRED_CANON.every(c => keys.includes(c));
+}
+
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files[0];
+  diagBox.classList.remove('show'); diagBox.textContent = '';
+  if(!f){ processBtn.disabled = true; return; }
+
+  if(typeof XLSX === 'undefined'){
+    var st = window.__libStatus ? window.__libStatus.xlsx : null;
+    if(st === 'failed'){
+      fileStatus.textContent = 'کتابخانه XLSX نه از فایل محلی (xlsx.full.min.js کنار همین HTML) و نه از اینترنت لود نشد. فایل xlsx.full.min.js رو کنار این HTML قرار بده.';
+    } else {
+      fileStatus.textContent = 'کتابخانه XLSX هنوز در حال لود شدنه، چند ثانیه صبر کن و دوباره فایل رو انتخاب کن.';
+    }
+    fileStatus.className = 'err';
+    processBtn.disabled = true;
+    return;
+  }
+
+  fileStatus.textContent = 'در حال خواندن فایل...';
+  fileStatus.className = '';
+  const reader = new FileReader();
+
+  reader.onerror = () => {
+    fileStatus.textContent = 'خطا در خواندن فایل از دیسک (FileReader error).';
+    fileStatus.className = 'err';
+    processBtn.disabled = true;
+  };
+
+  reader.onload = (e) => {
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      if(!wb.SheetNames || !wb.SheetNames.length){
+        throw new Error('هیچ شیتی در فایل اکسل پیدا نشد.');
+      }
+
+      let sheetName = wb.SheetNames.find(n => /issue/i.test(n)) || wb.SheetNames[0];
+      let rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:null});
+      rows = normalizeRows(rows);
+
+      if(!(rows.length && rowHasRequired(rows[0]))){
+        // scan every other sheet too
+        let found = false;
+        for(const sn of wb.SheetNames){
+          let r2 = XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:null});
+          r2 = normalizeRows(r2);
+          if(r2.length && rowHasRequired(r2[0])){ rows = r2; sheetName = sn; found = true; break; }
+        }
+        if(!found){
+          const seenCols = rows.length ? Object.keys(rows[0]).join(', ') : '(شیت خالی است)';
+          fileStatus.textContent = 'ستون‌های مورد نیاز (P, SLA Status, Group Assignee, Age of Ticket) پیدا نشد.';
+          fileStatus.className = 'err';
+          diagBox.classList.add('show');
+          diagBox.textContent = 'ستون‌های موجود در شیت "' + sheetName + '":\n' + seenCols;
+          processBtn.disabled = true;
+          workbookRows = null;
+          return;
+        }
+      }
+
+      workbookRows = rows.filter(r => r['P'] && String(r['P']).trim() !== '');
+      if(workbookRows.length === 0){
+        fileStatus.textContent = 'ستون‌ها پیدا شدن ولی هیچ ردیفی مقدار Priority (P) نداشت — فایل رو بررسی کن.';
+        fileStatus.className = 'err';
+        processBtn.disabled = true;
+        return;
+      }
+      fileStatus.textContent = `فایل خوانده شد ✔ (شیت: ${sheetName} — ${workbookRows.length} اینسیدنت معتبر)`;
+      fileStatus.className = 'ok';
+      processBtn.disabled = false;
+    }catch(err){
+      console.error(err);
+      fileStatus.textContent = 'خطا در خواندن فایل: ' + (err && err.message ? err.message : err);
+      fileStatus.className = 'err';
+      diagBox.classList.add('show');
+      diagBox.textContent = 'جزئیات فنی: ' + (err && err.stack ? err.stack : String(err));
+      processBtn.disabled = true;
+      workbookRows = null;
+    }
+  };
+  reader.readAsArrayBuffer(f);
+});
+
+function postSlaStats(rows){
+  try{
+    let inTime=0, evaluated=0;
+    rows.forEach(r=>{ const sla=norm(r['SLA Status']); if(sla==='In Time'){inTime++;evaluated++;} else if(sla==='Breached'){evaluated++;} });
+    const pct = evaluated? (inTime/evaluated*100):0;
+    window.parent.postMessage({source:"sdhub", report:"sla", compliance:pct, total:rows.length, updatedAt:Date.now()}, "*");
+  }catch(e){}
+}
+processBtn.addEventListener('click', () => {
+  if(!workbookRows) return;
+  buildTable1(workbookRows);
+  buildTable2(workbookRows);
+  document.getElementById('block1').classList.add('visible');
+  document.getElementById('block2').classList.add('visible');
+  postSlaStats(workbookRows);
+});
+
+// ---------- Local folder auto-read (Chrome/Edge File System Access API) ----------
+function loadRowsFromWorkbook(wb){
+  let sheetName = wb.SheetNames.find(n => /issue/i.test(n)) || wb.SheetNames[0];
+  let rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:null});
+  rows = normalizeRows(rows);
+  if(!(rows.length && rowHasRequired(rows[0]))){
+    let found = false;
+    for(const sn of wb.SheetNames){
+      let r2 = XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:null});
+      r2 = normalizeRows(r2);
+      if(r2.length && rowHasRequired(r2[0])){ rows = r2; sheetName = sn; found = true; break; }
+    }
+    if(!found) return null;
+  }
+  const filtered = rows.filter(r => r['P'] && String(r['P']).trim() !== '');
+  return filtered.length ? {rows: filtered, sheetName} : null;
+}
+
+const folderInput = document.getElementById('folder-input');
+document.getElementById('folder-pick-btn').addEventListener('click', ()=>folderInput.click());
+folderInput.addEventListener('change', async ()=>{
+  const files = [...folderInput.files].filter(f=>/\.(xlsx|xls|xlsm)$/i.test(f.name));
+  if (!files.length){
+    fileStatus.textContent = 'فایل اکسلی در این پوشه پیدا نشد';
+    fileStatus.className = 'err';
+    return;
+  }
+  if (typeof XLSX === 'undefined'){
+    fileStatus.textContent = 'کتابخانه XLSX هنوز لود نشده — چند ثانیه صبر کنید و دوباره تلاش کنید.';
+    fileStatus.className = 'err';
+    return;
+  }
+  let matchedFile = null, matchedResult = null;
+  for (const file of files){
+    try{
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), {type:'array'});
+      const result = loadRowsFromWorkbook(wb);
+      if (result){ matchedFile = file; matchedResult = result; break; }
+    }catch(e){ console.error(e); }
+  }
+  if (!matchedResult){
+    fileStatus.textContent = 'فایل معتبری (با ستون‌های P, SLA Status, Group Assignee, Age of Ticket) در این پوشه پیدا نشد.';
+    fileStatus.className = 'err';
+    return;
+  }
+  workbookRows = matchedResult.rows;
+  fileStatus.textContent = `از پوشه خوانده شد ✔ (فایل: ${matchedFile.name} — شیت: ${matchedResult.sheetName} — ${workbookRows.length} اینسیدنت معتبر)`;
+  fileStatus.className = 'ok';
+  processBtn.disabled = false;
+  document.getElementById('folder-status').textContent = '📁 ' + files.length + ' فایل از پوشه بررسی شد';
+  buildTable1(workbookRows);
+  buildTable2(workbookRows);
+  document.getElementById('block1').classList.add('visible');
+  document.getElementById('block2').classList.add('visible');
+  postSlaStats(workbookRows);
+});
+
+window.addEventListener('message', (e)=>{
+  if (!e.data || e.data.type!=='sdhub:inject-file') return;
+  if (typeof XLSX === 'undefined') return;
+  try{
+    const wb = XLSX.read(new Uint8Array(e.data.buffer), {type:'array'});
+    const result = loadRowsFromWorkbook(wb);
+    if (!result) return;
+    workbookRows = result.rows;
+    fileStatus.textContent = `از API دریافت شد ✔ (شیت: ${result.sheetName} — ${workbookRows.length} اینسیدنت معتبر)`;
+    fileStatus.className = 'ok';
+    processBtn.disabled = false;
+    buildTable1(workbookRows);
+    buildTable2(workbookRows);
+    document.getElementById('block1').classList.add('visible');
+    document.getElementById('block2').classList.add('visible');
+    postSlaStats(workbookRows);
+  }catch(err){
+    fileStatus.textContent = 'خطا در دریافت فایل از API: ' + err.message;
+    fileStatus.className = 'err';
+  }
+});
+
+function norm(v){ return (v===null || v===undefined) ? '' : String(v).trim(); }
+
+// ---------- TABLE 1: Incident Type Distribution ----------
+function buildTable1(rows){
+  const priorities = ['Critical','High','Medium','Low'];
+  const stats = {};
+  priorities.forEach(p => stats[p] = {total:0, inTime:0, breached:0});
+
+  rows.forEach(r => {
+    const p = norm(r['P']);
+    if(!stats[p]) return;
+    stats[p].total++;
+    const sla = norm(r['SLA Status']);
+    if(sla === 'In Time') stats[p].inTime++;
+    else if(sla === 'Breached') stats[p].breached++;
+  });
+
+  let html = '<table class="report"><thead><tr><th style="text-align:left;">Incident Type</th>';
+  priorities.forEach(p => html += `<th>${p}</th>`);
+  html += '</tr></thead><tbody>';
+
+  html += '<tr><td class="label">#IT Incidents</td>';
+  priorities.forEach(p => html += `<td>${stats[p].total}</td>`);
+  html += '</tr>';
+
+  html += '<tr><td class="label">Incidents Within SLA</td>';
+  priorities.forEach(p => {
+    const evaluated = stats[p].inTime + stats[p].breached;
+    if(evaluated === 0){
+      html += '<td>-</td>';
+    } else {
+      const pct = Math.round((stats[p].inTime / evaluated) * 100);
+      const cls = pct >= 90 ? 'pct-good' : 'pct-bad';
+      html += `<td class="${cls}">${pct}%</td>`;
+    }
+  });
+  html += '</tr></tbody></table>';
+
+  document.getElementById('captureArea1').innerHTML = html;
+}
+
+// ---------- TABLE 2: Incident SLA (OOSLA) Distribution ----------
+function buildTable2(rows){
+  const groups = {
+    minor: { label: 'Minor (Low + Medium)', priorities: ['Low','Medium'], headClass:'minor-head' },
+    major: { label: 'Major (High + Critical)', priorities: ['High','Critical'], headClass:'major-head' }
+  };
+
+  let html = '<table class="report sla-table"><tbody>';
+
+  Object.keys(groups).forEach((key, idx) => {
+    const g = groups[key];
+    const byAssignee = {};
+
+    rows.forEach(r => {
+      const p = norm(r['P']);
+      if(!g.priorities.includes(p)) return;
+      const assignee = norm(r['Group Assignee']) || '(Unassigned)';
+      const sla = norm(r['SLA Status']);
+      if(sla !== 'In Time' && sla !== 'Breached') return; // exclude not-yet-evaluated tickets
+      if(!byAssignee[assignee]) byAssignee[assignee] = { breached:0, inTime:0, ageSum:0 };
+      if(sla === 'Breached'){
+        byAssignee[assignee].breached++;
+        const age = Number(r['Age of Ticket']);
+        if(!isNaN(age)) byAssignee[assignee].ageSum += age;
+      } else {
+        byAssignee[assignee].inTime++;
+      }
+    });
+
+    let list = Object.keys(byAssignee).map(name => {
+      const d = byAssignee[name];
+      const total = d.breached + d.inTime;
+      const pct = total > 0 ? (d.breached/total*100) : 0;
+      const avgAge = d.breached > 0 ? (d.ageSum/d.breached) : 0;
+      return { name, oosla: d.breached, pct, avgAge };
+    }).filter(x => x.oosla > 0);
+
+    list.sort((a,b) => b.oosla - a.oosla || b.pct - a.pct);
+    list = list.slice(0,5);
+
+    if(idx > 0){
+      html += `<tr><td colspan="4" style="border:none;background:#fff;height:14px;padding:0;"></td></tr>`;
+    }
+
+    html += `<tr class="group-title-row"><th class="corner">Priority</th><th colspan="3" class="${g.headClass}">${g.label}</th></tr>`;
+    html += `<tr><th style="text-align:left;">Group Assignee with most<br>OOSLA Incidents</th><th>OOSLA Count</th><th>OOSLA Percentage<br>Vs. Total Incidents</th><th>AVG Age of<br>OOSLA Incidents</th></tr>`;
+
+    if(list.length === 0){
+      html += `<tr><td class="empty-note" colspan="4">There are no OOSLA tickets for this period</td></tr>`;
+    } else {
+      list.forEach(x => {
+        html += `<tr><td class="assignee-cell">${x.name}</td><td>${x.oosla}</td><td>${Math.round(x.pct)}%</td><td>${Math.round(x.avgAge)}</td></tr>`;
+      });
+    }
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('captureArea2').innerHTML = html;
+}
+
+// ---------- Image export ----------
+function downloadCanvas(elementId, filename){
+  if(typeof html2canvas === 'undefined'){
+    alert('کتابخانه html2canvas لود نشده. فایل html2canvas.min.js رو کنار این HTML قرار بده یا اینترنت رو وصل کن.');
+    return;
+  }
+  const el = document.getElementById(elementId);
+  html2canvas(el, {backgroundColor:'#ffffff', scale:2}).then(canvas => {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+document.getElementById('dl1').addEventListener('click', () => {
+  const d = new Date().toISOString().slice(0,10);
+  downloadCanvas('captureArea1', `Incident_Type_Distribution_${d}.png`);
+});
+document.getElementById('dl2').addEventListener('click', () => {
+  const d = new Date().toISOString().slice(0,10);
+  downloadCanvas('captureArea2', `Incident_SLA_Distribution_${d}.png`);
+});
+</script>
+</body>
+</html>

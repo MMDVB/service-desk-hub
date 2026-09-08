@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift Roster — Service Desk</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230D9488'/%3E%3Ctext x='50' y='66' font-size='54' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%97%8E%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+<style>
+  :root{
+    --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F1F4F9; --border:#E3E8F0;
+    --text:#1E293B; --muted:#64748B; --teal:#0D9488; --teal-dark:#0B7A70; --amber:#D97706; --red:#DC2626; --blue:#2563EB;
+    --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 2px 8px rgba(15,23,42,0.05);
+    --shadow-lg: 0 8px 24px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.06);
+    --sidebar-w: 272px; --topbar-h: 68px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ margin:0; background:var(--panel-alt); color:var(--text); font-family:'Vazirmatn','Inter','Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
+  button,input,select{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--teal); outline-offset:2px; border-radius:6px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+
+  .shell{ display:flex; min-height:100vh; }
+
+  .sidebar{ width:var(--sidebar-w); flex-shrink:0; background:linear-gradient(190deg,#0F172A 0%, #0B2A27 85%); color:#E2E8F0; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; z-index:40; transition:transform .25s ease; }
+  .brand{ display:flex; align-items:center; gap:12px; padding:22px 20px 18px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .brand-icon{ width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,var(--teal),#14B8A6); display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 4px 14px rgba(13,148,136,0.45); flex-shrink:0; }
+  .brand-title{ font-size:14.5px; font-weight:800; color:#fff; }
+  .brand-sub{ font-size:11px; color:#94A3B8; margin-top:2px; }
+
+  .nav{ padding:16px 12px; display:flex; flex-direction:column; gap:4px; flex:1; overflow-y:auto; }
+  .nav-group-label{ font-size:10.5px; color:#64748B; font-weight:700; letter-spacing:.04em; margin:14px 10px 4px; text-transform:uppercase; }
+  .nav-item{ display:flex; align-items:center; gap:12px; width:100%; text-align:right; background:transparent; border:none; border-radius:12px; padding:10px 12px; cursor:pointer; color:#CBD5E1; position:relative; transition:background .15s, color .15s; }
+  html[dir="ltr"] .nav-item{ text-align:left; }
+  .nav-item:hover{ background:rgba(255,255,255,0.06); color:#fff; }
+  .nav-item.active{ background:rgba(13,148,136,0.18); color:#fff; }
+  .nav-item.active::before{ content:""; position:absolute; right:0; top:8px; bottom:8px; width:3px; border-radius:3px; background:var(--teal); }
+  .nav-icon{ font-size:18px; width:26px; text-align:center; flex-shrink:0; }
+  .nav-label{ display:flex; flex-direction:column; gap:1px; line-height:1.3; min-width:0; flex:1; }
+  .nav-label b{ font-size:12.8px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nav-label small{ font-size:10.5px; color:#8CA0B3; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nav-item.active .nav-label small{ color:#9FE0D8; }
+  .nav-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; background:#475569; }
+  .nav-dot.ready{ background:#2DD4BF; box-shadow:0 0 0 3px rgba(45,212,191,0.18); }
+
+  .sidebar-footer{ padding:14px 16px 18px; border-top:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:10px; }
+  .date-chip{ display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#E2E8F0; font-size:11.5px; padding:6px 12px; border-radius:999px; }
+  .lead-btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:linear-gradient(135deg,#F59E0B,#D97706); color:#fff; border:none; border-radius:12px; padding:11px 14px; font-size:12.5px; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(217,119,6,0.35); transition:transform .15s; }
+  .lead-btn:hover{ transform:translateY(-1px); }
+  .lead-btn.unlocked{ background:linear-gradient(135deg,#14B8A6,#0D9488); box-shadow:0 4px 14px rgba(13,148,136,0.35); }
+  .version{ font-size:10px; color:#4B5768; text-align:center; }
+  .sidebar-close{ display:none; margin-inline-start:auto; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; border-radius:8px; width:28px; height:28px; cursor:pointer; }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{ height:var(--topbar-h); flex-shrink:0; background:#fff; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 26px; position:sticky; top:0; z-index:30; }
+  .crumb{ display:flex; align-items:center; gap:10px; font-size:15px; font-weight:800; }
+  .crumb .eyebrow-dot{ width:8px; height:8px; border-radius:50%; background:var(--teal); }
+  .topbar-actions{ display:flex; gap:8px; align-items:center; }
+  .tbtn{ display:inline-flex; align-items:center; gap:6px; background:var(--panel-alt); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:8px 14px; font-size:12.5px; cursor:pointer; font-weight:600; transition:.15s; text-decoration:none; }
+  .tbtn:hover{ border-color:var(--teal); background:#F0FDFA; }
+  .tbtn.small{ padding:6px 10px; font-size:11.5px; }
+  .lang-switch{ display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+  .lang-switch button{ background:var(--panel-alt); border:none; padding:8px 12px; font-size:11.5px; font-weight:700; cursor:pointer; color:var(--muted); }
+  .lang-switch button.active{ background:var(--teal); color:#fff; }
+
+  .content{ padding:26px; flex:1; }
+  .tab-panel{ display:none; animation:fadeUp .35s ease; }
+  .tab-panel.active{ display:block; }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:translateY(0);} }
+
+  .hero{ background:linear-gradient(120deg,#0F172A 0%, #0B2A27 60%, #0D9488 140%); border-radius:22px; padding:34px 34px 28px; color:#fff; position:relative; overflow:hidden; margin-bottom:26px; }
+  .hero::after{ content:""; position:absolute; inset:0; background:radial-gradient(420px 220px at 90% -20%, rgba(45,212,191,0.35), transparent); pointer-events:none; }
+  .hero-eyebrow{ font-size:12px; font-weight:700; color:#7DEAD9; letter-spacing:.04em; text-transform:uppercase; position:relative; }
+  .hero h1{ font-size:25px; font-weight:800; margin:8px 0 10px; position:relative; max-width:660px; line-height:1.55; }
+  .hero p{ font-size:13.5px; color:#CBD5E1; max-width:620px; line-height:1.9; position:relative; }
+  .hero-stats{ display:flex; gap:14px; margin-top:22px; flex-wrap:wrap; position:relative; }
+  .hero-stat{ background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:14px; padding:12px 18px; backdrop-filter:blur(4px); min-width:118px; }
+  .hero-stat b{ display:block; font-size:18px; font-weight:800; }
+  .hero-stat span{ font-size:11px; color:#9FB3C8; }
+  .hero-stat.good b{ color:#7DEAD9; }
+  .hero-stat.warn b{ color:#FCD34D; }
+  .hero-stat.muted b{ color:#94A3B8; }
+
+  .section-title{ font-size:15px; font-weight:800; margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+  .section-title .dot{ width:8px; height:8px; border-radius:50%; background:var(--teal); }
+
+  .card-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
+  @media (max-width:1100px){ .card-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:700px){ .card-grid{ grid-template-columns:1fr; } }
+  .report-card{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px; cursor:pointer; transition:transform .18s, box-shadow .18s, border-color .18s; position:relative; }
+  .report-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg); border-color:var(--teal); }
+  .rc-icon{ width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .rc-icon.blue{ background:#EFF6FF; } .rc-icon.teal{ background:#F0FDFA; } .rc-icon.amber{ background:#FFFBEB; }
+  .rc-title{ font-size:15px; font-weight:800; }
+  .rc-desc{ font-size:12.5px; color:var(--muted); line-height:1.8; }
+  .rc-meta{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+  .rc-chip{ font-size:10.5px; background:var(--panel-alt); border:1px solid var(--border); color:var(--muted); padding:4px 9px; border-radius:999px; }
+  .rc-badge{ position:absolute; top:16px; left:16px; font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .rc-badge.ready{ background:#F0FDFA; color:var(--teal-dark); border:1px solid #99E6DC; }
+  .rc-badge.pending{ background:var(--panel-alt); color:var(--muted); border:1px solid var(--border); }
+  .rc-cta{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--teal); padding-top:8px; }
+
+  .info-callout{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:22px 24px; box-shadow:var(--shadow); margin-bottom:30px; display:flex; gap:18px; align-items:flex-start; }
+  .info-callout .fc-icon{ font-size:28px; flex-shrink:0; }
+  .info-callout h3{ font-size:14.5px; margin:0 0 6px; font-weight:800; }
+  .info-callout p{ font-size:12.5px; color:var(--muted); line-height:1.85; margin:0; }
+
+  .guide-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:32px; }
+  @media (max-width:900px){ .guide-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .guide-grid{ grid-template-columns:1fr; } }
+  .guide-step{ background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
+  .guide-num{ width:26px; height:26px; border-radius:8px; background:var(--panel-alt); color:var(--teal); font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .guide-step h4{ font-size:13px; margin:0 0 6px; font-weight:700; }
+  .guide-step p{ font-size:11.8px; color:var(--muted); line-height:1.75; margin:0; }
+
+  .standards-panel{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:22px 24px; box-shadow:var(--shadow); margin-bottom:10px; }
+  .standards-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px 26px; margin-top:14px; }
+  @media (max-width:760px){ .standards-grid{ grid-template-columns:1fr; } }
+  .standard-item{ display:flex; align-items:flex-start; gap:10px; font-size:12.5px; color:var(--text); line-height:1.8; }
+  .standard-item .chk{ color:var(--teal); font-weight:900; flex-shrink:0; margin-top:1px; }
+
+  .frame-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .frame-head-text h2{ font-size:16.5px; margin:0 0 4px; font-weight:800; }
+  .frame-head-text p{ font-size:12px; color:var(--muted); margin:0; max-width:560px; line-height:1.8; }
+  .frame-actions{ display:flex; gap:8px; }
+  .frame-wrap{ background:#fff; border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-lg); }
+  .frame-wrap iframe{ width:100%; height:80vh; min-height:640px; border:none; display:block; background:#fff; }
+  .frame-wrap:fullscreen iframe{ height:100vh; }
+
+  .lead-overlay{ position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(2px); z-index:200; display:none; align-items:center; justify-content:center; padding:20px; }
+  .lead-overlay.show{ display:flex; }
+  .lead-modal{ background:#fff; border-radius:18px; padding:26px; width:100%; max-width:420px; box-shadow:var(--shadow-lg); }
+  .lead-modal h3{ font-size:15px; margin:0 0 6px; font-weight:800; }
+  .lead-modal p{ font-size:12px; color:var(--muted); margin:0 0 14px; line-height:1.8; }
+  .lead-modal input{ width:100%; border:1px solid var(--border); border-radius:10px; padding:11px 14px; font-size:13px; margin-bottom:12px; direction:ltr; text-align:left; }
+  .lead-modal .lead-actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .lead-modal .err-msg{ color:var(--red); font-size:11.5px; margin:-6px 0 12px; display:none; }
+
+  .lead-drawer{ position:fixed; inset:0; background:rgba(15,23,42,0.5); z-index:190; display:none; align-items:stretch; justify-content:flex-end; }
+  .lead-drawer.show{ display:flex; }
+  .lead-panel{ width:560px; max-width:94vw; background:#fff; height:100%; overflow-y:auto; padding:26px; box-shadow:-10px 0 30px rgba(0,0,0,.2); }
+  .lead-panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .lead-panel-head h3{ font-size:16px; margin:0; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .lead-badge{ font-size:10px; font-weight:700; background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:3px 9px; border-radius:999px; }
+  .lead-close{ background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; }
+  .lead-note{ font-size:11.8px; color:var(--muted); line-height:1.85; margin:10px 0 20px; background:var(--panel-alt); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+  .lead-row{ border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; }
+  .lead-row-label{ font-size:12.5px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .lead-sub-label{ font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.03em; margin:10px 0 6px; }
+  .folder-sync-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .folder-status-text{ font-size:11px; color:var(--muted); flex:1; min-width:140px; }
+  .lead-row input[type=url]{ width:100%; border:1px solid var(--border); border-radius:9px; padding:9px 11px; font-size:11.8px; direction:ltr; text-align:left; margin-bottom:8px; }
+  .lead-row-actions{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .lead-auto{ font-size:11px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+  .lead-interval{ width:44px; border:1px solid var(--border); border-radius:6px; padding:3px 5px; font-size:11px; text-align:center; }
+  .lead-divider{ border:none; border-top:1px dashed var(--border); margin:12px 0; }
+  .lead-logout{ margin-top:6px; width:100%; }
+
+  .hamburger{ display:none; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:#fff; align-items:center; justify-content:center; font-size:16px; cursor:pointer; }
+  .backdrop{ display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:39; }
+  .backdrop.show{ display:block; }
+  @media (max-width:960px){
+    .sidebar{ position:fixed; right:0; top:0; transform:translateX(100%); box-shadow:-10px 0 30px rgba(0,0,0,0.25); }
+    .sidebar.open{ transform:translateX(0); }
+    .sidebar-close{ display:block; }
+    .hamburger{ display:flex; }
+    .card-grid, .guide-grid{ grid-template-columns:1fr; }
+    .content{ padding:16px; }
+    .hero{ padding:24px 18px; }
+    .topbar{ padding:0 14px; }
+    .info-callout{ flex-direction:column; }
+  }
+
+  /* ---------- Roster ---------- */
+  .roster-toolbar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .roster-week-nav{ display:flex; align-items:center; gap:8px; }
+  .roster-week-label{ font-size:12.5px; font-weight:700; color:var(--text); background:var(--panel-alt); border:1px solid var(--border); border-radius:9px; padding:8px 14px; min-width:170px; text-align:center; }
+  .roster-add-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .roster-add-row select, .roster-add-row input{ border:1px solid var(--border); border-radius:9px; padding:8px 10px; font-size:12px; }
+  .roster-wrap{ background:var(--panel); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); overflow:auto; padding:6px; max-height:74vh; }
+  table.roster-table{ border-collapse:separate; border-spacing:0 6px; width:100%; min-width:760px; }
+  table.roster-table th{ font-size:11.5px; font-weight:700; color:var(--muted); text-align:center; padding:6px 8px; }
+  table.roster-table th.today-col{ color:var(--teal-dark); }
+  table.roster-table td{ padding:4px 6px; text-align:center; }
+  table.roster-table td.agent-col, table.roster-table th.agent-col{ text-align:right; min-width:190px; position:sticky; right:0; background:var(--panel-alt); border-radius:12px 0 0 12px; }
+  html[dir="ltr"] table.roster-table td.agent-col, html[dir="ltr"] table.roster-table th.agent-col{ text-align:left; right:auto; left:0; border-radius:0 12px 12px 0; }
+  table.roster-table th.agent-col{ background:transparent; }
+  table.roster-table tr td{ background:var(--panel-alt); }
+  table.roster-table tr td:first-child{ border-radius:12px 0 0 12px; }
+  html[dir="ltr"] table.roster-table tr td:first-child{ border-radius:0 12px 12px 0; }
+  table.roster-table tr td:last-child{ border-radius:0 12px 12px 0; }
+  html[dir="ltr"] table.roster-table tr td:last-child{ border-radius:12px 0 0 12px; }
+  .agent-row-inner{ display:flex; align-items:center; gap:10px; padding:8px 4px; }
+  .agent-avatar{ width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#14B8A6); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; text-transform:uppercase; }
+  .agent-name{ font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .agent-rm{ background:transparent; border:none; color:var(--red); cursor:pointer; font-size:13px; opacity:.55; flex-shrink:0; }
+  .agent-rm:hover{ opacity:1; }
+  .shift-chip{ display:flex; align-items:center; justify-content:center; min-width:64px; height:38px; border-radius:10px; font-size:11.5px; font-weight:800; cursor:default; margin:0 auto; letter-spacing:.02em; }
+  .shift-chip.editable{ cursor:pointer; transition:transform .1s; border:2px solid transparent; }
+  .shift-chip.editable:hover{ transform:scale(1.05); }
+  .shift-chip.editable:active{ transform:scale(.96); }
+  .roster-legend{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; align-items:center; }
+  .roster-legend .lg-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); font-weight:600; }
+  .roster-legend .lg-swatch{ width:14px; height:14px; border-radius:5px; }
+  .roster-hint{ font-size:11px; color:var(--muted); margin-top:8px; }
+
+  /* ---------- Roster v3 additions ---------- */
+  table.roster-table th.holiday-col{ background:#FEF2F2; color:#B91C1C; }
+  table.roster-table td.holiday-col{ background:#FEF2F2; }
+  table.roster-table td.holiday-col .shift-chip{ box-shadow:inset 0 0 0 1px #FCA5A5; }
+  .jalali-sub{ display:block; font-size:9.5px; color:var(--muted); font-weight:600; direction:ltr; }
+  th.holiday-col .jalali-sub{ color:#B91C1C; }
+  .shift-cell{ display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .hq-tag{ font-size:8.5px; font-weight:800; letter-spacing:.03em; background:#CFFAFE; color:#0E7490; border:1px solid #67E8F9; border-radius:6px; padding:1px 6px; cursor:default; }
+  .hq-tag.editable{ cursor:pointer; }
+  .oncall-bar{ display:flex; align-items:center; gap:10px; background:linear-gradient(90deg,#ECFDF5,#F0FDFA); border:1px solid #99E6DC; border-radius:12px; padding:10px 16px; margin-bottom:14px; font-size:12.5px; font-weight:700; flex-wrap:wrap; }
+  .oncall-icon{ font-size:16px; }
+  .oncall-label{ color:var(--teal-dark); }
+  .oncall-select{ border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; }
+  .oncall-name{ background:#fff; border:1px solid var(--border); border-radius:999px; padding:4px 12px; }
+  .leave-req-panel{ background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px 18px; margin-top:16px; }
+  .leave-req-title{ font-size:12.5px; font-weight:800; margin-bottom:12px; }
+  .leave-req-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+  @media (max-width:900px){ .leave-req-grid{ grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:560px){ .leave-req-grid{ grid-template-columns:repeat(2,1fr); } }
+  .leave-req-day-label{ font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; }
+  .leave-req-chips{ display:flex; flex-wrap:wrap; gap:5px; min-height:22px; }
+  .leave-req-chip{ display:inline-flex; align-items:center; gap:4px; background:#FDF2F8; color:#9D174D; border:1px solid #FBCFE8; font-size:10.5px; font-weight:700; padding:3px 7px; border-radius:999px; }
+  .leave-req-chip button{ background:transparent; border:none; color:#9D174D; cursor:pointer; font-size:10px; padding:0; opacity:.6; }
+  .leave-req-chip button:hover{ opacity:1; }
+  .leave-req-empty{ font-size:11px; color:#CBD5E1; }
+  .leave-req-input{ width:100%; margin-top:6px; border:1px solid var(--border); border-radius:7px; padding:5px 8px; font-size:11px; }
+  .shiftmgr-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .lead-modal input.shiftmgr-color{ width:34px !important; height:34px !important; border:1px solid var(--border) !important; border-radius:8px !important; padding:2px !important; cursor:pointer; flex:0 0 auto; margin-bottom:0 !important; }
+  .lead-modal input.shiftmgr-label, .lead-modal input.holiday-label{ flex:1; width:auto !important; border:1px solid var(--border) !important; border-radius:8px !important; padding:7px 10px !important; font-size:12px !important; direction:auto !important; text-align:inherit !important; margin-bottom:0 !important; color:var(--text) !important; }
+  .shiftmgr-builtin{ font-size:10px; color:var(--muted); background:var(--panel-alt); padding:3px 8px; border-radius:999px; flex:0 0 auto; white-space:nowrap; }
+  .shiftmgr-add{ display:flex; align-items:center; gap:8px; margin-top:12px; }
+  .lead-modal .shiftmgr-add input[type=text], .lead-modal .shiftmgr-add input[type=date]{ flex:1; width:auto !important; border:1px solid var(--border) !important; border-radius:8px !important; padding:8px 10px !important; font-size:12px !important; margin-bottom:0 !important; }
+  .lead-modal .shiftmgr-add input[type=color]{ width:34px !important; height:34px !important; padding:2px !important; border-radius:8px !important; margin-bottom:0 !important; flex:0 0 auto; }
+  .holiday-date{ font-size:11.5px; font-weight:700; direction:ltr; white-space:nowrap; }
+  .jalali-select-row{ display:flex; gap:6px; align-items:center; }
+  .jalali-select-row select, .jalali-select-row input{ border:1px solid var(--border) !important; border-radius:8px !important; padding:7px 8px !important; font-size:12px !important; margin-bottom:0 !important; width:auto !important; }
+  .jalali-select-row input{ width:64px !important; text-align:center !important; }
+  .greg-sub{ font-size:11px; color:var(--muted); font-weight:600; direction:ltr; display:inline-block; }
+
+  /* ================= Roster v5 — professional redesign ================= */
+  :root{
+    --rc-blue:#2563EB; --rc-blue-bg:#EEF3FF;
+    --rc-amber:#B45309; --rc-amber-bg:#FFF7E6;
+    --rc-purple:#6B21A8; --rc-purple-bg:#F5EEFF;
+    --rc-pink:#BE185D; --rc-pink-bg:#FFF0F6;
+    --rc-slate:#334155; --rc-slate-bg:#F1F5F9;
+    --rc-holiday:#DC2626; --rc-holiday-bg:#FEF2F2;
+    --rc-today-bg:#ECFDF9;
+  }
+  .roster-page-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+  .roster-page-head h2{ font-size:19px; font-weight:800; margin:0 0 6px; display:flex; align-items:center; gap:10px; }
+  .roster-page-head p{ font-size:12.5px; color:var(--muted); margin:0; max-width:560px; line-height:1.85; }
+
+  /* ---- toolbar ---- */
+  .roster-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:#fff; border:1px solid var(--border); border-radius:16px; padding:12px 16px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .roster-week-nav{ display:flex; align-items:center; gap:2px; background:var(--panel-alt); border-radius:12px; padding:4px; }
+  .roster-week-nav .tbtn.small{ background:transparent; border:none; border-radius:9px; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:var(--muted); }
+  .roster-week-nav .tbtn.small:hover{ background:#fff; color:var(--teal-dark); box-shadow:var(--shadow); }
+  .roster-week-nav #roster-today{ width:auto; padding:0 12px; font-size:11px; }
+  .roster-week-label{ font-size:13px; font-weight:800; color:var(--text); background:transparent; border:none; padding:0 10px; min-width:auto; direction:ltr; display:inline-block; }
+  html[dir="rtl"] .roster-week-label{ direction:rtl; }
+  .roster-add-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .roster-add-row .tbtn.small{ border-radius:10px; padding:8px 13px; font-weight:700; }
+
+  /* ---- lock / hint banners ---- */
+  .lead-note{ display:flex; align-items:center; gap:10px; background:#FFFBEB; border:1px solid #FDE68A; color:#92400E; border-radius:14px; padding:12px 16px; font-size:12px; font-weight:600; }
+  .roster-hint{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--muted); margin-top:10px; background:var(--panel-alt); border-radius:10px; padding:8px 12px; }
+
+  /* ---- drag pool ---- */
+  .drag-pool{ display:flex; flex-direction:column; gap:10px; background:linear-gradient(135deg,#F0FDFA,#F8FAFC); border:1px solid #CFF3ED; border-radius:16px; padding:14px 16px; margin-bottom:16px; }
+  .drag-pool-head{ display:flex; align-items:center; gap:8px; }
+  .drag-pool-label{ font-size:12px; font-weight:800; color:var(--teal-dark); display:flex; align-items:center; gap:6px; }
+  .drag-pool-chips{ display:flex; flex-wrap:wrap; gap:8px; max-height:112px; overflow-y:auto; padding:2px; }
+  .drag-chip{ display:inline-flex; align-items:center; gap:7px; background:#fff; border:1px solid var(--border); border-radius:999px; padding:5px 12px 5px 5px; font-size:12px; font-weight:700; color:var(--text); cursor:grab; user-select:none; transition:transform .12s, box-shadow .12s, border-color .12s; }
+  html[dir="rtl"] .drag-chip{ padding:5px 5px 5px 12px; }
+  .drag-chip:hover{ border-color:var(--teal); box-shadow:0 3px 10px rgba(13,148,136,0.18); transform:translateY(-1px); }
+  .drag-chip.dragging{ opacity:.35; }
+  .drag-chip-avatar{ width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#14B8A6); color:#fff; font-size:9.5px; font-weight:800; display:flex; align-items:center; justify-content:center; text-transform:uppercase; flex-shrink:0; }
+
+  /* ---- legend ---- */
+  .roster-legend{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .roster-legend .lg-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text); font-weight:600; background:#fff; border:1px solid var(--border); padding:5px 11px 5px 7px; border-radius:999px; }
+  html[dir="rtl"] .roster-legend .lg-item{ padding:5px 7px 5px 11px; }
+  .roster-legend .lg-swatch{ width:11px; height:11px; border-radius:4px; flex-shrink:0; }
+
+  /* ---- table shell ---- */
+  .roster-wrap{ background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-lg); overflow:auto; padding:0; max-height:70vh; }
+  table.roster-table{ border-collapse:separate; border-spacing:0; width:100%; min-width:1300px; }
+  table.roster-table thead th{ font-size:10.8px; font-weight:800; letter-spacing:.02em; padding:13px 12px; text-align:center; white-space:nowrap; position:sticky; top:0; background:var(--panel-alt); color:var(--text); z-index:3; box-shadow:0 2px 6px rgba(15,23,42,0.08); }
+  table.roster-table thead th.date-col{ color:var(--muted); text-transform:uppercase; font-size:9.8px; }
+  table.roster-table tbody td{ font-size:12px; padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle; background:#fff; height:44px; }
+  table.roster-table tbody tr:nth-child(even) td{ background:#FAFBFD; }
+  table.roster-table tbody tr:hover td{ background:#F3F8FF; }
+  table.roster-table td.date-col{ white-space:nowrap; background:var(--panel-alt); }
+  table.roster-table td.date-col b{ font-size:12.5px; font-weight:800; }
+
+  tr.today-row td{ background:var(--rc-today-bg) !important; }
+  tr.holiday-row td{ background:var(--rc-holiday-bg) !important; }
+  tr.today-row td.date-col{ background:var(--rc-today-bg) !important; box-shadow:inset 3px 0 0 var(--teal); }
+  html[dir="ltr"] tr.today-row td.date-col{ box-shadow:inset -3px 0 0 var(--teal); }
+  tr.holiday-row td.date-col{ background:var(--rc-holiday-bg) !important; color:var(--rc-holiday); }
+  tr.holiday-row td.date-col b{ color:var(--rc-holiday); }
+  .day-badge{ display:inline-block; font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:6px; margin-inline-start:6px; vertical-align:middle; }
+  .day-badge.today{ background:#CCFBF1; color:var(--teal-dark); }
+  .day-badge.holiday{ background:#FEE2E2; color:var(--rc-holiday); }
+
+  td.shift-td{ min-width:184px; }
+  td.shift-td.editable{ cursor:pointer; transition:background .12s, box-shadow .12s; }
+  td.shift-td.editable:hover{ box-shadow:inset 0 0 0 1.5px var(--teal); border-radius:8px; }
+  td.shift-td.droppable.drag-over{ background:#D1FAE5 !important; box-shadow:inset 0 0 0 2px var(--teal); border-radius:8px; }
+
+  .cell-chips{ display:flex; flex-wrap:wrap; gap:4px; min-height:26px; align-items:center; }
+  .cell-chip{ display:inline-flex; align-items:center; gap:4px; font-size:10.3px; font-weight:700; padding:3px 8px 3px 4px; border-radius:999px; white-space:nowrap; }
+  html[dir="rtl"] .cell-chip{ padding:3px 4px 3px 8px; }
+  .cell-chip .chip-avatar{ width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,0.65); font-size:7px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
+  .cell-chip.lg{ font-size:12.5px; padding:6px 12px; }
+  .cell-chip.lg button{ background:transparent; border:none; cursor:pointer; opacity:.6; font-size:11px; padding:0; color:inherit; }
+  .cell-chip.lg button:hover{ opacity:1; }
+  .cell-empty{ display:flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; border:1.5px dashed #CBD5E1; color:#CBD5E1; font-weight:800; font-size:13px; margin:0 auto; pointer-events:none; }
+  td.shift-td.editable:hover .cell-empty{ border-color:var(--teal); color:var(--teal); }
+  .cell-editor-chips{ display:flex; flex-wrap:wrap; gap:6px; min-height:28px; margin-bottom:6px; }
+
+  .chip-x{ background:transparent; border:none; cursor:pointer; font-size:9px; padding:0; opacity:.55; color:inherit; line-height:1; }
+  .chip-x:hover{ opacity:1; }
+
+  /* ---- summary table ---- */
+  .summary-panel{ background:#fff; border:1px solid var(--border); border-radius:18px; padding:20px 22px; margin-top:18px; box-shadow:var(--shadow); }
+  .summary-title{ font-size:13.5px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  table.summary-table{ border-collapse:collapse; width:100%; max-width:640px; }
+  table.summary-table th{ font-size:10.5px; font-weight:700; color:var(--muted); text-align:center; padding:8px 10px; border-bottom:2px solid var(--border); text-transform:uppercase; letter-spacing:.03em; }
+  table.summary-table th:first-child, table.summary-table td.summary-name{ text-align:right; }
+  html[dir="ltr"] table.summary-table th:first-child, html[dir="ltr"] table.summary-table td.summary-name{ text-align:left; }
+  table.summary-table td{ font-size:12.5px; text-align:center; padding:9px 10px; border-bottom:1px solid var(--border); }
+  table.summary-table tr:hover td{ background:var(--panel-alt); }
+  table.summary-table td.summary-name{ font-weight:700; display:flex; align-items:center; gap:8px; }
+  .summary-avatar{ width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#14B8A6); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; text-transform:uppercase; flex-shrink:0; }
+  .summary-bar-cell{ display:flex; align-items:center; gap:6px; justify-content:center; }
+  .summary-bar-track{ width:56px; height:6px; border-radius:4px; background:var(--panel-alt); overflow:hidden; }
+  .summary-bar-fill{ height:100%; border-radius:4px; }
+  .summary-bar-fill.daily{ background:var(--rc-blue); }
+  .summary-bar-fill.weekend{ background:var(--rc-holiday); }
+
+  .std-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 26px; background:#fff; border-bottom:1px solid var(--border); }
+  .std-header .brand{ display:flex; align-items:center; gap:12px; }
+  .std-header .brand-icon{ width:38px; height:38px; border-radius:11px; background:linear-gradient(135deg,var(--teal),#14B8A6); display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff; }
+  .std-header .brand-title{ font-size:14px; font-weight:800; }
+  .std-header .brand-sub{ font-size:11px; color:var(--muted); }
+  .std-header-actions{ display:flex; align-items:center; gap:8px; }
+  .std-body{ padding:24px; max-width:1500px; margin:0 auto; }
+
+  /* ================= Roster v6 — "SD Workforce" style redesign ================= */
+  .roster-action-bar{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .roster-action-btns{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .rab-btn{ display:inline-flex; align-items:center; gap:7px; background:#fff; border:1px solid var(--border); border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:700; color:var(--text); cursor:pointer; white-space:nowrap; }
+  .rab-btn:hover{ border-color:var(--teal); background:#F8FFFE; }
+  .rab-btn.primary{ background:#ECFDF5; border-color:#99E6DC; color:var(--teal-dark); }
+  .rab-btn.primary:hover{ background:#D9F9F1; }
+  .rab-icon{ font-size:14px; }
+
+  .period-pill-group{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .period-dropdown{ display:flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--border); border-radius:10px; padding:9px 12px; font-size:12.5px; font-weight:700; }
+  .period-range{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--border); border-radius:10px; padding:6px 8px; }
+  .period-range .pr-icon-btn{ width:26px; height:26px; border-radius:7px; border:none; background:var(--panel-alt); cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+  .period-range .pr-icon-btn:hover{ background:#E2E8F0; color:var(--text); }
+  .period-range .pr-label{ font-size:12.5px; font-weight:800; direction:ltr; padding:0 4px; white-space:nowrap; }
+  .icon-btn-square{ width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; color:var(--muted); flex-shrink:0; }
+  .icon-btn-square:hover{ border-color:var(--teal); color:var(--teal-dark); }
+
+  /* Shift legend strip */
+  .shift-strip{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .shift-strip-item{ display:flex; align-items:center; gap:9px; background:#fff; border:1px solid var(--border); border-radius:13px; padding:9px 14px; min-width:150px; }
+  .ss-icon{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .ss-text b{ display:block; font-size:12px; font-weight:800; line-height:1.3; }
+  .ss-text span{ font-size:10.5px; color:var(--muted); direction:ltr; display:block; }
+
+  /* Search + filter + team preview bar */
+  .roster-search-bar{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .roster-search-input{ flex:1; min-width:180px; position:relative; display:flex; align-items:center; }
+  .roster-search-input input{ width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 14px 10px 36px; font-size:12.5px; }
+  html[dir="rtl"] .roster-search-input input{ padding:10px 36px 10px 14px; }
+  .roster-search-input .si{ position:absolute; left:12px; color:var(--muted); font-size:13px; pointer-events:none; }
+  html[dir="rtl"] .roster-search-input .si{ left:auto; right:12px; }
+  .team-preview{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .tp-chip{ display:inline-flex; align-items:center; gap:7px; background:#fff; border:1px solid var(--border); border-radius:999px; padding:6px 12px 6px 6px; font-size:12px; font-weight:700; }
+  html[dir="rtl"] .tp-chip{ padding:6px 6px 6px 12px; }
+  .tp-avatar{ width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#14B8A6); color:#fff; font-size:9.5px; font-weight:800; display:flex; align-items:center; justify-content:center; text-transform:uppercase; }
+  .tp-viewall{ font-size:12px; font-weight:700; color:var(--teal-dark); background:var(--panel-alt); border:none; border-radius:999px; padding:8px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .tp-viewall:hover{ background:#E2E8F0; }
+  .filters-popover{ position:relative; }
+  .filters-panel{ position:absolute; top:calc(100% + 6px); left:0; background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; z-index:20; min-width:180px; display:none; }
+  html[dir="rtl"] .filters-panel{ left:auto; right:0; }
+  .filters-panel.show{ display:block; }
+  .filters-panel label{ display:flex; align-items:center; gap:8px; font-size:12px; padding:6px 0; cursor:pointer; }
+
+  /* Table restyle */
+  table.roster-table thead th{ background:var(--panel-alt); }
+  table.roster-table thead th.date-col{ text-transform:none; font-size:10.8px; }
+  .col-th-inner{ display:flex; flex-direction:column; align-items:center; gap:1px; }
+  .col-th-inner .cth-time{ font-size:9px; font-weight:600; opacity:.75; direction:ltr; }
+  table.roster-table td.dash-cell{ text-align:center; color:#CBD5E1; font-weight:700; }
+  .row-actions-btn{ width:24px; height:24px; border-radius:7px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:13px; font-weight:900; }
+  .row-actions-btn:hover{ background:var(--panel-alt); color:var(--text); }
+
+  .roster-footer-hint{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:14px; }
+  .rfh-tips{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); }
+  .rfh-tips span{ display:flex; align-items:center; gap:6px; }
+  .legend-btn{ display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:12px; font-weight:700; color:var(--text); cursor:pointer; }
+  .legend-btn:hover{ border-color:var(--teal); }
+
+  .day-details-list{ display:flex; flex-direction:column; gap:8px; margin:12px 0; max-height:340px; overflow-y:auto; }
+  .ddl-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border-radius:10px; background:var(--panel-alt); }
+  .ddl-row .ddl-label{ font-size:11.5px; font-weight:800; }
+  .ddl-row .ddl-val{ font-size:12px; font-weight:600; display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+  .tp-more{ width:36px; height:36px; border-radius:50%; background:var(--panel-alt); border:1px solid var(--border); color:var(--muted); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .tp-more:hover{ background:#E2E8F0; }
+
+  /* ---- Bottom row: stat cards + mini calendar ---- */
+  .roster-bottom-row{ display:grid; grid-template-columns:repeat(6,1fr) 260px; gap:14px; margin-top:18px; align-items:stretch; }
+  @media (max-width:1300px){ .roster-bottom-row{ grid-template-columns:repeat(3,1fr); } .rbr-cal{ grid-column:span 3; } }
+  @media (max-width:700px){ .roster-bottom-row{ grid-template-columns:1fr 1fr; } .rbr-cal{ grid-column:span 2; } }
+  .stat-card{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:var(--shadow); }
+  .stat-card-head{ display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800; }
+  .stat-card-head .sc-icon{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .stat-card-head .sc-sub{ font-size:9.5px; font-weight:600; color:var(--muted); display:block; }
+  .stat-card .sc-value{ font-size:24px; font-weight:800; line-height:1; }
+  .stat-card .sc-label{ font-size:10.5px; color:var(--muted); font-weight:600; }
+
+  .rbr-cal{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px 16px; box-shadow:var(--shadow); }
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .cal-head b{ font-size:12.5px; font-weight:800; }
+  .cal-nav-btn{ width:24px; height:24px; border-radius:7px; border:none; background:var(--panel-alt); color:var(--muted); cursor:pointer; font-size:12px; }
+  .cal-nav-btn:hover{ background:#E2E8F0; color:var(--text); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-wd{ font-size:9px; color:var(--muted); font-weight:700; text-align:center; padding:2px 0; }
+  .cal-day{ font-size:10.5px; text-align:center; padding:5px 0; border-radius:7px; cursor:pointer; font-weight:600; }
+  .cal-day:hover{ background:var(--panel-alt); }
+  .cal-day.today{ background:var(--teal); color:#fff; font-weight:800; }
+  .cal-day.other-month{ color:#CBD5E1; }
+  .cal-day.has-holiday{ color:var(--rc-holiday); font-weight:800; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<header class="std-header">
+  <div class="brand">
+    <div class="brand-icon">🗓️</div>
+    <div>
+      <div class="brand-title" data-i18n="navRoster">Shift Roster</div>
+      <div class="brand-sub" data-i18n="rosterDesc">Weekly shift plan for the service desk team.</div>
+    </div>
+  </div>
+  <div class="std-header-actions">
+    <div class="lang-switch">
+      <button id="langEnBtn" class="active">EN</button>
+      <button id="langFaBtn">فا</button>
+    </div>
+    <button class="lead-btn" id="leadBtn" style="width:auto; padding:9px 16px;">👑 <span data-i18n="leadBtnLocked">Leadership</span></button>
+    <a class="tbtn" href="index.html">↩ <span data-i18n="backToHub">Back to hub</span></a>
+  </div>
+</header>
+
+<div class="std-body">
+  <div id="roster-lock-note" class="lead-note" style="display:none;">
+    🔒 <span data-i18n="rosterLocked">You're in view-only mode. Unlock Leadership to edit the roster.</span>
+  </div>
+
+  <div class="roster-action-bar" id="roster-action-bar"></div>
+  <div class="shift-strip" id="shift-strip"></div>
+  <div class="roster-search-bar" id="roster-search-bar"></div>
+
+  <div class="roster-toolbar" id="roster-toolbar" style="display:none;"></div>
+
+  <div class="drag-pool" id="drag-pool" style="display:none;"></div>
+
+  <div class="roster-wrap">
+    <table class="roster-table" id="roster-table"></table>
+  </div>
+
+  <div class="roster-footer-hint">
+    <div class="rfh-tips">
+      <span>🖱️ <span data-i18n="hintClick">Click any cell to edit or view details</span></span>
+      <span>🤚 <span data-i18n="hintDrag">Drag & drop to assign team members</span></span>
+      <span>— <span data-i18n="hintDash">"–" means no assignment</span></span>
+    </div>
+    <button class="legend-btn" id="legend-open-btn">ℹ️ <span data-i18n="legendBtn">Legend</span></button>
+  </div>
+
+  <div class="roster-legend" id="roster-legend" style="display:none;"></div>
+  <div class="roster-hint" id="roster-hint" style="display:none;"></div>
+
+  <div class="summary-panel" id="summary-panel"></div>
+
+  <div class="roster-bottom-row" id="roster-bottom-row"></div>
+</div>
+
+<!-- ===================== LEADERSHIP GATE ===================== -->
+<div class="lead-overlay" id="leadOverlay">
+  <div class="lead-modal">
+    <h3 data-i18n="gateTitle">🔐 Leadership Access</h3>
+    <p data-i18n="gateText">This area lets you edit the roster. Please enter the passcode.</p>
+    <input type="password" id="leadPassInput" data-i18n-placeholder="gatePlaceholder" placeholder="Passcode">
+    <div class="err-msg" id="leadErr" data-i18n="gateErr">Incorrect passcode</div>
+    <div class="lead-actions">
+      <button class="tbtn" id="leadCancelBtn" type="button" data-i18n="cancel">Cancel</button>
+      <button class="tbtn" id="leadSubmitBtn" type="button" style="background:var(--teal); color:#fff; border-color:var(--teal);" data-i18n="submit">Enter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHELL_I18N = {
+  en: {
+    brandSub:"Analytics & Reporting Center", navOverview:"Overview", navOverviewSub:"Summary & guide",
+    navGroupReports:"Specialized reports", navSdcm:"SDCM Registration", navSdcmSub:"Inbound / outbound calls",
+    navAicc:"AICC Performance", navAiccSub:"Answer & occupancy rate", navSla:"SLA Incident", navSlaSub:"Incident & OOSLA distribution",
+    navGroupTeam:"Team", navRoster:"Shift Roster", navRosterSub:"Plan agent shifts",
+    leadBtnLocked:"Leadership", leadBtnUnlocked:"Leadership (unlocked)",
+    heroEyebrow:"Service Desk Reporting Platform",
+    heroTitle:"Three independent reports, one control center — synced automatically from your own folders",
+    heroText:"Each report is a fully independent, ready-to-use page. Leadership can point each report at a local folder once — from then on it refreshes on its own, no re-selecting a file or folder every time.",
+    statSdcm:"SDCM registration rate", statAicc:"AICC answer rate", statSla:"SLA compliance", statUpdated:"Last updated",
+    sectionReports:"Reports", badgePending:"⏳ Awaiting data", badgeReady:"✅ Ready",
+    rcSdcmDesc:"Compares inbound and outbound calls by SDCM registration status, per agent.",
+    chipSdcmTicket:"SDCM ticketing file", chipAiccLog:"AICC call log", ctaView:"View report",
+    rcAiccDesc:"Answer rate, calls received vs. answered, and a full agent performance ranking.",
+    chipPerf:"Performance file", chipActivity:"Activity file",
+    rcSlaDesc:"Incident distribution table by priority, plus the OOSLA breakdown by assignee group.",
+    chipIcare:"Daily iCare export",
+    calloutTitle:"Folder sync now lives in the Leadership panel",
+    calloutText:"To keep this control in one trusted place, connecting a report to a local folder — and re-syncing it — is done from the Leadership panel (bottom-left), not inside each report page. Open Leadership once, pick a folder for each report, and every future visit reads the latest files automatically.",
+    sectionGuide:"Quick start guide",
+    guide1Title:"Open a report", guide1Text:"Use the sidebar menu or the cards above to enter one of the three reports.",
+    guide2Title:"Connect a folder once", guide2Text:"In the Leadership panel, point each report at the folder where its daily files are saved.",
+    guide3Title:"Sync anytime", guide3Text:"One click on \"Sync now\" reads the newest files and rebuilds the report — no re-browsing.",
+    guide4Title:"Export as image", guide4Text:"Grab a ready-to-share snapshot of any report with a single click.",
+    sectionStandards:"Platform standards",
+    std1:"Every report is an independent page with a unified design language (color, Vazirmatn/Inter font, spacing)",
+    std2:"Persistent per-report folder access with one-click re-sync — no repeated file picking",
+    std3:"Fully client-side processing — files are never uploaded to a server",
+    std4:"Bilingual interface (English / Persian) with full RTL support",
+    std5:"Accessible color contrast and visible keyboard focus",
+    std6:"Standard PNG export for fast reporting to management",
+    frameSdcmDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
+    frameAiccDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
+    frameSlaDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
+    fullscreen:"Fullscreen", openNewTab:"Open in new tab",
+    rosterDesc:"Weekly shift plan for the service desk team. Click a cell to cycle through AM / PM / Off. Only Leadership can edit.",
+    rosterLocked:"You're in view-only mode. Open the Leadership panel (bottom-left) to edit the roster.",
+    rosterHint:"Tip: click any shift cell to cycle AM → PM → Off.",
+    gateTitle:"🔐 Leadership Access", gateText:"This area lets you connect report folders and edit the roster. Please enter the passcode.",
+    gatePlaceholder:"Passcode", gateErr:"Incorrect passcode", cancel:"Cancel", submit:"Enter",
+    drawerTitle:"Data Connections", drawerBadge:"Leadership only",
+    drawerNote:"Pick a local folder once per report — permission is remembered by the browser, so future visits sync with a single click, no re-browsing. You can also enter an API URL instead if you prefer to pull files from a server.",
+    drawerLogout:"🔒 Exit leadership mode", backToHub:"Back to hub",
+    rosterSectionDaily:"Daily", roster_am:"AM", roster_pm:"PM", roster_off:"Off",
+    folderChoose:"Choose folder", folderSync:"Sync now", folderNone:"No folder connected yet",
+    folderSynced:"Synced", folderPermNeeded:"Permission needed — click Sync now", folderDenied:"Permission denied",
+    folderNotSupported:"Folder access isn't supported in this browser (use Chrome/Edge).",
+    apiSectionLabel:"Or use an API URL instead", fetchNow:"Fetch now", auto:"Auto every", minutes:"min",
+    addMember:"＋ Add member", pickExisting:"— pick from roster staff —", newMemberPlaceholder:"or type a new name/username…",
+    alreadyInRoster:"This member is already in the roster.", confirmRemove:"Remove \"{name}\" from the roster? Their shifts will be cleared too.",
+    thisWeek:"This week", prevWeek:"‹ Prev week", nextWeek:"Next week ›", teamMember:"Team member",
+    filesFound:"files",
+    manageShifts:"Manage shifts", manageShiftsDesc:"Add new shift types, rename them, or change their colors. Built-in shifts can be recolored/renamed but not removed.",
+    newShiftPlaceholder:"New shift name…", addShift:"＋ Add", done:"Done", remove:"Remove", builtin:"Built-in",
+    confirmRemoveShift:"Remove this shift type? Any cells using it will reset to Normal.",
+    holidayLegend:"Weekly/official holiday", hqLegend:"HQ office day", hqToggle:"Toggle HQ office day",
+    oncallLabel:"On-call supervisor this week:",
+    leaveReqTitle:"Leave requests (pending, not yet assigned)", addName:"Add name + Enter",
+    manageTeam:"Manage team", manageTeamDesc:"Add or remove people from the roster's staff pool (used everywhere you pick a name).",
+    colDateJalali:"Date (Shamsi)", colDateGreg:"Date (Gregorian)", colDay:"Day",
+    colTypeMulti:"Multiple names", colTypeSingle:"One name",
+    rosterHintV4:"Tip: click any cell to add or remove names for that day.",
+    dragPoolLabel:"Drag a name onto a cell:", summaryTitle:"Daily vs. Weekend shift count per person (this period)",
+    summaryDaily:"Daily", summaryWeekend:"Weekend/Holiday", summaryTotal:"Total",
+    importExcel:"Import from Excel", importLibFail:"The Excel-reading library failed to load — check your internet connection and try again.",
+    importNoData:"That file doesn't seem to have any rows.", importNoDateCol:"Couldn't find a \"Date\" column in the first sheet — is this the right file?",
+    importDone:"Imported {n} days from the Excel file. Any new columns or team members it found were added automatically.",
+    todayBadge:"Today", holidayBadge:"Holiday",
+    exportCsv:"Export", searchPlaceholder:"Search by name...", filtersLabel:"Filters",
+    filterHolidays:"Holidays only", filterToday:"Today only", viewAll:"View all",
+    legendBtn:"Legend", hintClick:"Click any cell to edit or view details",
+    hintDrag:"Drag & drop to assign team members", hintDash:'"–" means no assignment',
+    statDay:"Day Shifts", statNight:"Night Shifts", statHq:"HQ Office", statOncall:"On-Call",
+    statOff:"Off / Holiday", statLeave:"Leave Requests", statAssignments:"Assignments",
+    statPeople:"People", statApproved:"Approved",
+    manageHolidays:"Manage holidays", manageHolidaysDesc:"Thursdays & Fridays are marked automatically. Add official/religious holidays here — Iran's calendar isn't fetched automatically, so please add and verify dates as they're announced.",
+    holidayNamePlaceholder:"Holiday name…", officialHoliday:"Official holiday",
+  },
+  fa: {
+    brandSub:"مرکز گزارش و آنالیز", navOverview:"نمای کلی", navOverviewSub:"خلاصه و راهنما",
+    navGroupReports:"گزارش‌های تخصصی", navSdcm:"ثبت SDCM", navSdcmSub:"تماس‌های ورودی/خروجی",
+    navAicc:"عملکرد AICC", navAiccSub:"نرخ پاسخ‌گویی و اشغالی", navSla:"SLA Incident", navSlaSub:"توزیع Incident و OOSLA",
+    navGroupTeam:"تیم", navRoster:"راستر شیفت", navRosterSub:"چیدمان شیفت پرسنل",
+    leadBtnLocked:"لیدرشیپ", leadBtnUnlocked:"لیدرشیپ (باز)",
+    heroEyebrow:"پلتفرم گزارش‌گیری سرویس دسک",
+    heroTitle:"سه گزارش مستقل، یک مرکز کنترل — با همگام‌سازی خودکار از پوشه‌های شما",
+    heroText:"هر گزارش یک صفحه کاملاً مستقل و آماده است. لیدرشیپ فقط یک‌بار هر گزارش را به پوشه‌ی محلی متصل می‌کند و از آن پس بدون انتخاب دوباره‌ی فایل یا پوشه، خودش به‌روزرسانی می‌شود.",
+    statSdcm:"نرخ ثبت SDCM", statAicc:"نرخ پاسخ‌گویی AICC", statSla:"رعایت SLA", statUpdated:"آخرین به‌روزرسانی",
+    sectionReports:"گزارش‌ها", badgePending:"⏳ در انتظار داده", badgeReady:"✅ آماده",
+    rcSdcmDesc:"مقایسه تماس‌های ورودی و خروجی از نظر ثبت‌شدن در سیستم SDCM، به تفکیک اپراتور.",
+    chipSdcmTicket:"فایل تیکتینگ SDCM", chipAiccLog:"لاگ تماس AICC", ctaView:"مشاهده گزارش",
+    rcAiccDesc:"نرخ پاسخ‌گویی، تماس دریافتی در مقابل پاسخ‌داده و رتبه‌بندی کامل عملکرد اپراتورها.",
+    chipPerf:"فایل Performance", chipActivity:"فایل Activity",
+    rcSlaDesc:"جدول توزیع Incident بر اساس اولویت و جدول OOSLA به تفکیک گروه اساینی.",
+    chipIcare:"خروجی روزانه iCare",
+    calloutTitle:"همگام‌سازی پوشه اکنون در پنل لیدرشیپ است",
+    calloutText:"برای اینکه این کنترل فقط در یک جای امن باشد، اتصال هر گزارش به پوشه محلی و همگام‌سازی مجدد آن از پنل لیدرشیپ (پایین سمت چپ منو) انجام می‌شود، نه داخل هر گزارش. یک‌بار لیدرشیپ را باز کنید، برای هر گزارش پوشه انتخاب کنید و از آن پس هر بار جدیدترین فایل‌ها خودکار خوانده می‌شود.",
+    sectionGuide:"راهنمای شروع سریع",
+    guide1Title:"گزارش موردنظر را باز کنید", guide1Text:"از منوی سمت راست یا کارت‌های بالا وارد یکی از سه گزارش شوید.",
+    guide2Title:"یک‌بار پوشه را متصل کنید", guide2Text:"در پنل لیدرشیپ، هر گزارش را به پوشه‌ای که فایل‌های روزانه در آن ذخیره می‌شود معرفی کنید.",
+    guide3Title:"هر زمان همگام‌سازی کنید", guide3Text:"با یک کلیک روی «همگام‌سازی الان»، جدیدترین فایل‌ها خوانده و گزارش دوباره ساخته می‌شود.",
+    guide4Title:"خروجی تصویر بگیرید", guide4Text:"تصویر آماده هر گزارش را با یک کلیک برای مدیریت دانلود کنید.",
+    sectionStandards:"استانداردهای این پلتفرم",
+    std1:"هر گزارش یک صفحه مستقل با طراحی یکپارچه (رنگ، فونت Vazirmatn/Inter و فاصله‌گذاری یکسان)",
+    std2:"دسترسی مانا به پوشه هر گزارش با همگام‌سازی یک‌کلیکی — بدون انتخاب مکرر فایل",
+    std3:"پردازش کاملاً سمت کاربر — فایل‌ها هیچ‌گاه به سروری ارسال نمی‌شوند",
+    std4:"رابط دو زبانه (انگلیسی/فارسی) با پشتیبانی کامل راست‌به‌چپ",
+    std5:"کنتراست رنگی مناسب و فوکوس قابل مشاهده با کیبورد",
+    std6:"خروجی تصویری استاندارد (PNG) برای گزارش‌دهی سریع به مدیریت",
+    frameSdcmDesc:"این گزارش را از پنل لیدرشیپ به پوشه داده‌اش متصل کنید یا مستقیم بازش کنید.",
+    frameAiccDesc:"این گزارش را از پنل لیدرشیپ به پوشه داده‌اش متصل کنید یا مستقیم بازش کنید.",
+    frameSlaDesc:"این گزارش را از پنل لیدرشیپ به پوشه داده‌اش متصل کنید یا مستقیم بازش کنید.",
+    fullscreen:"تمام‌صفحه", openNewTab:"باز کردن در تب جدید",
+    rosterDesc:"برنامه هفتگی شیفت تیم سرویس دسک. روی هر خانه کلیک کنید تا بین AM / PM / آف بچرخد. فقط لیدرشیپ می‌تواند ویرایش کند.",
+    rosterLocked:"شما در حالت مشاهده هستید. برای ویرایش، پنل لیدرشیپ (پایین سمت چپ منو) را باز کنید.",
+    rosterHint:"نکته: روی هر خانه‌ی شیفت کلیک کنید تا بین AM ← PM ← آف بچرخد.",
+    gateTitle:"🔐 دسترسی لیدرشیپ", gateText:"این بخش اتصال پوشه گزارش‌ها و ویرایش راستر را فعال می‌کند. رمز عبور را وارد کنید.",
+    gatePlaceholder:"رمز عبور", gateErr:"رمز عبور نادرست است", cancel:"انصراف", submit:"ورود",
+    drawerTitle:"اتصال داده‌ها", drawerBadge:"فقط لیدرشیپ",
+    drawerNote:"برای هر گزارش یک‌بار پوشه محلی انتخاب کنید — مرورگر این اجازه را به‌خاطر می‌سپارد، پس دفعات بعد فقط با یک کلیک همگام می‌شود. در صورت تمایل می‌توانید به‌جای پوشه، از آدرس API هم استفاده کنید.",
+    drawerLogout:"🔒 خروج از حالت لیدرشیپ", backToHub:"بازگشت به مرکز داشبورد",
+    rosterSectionDaily:"روزانه", roster_am:"AM", roster_pm:"PM", roster_off:"آف",
+    folderChoose:"انتخاب پوشه", folderSync:"همگام‌سازی الان", folderNone:"هنوز پوشه‌ای متصل نشده",
+    folderSynced:"همگام شد", folderPermNeeded:"نیاز به تأیید دسترسی — همگام‌سازی الان را بزنید", folderDenied:"دسترسی رد شد",
+    folderNotSupported:"این مرورگر از دسترسی به پوشه پشتیبانی نمی‌کند (از Chrome یا Edge استفاده کنید).",
+    apiSectionLabel:"یا به‌جای آن از آدرس API استفاده کنید", fetchNow:"دریافت الان", auto:"خودکار هر", minutes:"دقیقه",
+    addMember:"＋ افزودن عضو", pickExisting:"— انتخاب از پرسنل موجود —", newMemberPlaceholder:"یا نام/یوزرنیم جدید…",
+    alreadyInRoster:"این عضو از قبل در راستر است.", confirmRemove:"«{name}» از راستر حذف شود؟ شیفت‌های ثبت‌شده او هم پاک می‌شود.",
+    thisWeek:"این هفته", prevWeek:"‹ هفته قبل", nextWeek:"هفته بعد ›", teamMember:"عضو تیم",
+    filesFound:"فایل",
+    manageShifts:"مدیریت شیفت‌ها", manageShiftsDesc:"می‌توانید شیفت جدید اضافه کنید، نامش را عوض کنید یا رنگش را تغییر دهید. شیفت‌های پیش‌فرض قابل تغییر نام/رنگ هستند ولی حذف نمی‌شوند.",
+    newShiftPlaceholder:"نام شیفت جدید…", addShift:"＋ افزودن", done:"تمام", remove:"حذف", builtin:"پیش‌فرض",
+    confirmRemoveShift:"این نوع شیفت حذف شود؟ خانه‌هایی که این شیفت را دارند به «روز (Normal)» برمی‌گردند.",
+    holidayLegend:"تعطیل هفتگی/رسمی", hqLegend:"روز حضور در HQ", hqToggle:"فعال/غیرفعال کردن حضور در HQ",
+    oncallLabel:"سوپروایزر آنکال این هفته:",
+    leaveReqTitle:"درخواست‌های مرخصی (در انتظار، هنوز ثبت‌نشده)", addName:"نام را بنویس و Enter بزن",
+    manageTeam:"مدیریت اعضای تیم", manageTeamDesc:"افزودن یا حذف افراد از استخر پرسنل راستر (همه‌جا که اسم انتخاب می‌کنید همینا هستن).",
+    colDateJalali:"تاریخ (شمسی)", colDateGreg:"تاریخ (میلادی)", colDay:"روز هفته",
+    colTypeMulti:"چند نفره", colTypeSingle:"یک نفره",
+    rosterHintV4:"نکته: روی هر خانه کلیک کن تا برای اون روز اسم اضافه یا حذف کنی.",
+    dragPoolLabel:"یک اسم رو بکش و بنداز رو خانه‌ی موردنظر:", summaryTitle:"جمع شیفت‌های دیلی و ویکند هر نفر (این دوره)",
+    summaryDaily:"دیلی", summaryWeekend:"ویکند/تعطیل", summaryTotal:"جمع کل",
+    importExcel:"درون‌ریزی از اکسل", importLibFail:"کتابخانه‌ی خواندن اکسل لود نشد — اتصال اینترنت رو چک کن و دوباره امتحان کن.",
+    importNoData:"این فایل هیچ ردیفی نداشت.", importNoDateCol:"تو شیت اول ستون «Date» پیدا نشد — مطمئنی فایل درستیه؟",
+    importDone:"داده‌ی {n} روز از فایل اکسل درون‌ریزی شد. ستون‌ها یا اعضای جدیدی که پیدا شد هم خودکار اضافه شدن.",
+    todayBadge:"امروز", holidayBadge:"تعطیل",
+    exportCsv:"خروجی", searchPlaceholder:"جستجو با نام...", filtersLabel:"فیلترها",
+    filterHolidays:"فقط تعطیلات", filterToday:"فقط امروز", viewAll:"مشاهده همه",
+    legendBtn:"راهنما", hintClick:"روی هر خانه کلیک کن برای ویرایش یا مشاهده جزئیات",
+    hintDrag:"با کشیدن و رها کردن، عضو تیم رو تخصیص بده", hintDash:'«–» یعنی هیچ تخصیصی نیست',
+    statDay:"شیفت روز", statNight:"شیفت شب", statHq:"حضور HQ", statOncall:"آنکال",
+    statOff:"آف / تعطیل", statLeave:"درخواست مرخصی", statAssignments:"تخصیص",
+    statPeople:"نفر", statApproved:"تأییدشده",
+    manageHolidays:"مدیریت تعطیلات", manageHolidaysDesc:"پنجشنبه و جمعه خودکار قرمز می‌شن. تعطیلات رسمی/مذهبی رو اینجا اضافه کن — تقویم رسمی ایران خودکار دریافت نمی‌شه، پس لطفاً تاریخ‌ها رو خودتون اضافه و تأیید کنید.",
+    holidayNamePlaceholder:"نام تعطیلی…", officialHoliday:"تعطیل رسمی",
+  }
+};
+let currentLang = localStorage.getItem('sdhub_lang') || 'en';
+
+function t(key){ return (SHELL_I18N[currentLang] && SHELL_I18N[currentLang][key]) || (SHELL_I18N.en[key]) || key; }
+
+const LEAD_PASSCODE = "leadership2026"; // ⚠️ same passcode as the hub — change it here AND in index.html
+const IS_EMBEDDED = (window.parent !== window);
+let embeddedUnlocked = false;
+function isLeadUnlocked(){ return IS_EMBEDDED ? embeddedUnlocked : sessionStorage.getItem('sdhub_lead_unlocked')==='1'; }
+function updateLeadButton(){
+  const btn=document.getElementById('leadBtn');
+  if (!btn) return;
+  btn.classList.toggle('unlocked', isLeadUnlocked());
+  btn.querySelector('span').textContent = isLeadUnlocked() ? t('leadBtnUnlocked') : t('leadBtnLocked');
+}
+if (IS_EMBEDDED){
+  // A single Leadership button lives in the hub's sidebar — this page just mirrors that state.
+  document.getElementById('leadBtn').style.display = 'none';
+  window.addEventListener('message', (e)=>{
+    if (!e.data || e.data.type!=='sdhub:lead-state') return;
+    embeddedUnlocked = !!e.data.unlocked;
+    updateLeadButton();
+    renderRoster();
+  });
+  window.parent.postMessage({ type:'sdhub:request-lead-state' }, '*');
+} else {
+  document.getElementById('leadBtn').addEventListener('click', ()=>{
+    if (isLeadUnlocked()){
+      sessionStorage.removeItem('sdhub_lead_unlocked');
+      updateLeadButton();
+      renderRoster();
+    } else {
+      document.getElementById('leadPassInput').value='';
+      document.getElementById('leadErr').style.display='none';
+      document.getElementById('leadOverlay').classList.add('show');
+      setTimeout(()=>document.getElementById('leadPassInput').focus(), 50);
+    }
+  });
+}
+document.getElementById('leadCancelBtn').addEventListener('click', ()=>document.getElementById('leadOverlay').classList.remove('show'));
+document.getElementById('leadOverlay').addEventListener('click', (e)=>{ if(e.target.id==='leadOverlay') document.getElementById('leadOverlay').classList.remove('show'); });
+document.getElementById('leadSubmitBtn').addEventListener('click', submitLeadPass);
+document.getElementById('leadPassInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitLeadPass(); });
+function submitLeadPass(){
+  const val=document.getElementById('leadPassInput').value;
+  if(val===LEAD_PASSCODE){
+    document.getElementById('leadOverlay').classList.remove('show');
+    sessionStorage.setItem('sdhub_lead_unlocked','1');
+    updateLeadButton();
+    renderRoster();
+  } else {
+    document.getElementById('leadErr').style.display='block';
+  }
+}
+
+function applyI18n(){
+  document.documentElement.setAttribute('lang', currentLang);
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder'))); });
+  document.getElementById('langEnBtn').classList.toggle('active', currentLang==='en');
+  document.getElementById('langFaBtn').classList.toggle('active', currentLang==='fa');
+  updateLeadButton();
+  renderRoster();
+}
+document.getElementById('langEnBtn').addEventListener('click', ()=>{ currentLang='en'; localStorage.setItem('sdhub_lang','en'); applyI18n(); });
+document.getElementById('langFaBtn').addEventListener('click', ()=>{ currentLang='fa'; localStorage.setItem('sdhub_lang','fa'); applyI18n(); });
+
+/* =========================================================================
+   JALALI (SHAMSI) CALENDAR — pure JS conversion, no network/library needed
+   ========================================================================= */
+function gregorianToJalali(gy, gm, gd){
+  const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let jy = (gy <= 1600) ? 0 : 979;
+  gy -= (gy <= 1600) ? 621 : 1600;
+  const gy2 = (gm > 2) ? (gy + 1) : gy;
+  let days = (365*gy) + Math.floor((gy2+3)/4) - Math.floor((gy2+99)/100) + Math.floor((gy2+399)/400) - 80 + gd + g_d_m[gm-1];
+  jy += 33*Math.floor(days/12053); days %= 12053;
+  jy += 4*Math.floor(days/1461); days %= 1461;
+  if (days > 365){ jy += Math.floor((days-1)/365); days = (days-1)%365; }
+  const jm = (days < 186) ? 1+Math.floor(days/31) : 7+Math.floor((days-186)/30);
+  const jd = 1 + ((days < 186) ? (days%31) : ((days-186)%30));
+  return [jy, jm, jd];
+}
+function jalaliToGregorian(jy, jm, jd){
+  jy += 1595;
+  let days = -355668 + (365*jy) + (Math.floor(jy/33)*8) + Math.floor(((jy%33)+3)/4) + jd + ((jm<7) ? (jm-1)*31 : ((jm-7)*30)+186);
+  let gy = 400*Math.floor(days/146097); days %= 146097;
+  if (days > 36524){ gy += 100*Math.floor(--days/36524); days %= 36524; if (days >= 365) days++; }
+  gy += 4*Math.floor(days/1461); days %= 1461;
+  if (days > 365){ gy += Math.floor((days-1)/365); days = (days-1)%365; }
+  let gd = days + 1;
+  const sal_a = [0,31,((gy%4===0 && gy%100!==0)||(gy%400===0))?29:28,31,30,31,30,31,31,30,31,30,31];
+  let gm;
+  for (gm=1; gm<=12; gm++){ const v=sal_a[gm]; if (gd<=v) break; gd-=v; }
+  return [gy, gm, gd];
+}
+const JALALI_MONTHS_FA = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const JALALI_MONTHS_EN = ['Farvardin','Ordibehesht','Khordad','Tir','Mordad','Shahrivar','Mehr','Aban','Azar','Dey','Bahman','Esfand'];
+function jalaliStr(d, lang){
+  const [jy,jm,jd] = gregorianToJalali(d.getFullYear(), d.getMonth()+1, d.getDate());
+  const months = lang==='fa' ? JALALI_MONTHS_FA : JALALI_MONTHS_EN;
+  return lang==='fa' ? `${jd} ${months[jm-1]}` : `${jd} ${months[jm-1].slice(0,3)}`;
+}
+
+/* =========================================================================
+   ROSTER v4 — Excel-style spreadsheet: rows = dates, columns = shift groups
+   Each cell holds a list of names (or a single name for On-Call).
+   ========================================================================= */
+const ROSTER_KEY = 'sdhub_roster_v4';
+const DEFAULT_COLUMNS = [
+  { key:'day1',     label:{en:'Day_1 (07:00-19:00)',      fa:'روز_۱ (۰۷:۰۰-۱۹:۰۰)'},        color:'#DBEAFE', text:'#1D4ED8', multi:true,  builtin:true },
+  { key:'day2',     label:{en:'Day_2 (07:00-19:00)',      fa:'روز_۲ (۰۷:۰۰-۱۹:۰۰)'},        color:'#DBEAFE', text:'#1D4ED8', multi:true,  builtin:true },
+  { key:'hq',       label:{en:'Day - HQ Office (08-17)',  fa:'حضور HQ (۰۸:۰۰-۱۷:۰۰)'},      color:'#FEF9C3', text:'#854D0E', multi:true,  builtin:true },
+  { key:'night1',   label:{en:'Night_1 (19:00-07:00)',    fa:'شب_۱ (۱۹:۰۰-۰۷:۰۰)'},         color:'#E0E7FF', text:'#3730A3', multi:true,  builtin:true },
+  { key:'night2',   label:{en:'Night_2 (19:00-07:00)',    fa:'شب_۲ (۱۹:۰۰-۰۷:۰۰)'},         color:'#E0E7FF', text:'#3730A3', multi:true,  builtin:true },
+  { key:'oncall',   label:{en:'Leadership On-Call',       fa:'آنکال لیدرشیپ'},              color:'#CCFBF1', text:'#0F766E', multi:false, builtin:true },
+  { key:'off',      label:{en:'Off',                      fa:'آف'},                         color:'#E9D5FF', text:'#6B21A8', multi:true,  builtin:true },
+  { key:'leaveRequest', label:{en:'Leave Request',        fa:'درخواست مرخصی'},              color:'#FBCFE8', text:'#9D174D', multi:true,  builtin:true },
+  { key:'cab',      label:{en:'CAB',                      fa:'CAB'},                         color:'#E2E8F0', text:'#334155', multi:true,  builtin:true },
+];
+const DEFAULT_AGENTS = [
+  'mohammadali.ar','ali.dava','ali.behr','amirhossein.tagh','parisa.jaf','amirali.am',
+  'yasamin.a','milad.esf','afsaneh.az','hengameh.n','payam.n','arezou.g','anahita.sad',
+  'mohammadmehdi.rajab','kosar.ha','narin.b','mehdi.vali','fatemeh.salim','amirhossein.mohamm','maryam.fall'
+];
+
+function loadRoster(){
+  try{
+    const raw = localStorage.getItem(ROSTER_KEY);
+    if (raw){
+      const d = JSON.parse(raw);
+      d.agents = d.agents && d.agents.length ? d.agents : DEFAULT_AGENTS.slice();
+      d.days = d.days || {};
+      d.holidays = d.holidays || {};
+      d.columns = d.columns && d.columns.length ? d.columns : JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
+      return d;
+    }
+  }catch(e){}
+  return { agents: DEFAULT_AGENTS.slice(), days: {}, holidays: {}, columns: JSON.parse(JSON.stringify(DEFAULT_COLUMNS)) };
+}
+function saveRoster(data){ localStorage.setItem(ROSTER_KEY, JSON.stringify(data)); }
+let rosterData = loadRoster();
+
+function getColumn(key){ return rosterData.columns.find(c=>c.key===key) || { key, label:{en:key,fa:key}, color:'#E2E8F0', text:'#64748B', multi:true, builtin:false }; }
+function colLabel(col){ return col.label[currentLang] || col.label.en; }
+function dayCell(dateKey){
+  if (!rosterData.days[dateKey]) rosterData.days[dateKey] = {};
+  const cell = rosterData.days[dateKey];
+  rosterData.columns.forEach(c=>{ if (cell[c.key]===undefined) cell[c.key] = c.multi ? [] : ''; });
+  return cell;
+}
+
+/* ---------- Jalali period navigation: 20th of a month to 20th of the next ---------- */
+function isLeapJalaliYear(jy){ const r=((jy%33)+33)%33; return [1,5,9,13,17,22,26,30].includes(r); }
+function jalaliMonthLength(jy,jm){ if(jm<=6) return 31; if(jm<=11) return 30; return isLeapJalaliYear(jy)?30:29; }
+const [TODAY_JY, TODAY_JM, TODAY_JD] = gregorianToJalali(new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate());
+function initialPeriod(){
+  // The period containing "today" starts on the 20th of the current month if today's day >= 20, otherwise the previous month's 20th.
+  if (TODAY_JD >= 20) return { jy:TODAY_JY, jm:TODAY_JM };
+  let jm = TODAY_JM-1, jy = TODAY_JY;
+  if (jm < 1){ jm = 12; jy--; }
+  return { jy, jm };
+}
+let { jy:currentJY, jm:currentJM } = initialPeriod();
+function nextJalaliMonth(jy,jm){ jm++; if (jm>12){ jm=1; jy++; } return {jy,jm}; }
+function currentMonthDates(){
+  const end = nextJalaliMonth(currentJY, currentJM);
+  const [sgy,sgm,sgd] = jalaliToGregorian(currentJY, currentJM, 20);
+  const [egy,egm,egd] = jalaliToGregorian(end.jy, end.jm, 20);
+  const start = new Date(sgy, sgm-1, sgd);
+  const last = new Date(egy, egm-1, egd);
+  const dates=[];
+  const cur = new Date(start);
+  while (cur <= last){ dates.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+  return dates;
+}
+function shiftMonth(delta){
+  currentJM += delta;
+  if (currentJM > 12){ currentJM = 1; currentJY++; }
+  if (currentJM < 1){ currentJM = 12; currentJY--; }
+}
+
+function ymd(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dd}`; }
+function gregLocale(){ return currentLang==='fa' ? 'fa-IR-u-ca-gregory' : 'en-US'; }
+function isSameDay(a,b){ return ymd(a)===ymd(b); }
+function isWeeklyOff(d){ const wd=d.getDay(); return wd===4 || wd===5; } // Thu=4, Fri=5
+function isOfficialHoliday(d){ return !!rosterData.holidays[ymd(d)]; }
+function isHoliday(d){ return isWeeklyOff(d) || isOfficialHoliday(d); }
+
+/* ---------- Toolbar ---------- */
+function renderRosterActionBar(){
+  const editable = isLeadUnlocked();
+  const end = nextJalaliMonth(currentJY, currentJM);
+  const monthLabel = currentLang==='fa'
+    ? `۲۰ ${JALALI_MONTHS_FA[currentJM-1]} — ۲۰ ${JALALI_MONTHS_FA[end.jm-1]} ${end.jy}`
+    : `20 ${JALALI_MONTHS_EN[currentJM-1]} – 20 ${JALALI_MONTHS_EN[end.jm-1]} ${end.jy}`;
+
+  document.getElementById('roster-action-bar').innerHTML = `
+    <div class="roster-action-btns">
+      ${editable ? `<button class="rab-btn" id="roster-manage-team-btn"><span class="rab-icon">👥</span>${t('manageTeam')}</button>` : ''}
+      ${editable ? `<button class="rab-btn" id="roster-manage-holidays-btn"><span class="rab-icon">📅</span>${t('manageHolidays')}</button>` : ''}
+      ${editable ? `<button class="rab-btn" id="roster-manage-cols-btn"><span class="rab-icon">🎨</span>${t('manageShifts')}</button>` : ''}
+      ${editable ? `<button class="rab-btn primary" id="roster-import-btn"><span class="rab-icon">📥</span>${t('importExcel')}</button>` : ''}
+      <input type="file" id="roster-import-input" accept=".xlsx,.xls" style="display:none;">
+    </div>
+    <div class="period-pill-group">
+      <div class="period-dropdown" id="roster-today">📅 ${t('thisWeek')} ▾</div>
+      <div class="period-range">
+        <button class="pr-icon-btn" id="roster-prev" title="${t('prevWeek')}">‹</button>
+        <span class="pr-label">${monthLabel}</span>
+        <button class="pr-icon-btn" id="roster-next" title="${t('nextWeek')}">›</button>
+      </div>
+      <button class="icon-btn-square" id="roster-export-btn" title="${t('exportCsv')}">⬇️</button>
+      ${editable ? `<button class="icon-btn-square" id="roster-manage-cols-btn2" title="${t('manageShifts')}">⚙️</button>` : ''}
+    </div>
+  `;
+  document.getElementById('roster-prev').addEventListener('click', ()=>{ shiftMonth(-1); renderRoster(); });
+  document.getElementById('roster-next').addEventListener('click', ()=>{ shiftMonth(1); renderRoster(); });
+  document.getElementById('roster-today').addEventListener('click', ()=>{ const p=initialPeriod(); currentJY=p.jy; currentJM=p.jm; renderRoster(); });
+  document.getElementById('roster-export-btn').addEventListener('click', exportRosterCsv);
+  if (editable){
+    document.getElementById('roster-manage-cols-btn').addEventListener('click', openColumnManager);
+    document.getElementById('roster-manage-cols-btn2').addEventListener('click', openColumnManager);
+    document.getElementById('roster-manage-holidays-btn').addEventListener('click', openHolidayManager);
+    document.getElementById('roster-manage-team-btn').addEventListener('click', openTeamManager);
+    document.getElementById('roster-import-btn').addEventListener('click', ()=>document.getElementById('roster-import-input').click());
+    document.getElementById('roster-import-input').addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if (file) importFromExcelFile(file);
+      e.target.value = '';
+    });
+  }
+}
+
+const SHIFT_ICONS = { day1:'☀️', day2:'🌤️', hq:'🏢', night1:'🌙', night2:'🌙', oncall:'🔔', off:'🚫', leaveRequest:'📩', cab:'📋' };
+function renderShiftStrip(){
+  document.getElementById('shift-strip').innerHTML = rosterData.columns.map(c=>{
+    const icon = SHIFT_ICONS[c.key] || '🏷️';
+    const timePart = colLabel(c).match(/\(([^)]+)\)/);
+    return `<div class="shift-strip-item">
+        <div class="ss-icon" style="background:${c.color}; color:${c.text};">${icon}</div>
+        <div class="ss-text"><b>${colLabel(c).replace(/\s*\([^)]*\)/,'')}</b>${timePart?`<span>${timePart[1]}</span>`:''}</div>
+      </div>`;
+  }).join('');
+}
+
+let rosterSearchTerm = '';
+let rosterFilters = { holidaysOnly:false, todayOnly:false };
+function renderSearchBar(){
+  const bar = document.getElementById('roster-search-bar');
+  const previewCount = 4;
+  const preview = rosterData.agents.slice(0, previewCount);
+  const overflow = rosterData.agents.length - previewCount;
+  bar.innerHTML = `
+    <div class="roster-search-input">
+      <span class="si">🔍</span>
+      <input type="text" id="roster-search-input" placeholder="${t('searchPlaceholder')}" value="${rosterSearchTerm}">
+    </div>
+    <div class="filters-popover">
+      <button class="rab-btn" id="filters-toggle-btn">🧰 ${t('filtersLabel')}</button>
+      <div class="filters-panel" id="filters-panel">
+        <label><input type="checkbox" id="filter-holidays" ${rosterFilters.holidaysOnly?'checked':''}> ${t('filterHolidays')}</label>
+        <label><input type="checkbox" id="filter-today" ${rosterFilters.todayOnly?'checked':''}> ${t('filterToday')}</label>
+      </div>
+    </div>
+    <div class="team-preview">
+      ${preview.map(a=>`<span class="tp-chip"><span class="tp-avatar">${initials(a)}</span>${a}</span>`).join('')}
+      ${overflow > 0 ? `<span class="tp-more" title="${overflow} ${t('viewAll')}">+${overflow}</span>` : ''}
+      <button class="tp-viewall" id="team-view-all-btn">👥 ${t('viewAll')}</button>
+    </div>
+  `;
+  document.getElementById('roster-search-input').addEventListener('input', (e)=>{ rosterSearchTerm = e.target.value; renderRosterTable(); });
+  document.getElementById('team-view-all-btn').addEventListener('click', openTeamManager);
+  const toggleBtn = document.getElementById('filters-toggle-btn');
+  const panel = document.getElementById('filters-panel');
+  toggleBtn.addEventListener('click', (e)=>{ e.stopPropagation(); panel.classList.toggle('show'); });
+  document.addEventListener('click', ()=> panel.classList.remove('show'), { once:true });
+  document.getElementById('filter-holidays').addEventListener('change', (e)=>{ rosterFilters.holidaysOnly = e.target.checked; renderRosterTable(); });
+  document.getElementById('filter-today').addEventListener('change', (e)=>{ rosterFilters.todayOnly = e.target.checked; renderRosterTable(); });
+}
+
+function exportRosterCsv(){
+  const dates = currentMonthDates();
+  const header = ['Date','Shamsi','Day', ...rosterData.columns.map(c=>colLabel(c))];
+  const lines = [header.join(',')];
+  dates.forEach(d=>{
+    const key = ymd(d);
+    const cell = rosterData.days[key] || {};
+    const row = [key, jalaliStr(d,'en'), d.toLocaleDateString('en-US',{weekday:'long'})];
+    rosterData.columns.forEach(c=>{
+      const val = cell[c.key];
+      const names = Array.isArray(val) ? val.join(' / ') : (val || '');
+      row.push('"' + String(names).replace(/"/g,'""') + '"');
+    });
+    lines.push(row.join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `roster_${ymd(dates[0])}_${ymd(dates[dates.length-1])}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function renderRosterLegend(){
+  document.getElementById('roster-legend').innerHTML = rosterData.columns.map(c=>
+    `<div class="lg-item"><span class="lg-swatch" style="background:${c.color}"></span>${colLabel(c)}</div>`
+  ).join('') + `<div class="lg-item"><span class="lg-swatch" style="background:#FFE4E6; border:1px solid #FCA5A5;"></span>${t('holidayLegend')}</div>`;
+}
+
+function openLegendPanel(){
+  renderRosterLegend();
+  let overlay = document.getElementById('legendOverlay');
+  if (!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'legendOverlay';
+    overlay.className = 'lead-overlay';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if (e.target===overlay) overlay.classList.remove('show'); });
+  }
+  overlay.innerHTML = `<div class="lead-modal" style="max-width:420px;">
+      <h3>ℹ️ ${t('legendBtn')}</h3>
+      <div class="roster-legend" style="display:flex;">${document.getElementById('roster-legend').innerHTML}</div>
+      <div class="lead-actions" style="margin-top:16px;"><button class="tbtn" id="legend-close-btn">${t('done')}</button></div>
+    </div>`;
+  document.getElementById('legend-close-btn').addEventListener('click', ()=> overlay.classList.remove('show'));
+  overlay.classList.add('show');
+}
+document.getElementById('legend-open-btn').addEventListener('click', openLegendPanel);
+
+/* ---------- Main table: rows = dates, columns = shift groups ---------- */
+function initials(name){
+  const clean = String(name||'').replace(/[._-]/g,' ').trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return parts.length===1 ? parts[0].slice(0,2) : (parts[0][0]+parts[1][0]);
+}
+
+function renderRoster(){
+  renderRosterActionBar();
+  renderShiftStrip();
+  renderSearchBar();
+  renderRosterTable();
+  renderDragPool();
+  renderSummaryTable(currentMonthDates());
+  renderBottomRow();
+}
+
+/* ---------- Bottom row: quick stat cards (derived from the same roster data) + mini calendar ---------- */
+function renderBottomRow(){
+  const dates = currentMonthDates();
+  const dayCount = dates.reduce((n,d)=> n + (cellCount(ymd(d),'day1') + cellCount(ymd(d),'day2')), 0);
+  const nightCount = dates.reduce((n,d)=> n + (cellCount(ymd(d),'night1') + cellCount(ymd(d),'night2')), 0);
+  const hqCount = dates.reduce((n,d)=> n + cellCount(ymd(d),'hq'), 0);
+  const oncallPeople = new Set();
+  const offPeople = new Set();
+  let leaveApproved = 0;
+  dates.forEach(d=>{
+    const cell = rosterData.days[ymd(d)] || {};
+    if (cell.oncall) oncallPeople.add(cell.oncall);
+    (Array.isArray(cell.off) ? cell.off : []).forEach(n=>offPeople.add(n));
+    leaveApproved += Array.isArray(cell.leaveRequest) ? cell.leaveRequest.length : 0;
+  });
+
+  const cards = [
+    { icon:'☀️', bg:'#DBEAFE', title: t('statDay'), sub:'Total', value: dayCount, label: t('statAssignments') },
+    { icon:'🌙', bg:'#E0E7FF', title: t('statNight'), sub:'Total', value: nightCount, label: t('statAssignments') },
+    { icon:'🏢', bg:'#FEF9C3', title: t('statHq'), sub:'Total', value: hqCount, label: t('statAssignments') },
+    { icon:'🔔', bg:'#CCFBF1', title: t('statOncall'), sub: t('thisWeek'), value: oncallPeople.size, label: t('statPeople') },
+    { icon:'🚫', bg:'#FEE2E2', title: t('statOff'), sub:'', value: offPeople.size, label: t('statPeople') },
+    { icon:'📩', bg:'#FBCFE8', title: t('statLeave'), sub: t('statApproved'), value: leaveApproved, label: t('statApproved') },
+  ];
+
+  document.getElementById('roster-bottom-row').innerHTML =
+    cards.map(c=>`<div class="stat-card">
+        <div class="stat-card-head"><span class="sc-icon" style="background:${c.bg};">${c.icon}</span>
+          <span>${c.title}${c.sub?`<span class="sc-sub">${c.sub}</span>`:''}</span></div>
+        <div class="sc-value">${c.value}</div>
+        <div class="sc-label">${c.label}</div>
+      </div>`).join('') +
+    `<div class="rbr-cal" id="rbr-cal"></div>`;
+
+  renderMiniCalendar();
+}
+function cellCount(dateKey, colKey){
+  const v = (rosterData.days[dateKey]||{})[colKey];
+  return Array.isArray(v) ? v.length : (v ? 1 : 0);
+}
+
+let calMonthDate = new Date(); // independent month cursor for the mini calendar (Gregorian)
+function renderMiniCalendar(){
+  const el = document.getElementById('rbr-cal');
+  const y = calMonthDate.getFullYear(), m = calMonthDate.getMonth();
+  const first = new Date(y, m, 1);
+  const startOffset = first.getDay(); // 0=Sun
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const today = new Date();
+  const monthLabel = calMonthDate.toLocaleDateString(gregLocale(), { month:'long', year:'numeric' });
+  const weekdayLabels = currentLang==='fa' ? ['ی','د','س','چ','پ','ج','ش'] : ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  let cells = '';
+  for (let i=0;i<startOffset;i++) cells += `<div class="cal-day other-month"></div>`;
+  for (let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(y,m,d);
+    const key = ymd(dateObj);
+    const isToday = isSameDay(dateObj, today);
+    const holiday = isOfficialHoliday(dateObj) || isWeeklyOff(dateObj);
+    cells += `<div class="cal-day${isToday?' today':''}${holiday && !isToday?' has-holiday':''}" data-caldate="${key}">${d}</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="cal-head">
+      <button class="cal-nav-btn" id="cal-prev">‹</button>
+      <b>${monthLabel}</b>
+      <button class="cal-nav-btn" id="cal-next">›</button>
+    </div>
+    <div class="cal-grid">
+      ${weekdayLabels.map(w=>`<div class="cal-wd">${w}</div>`).join('')}
+      ${cells}
+    </div>
+  `;
+  document.getElementById('cal-prev').addEventListener('click', ()=>{ calMonthDate = new Date(y, m-1, 1); renderMiniCalendar(); });
+  document.getElementById('cal-next').addEventListener('click', ()=>{ calMonthDate = new Date(y, m+1, 1); renderMiniCalendar(); });
+  el.querySelectorAll('[data-caldate]').forEach(dEl=>{
+    dEl.addEventListener('click', ()=>{
+      const [gy,gm,gd] = dEl.dataset.caldate.split('-').map(Number);
+      const [jy,jm,jd] = gregorianToJalali(gy,gm,gd);
+      if (jd >= 20){ currentJY = jy; currentJM = jm; }
+      else { currentJM = jm - 1; currentJY = jy; if (currentJM < 1){ currentJM = 12; currentJY--; } }
+      renderRoster();
+    });
+  });
+}
+
+function renderRosterTable(){
+  const editable = isLeadUnlocked();
+  document.getElementById('roster-lock-note').style.display = editable ? 'none' : 'block';
+
+  let dates = currentMonthDates();
+  const today = new Date();
+  if (rosterFilters.todayOnly) dates = dates.filter(d=>isSameDay(d,today));
+  if (rosterFilters.holidaysOnly) dates = dates.filter(d=>isHoliday(d));
+
+  const table = document.getElementById('roster-table');
+  const loc = gregLocale();
+  const term = rosterSearchTerm.trim().toLowerCase();
+
+  let thead = `<thead><tr>
+      <th class="date-col">${t('colDateGreg')}</th>
+      <th class="date-col">${t('colDateJalali')}</th>
+      <th class="date-col">${t('colDay')}</th>
+      ${rosterData.columns.map(c=>{
+        const timePart = colLabel(c).match(/\(([^)]+)\)/);
+        const label = colLabel(c).replace(/\s*\([^)]*\)/,'');
+        return `<th style="background:${c.color}22; color:${c.text}; box-shadow:inset 0 -3px 0 ${c.color};">
+          <div class="col-th-inner">${SHIFT_ICONS[c.key]||''} ${label}${timePart?`<span class="cth-time">${timePart[1]}</span>`:''}</div>
+        </th>`;
+      }).join('')}
+      <th class="date-col" style="width:36px;"></th>
+    </tr></thead>`;
+
+  let tbody = '<tbody>';
+  dates.forEach(d=>{
+    const key = ymd(d);
+    const cell = dayCell(key);
+
+    if (term){
+      const allNames = rosterData.columns.flatMap(c=>{
+        const v = cell[c.key];
+        return Array.isArray(v) ? v : (v ? [v] : []);
+      }).join(' ').toLowerCase();
+      if (!allNames.includes(term)) return;
+    }
+
+    const today_ = isSameDay(d,today), holiday_ = isHoliday(d);
+    let rowCls = today_ ? 'today-row' : '';
+    if (holiday_) rowCls += ' holiday-row';
+    const jal = jalaliStr(d, currentLang);
+    const wd = d.toLocaleDateString(loc,{weekday:'long'});
+    const md = d.toLocaleDateString(loc,{day:'numeric',month:'short',year:'numeric'});
+    const badges = (today_?`<span class="day-badge today">${t('todayBadge')}</span>`:'') + (holiday_?`<span class="day-badge holiday">${t('holidayBadge')}</span>`:'');
+
+    tbody += `<tr class="${rowCls}">
+      <td class="date-col">${md}</td>
+      <td class="date-col greg-sub">${jal}</td>
+      <td class="date-col">${wd}${badges}</td>`;
+
+    rosterData.columns.forEach(c=>{
+      const val = cell[c.key];
+      const names = c.multi ? (Array.isArray(val)?val:[]) : (val ? [val] : []);
+      const chips = names.map(n=>`<span class="cell-chip" style="background:${c.color}; color:${c.text};"><span class="chip-avatar">${initials(n)}</span>${n}${editable?`<button class="chip-x" data-chipx-day="${key}" data-chipx-col="${c.key}" data-chipx-name="${n}">✕</button>`:''}</span>`).join('');
+      tbody += `<td class="shift-td${editable?' editable droppable':''}" ${editable?`data-daykey="${key}" data-colkey="${c.key}"`:''}>
+          <div class="cell-chips">${chips || (editable?'<span class="cell-empty">+</span>':'<span class="dash-cell">–</span>')}</div>
+        </td>`;
+    });
+    tbody += `<td class="date-col"><button class="row-actions-btn" data-daydetail="${key}">⋯</button></td>`;
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+  table.innerHTML = thead + tbody;
+
+  if (editable){
+    table.querySelectorAll('.shift-td.editable').forEach(td=>{
+      td.addEventListener('click', (e)=>{ if (e.target.closest('.chip-x')) return; openCellEditor(td.dataset.daykey, td.dataset.colkey); });
+      td.addEventListener('dragover', (e)=>{ e.preventDefault(); td.classList.add('drag-over'); });
+      td.addEventListener('dragleave', ()=> td.classList.remove('drag-over'));
+      td.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        td.classList.remove('drag-over');
+        const name = e.dataTransfer.getData('text/plain');
+        if (name) assignName(td.dataset.daykey, td.dataset.colkey, name);
+      });
+    });
+    table.querySelectorAll('.chip-x').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        removeName(btn.dataset.chipxDay, btn.dataset.chipxCol, btn.dataset.chipxName);
+      });
+    });
+  }
+  table.querySelectorAll('[data-daydetail]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openDayDetails(btn.dataset.daydetail));
+  });
+}
+
+function openDayDetails(dateKey){
+  const cell = dayCell(dateKey);
+  const d = new Date(...dateKey.split('-').map((v,i)=>i===1?Number(v)-1:Number(v)));
+  let overlay = document.getElementById('dayDetailOverlay');
+  if (!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'dayDetailOverlay';
+    overlay.className = 'lead-overlay';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if (e.target===overlay) overlay.classList.remove('show'); });
+  }
+  const rows = rosterData.columns.map(c=>{
+    const val = cell[c.key];
+    const names = Array.isArray(val) ? val : (val ? [val] : []);
+    return `<div class="ddl-row">
+        <span class="ddl-label">${SHIFT_ICONS[c.key]||''} ${colLabel(c).replace(/\s*\([^)]*\)/,'')}</span>
+        <span class="ddl-val">${names.length ? names.map(n=>`<span class="cell-chip" style="background:${c.color};color:${c.text};">${n}</span>`).join('') : '<span class="dash-cell">–</span>'}</span>
+      </div>`;
+  }).join('');
+  overlay.innerHTML = `<div class="lead-modal" style="max-width:440px;">
+      <h3>📋 ${jalaliStr(d, currentLang)} <span class="greg-sub">(${d.toLocaleDateString(gregLocale(),{day:'numeric',month:'short',year:'numeric'})})</span></h3>
+      <div class="day-details-list">${rows}</div>
+      <div class="lead-actions"><button class="tbtn" id="daydetail-close-btn">${t('done')}</button></div>
+    </div>`;
+  document.getElementById('daydetail-close-btn').addEventListener('click', ()=> overlay.classList.remove('show'));
+  overlay.classList.add('show');
+}
+
+/* ---------- Shared assign/remove helpers (used by drag-drop, chip ✕, and the cell editor modal) ---------- */
+function assignName(dateKey, colKey, name){
+  const col = getColumn(colKey);
+  const cell = dayCell(dateKey);
+  if (col.multi){
+    const list = Array.isArray(cell[colKey]) ? cell[colKey] : [];
+    if (!list.includes(name)) list.push(name);
+    cell[colKey] = list;
+  } else {
+    cell[colKey] = name;
+  }
+  saveRoster(rosterData);
+  renderRoster();
+}
+function removeName(dateKey, colKey, name){
+  const col = getColumn(colKey);
+  const cell = dayCell(dateKey);
+  if (col.multi){ cell[colKey] = (cell[colKey]||[]).filter(n=>n!==name); }
+  else { cell[colKey] = ''; }
+  saveRoster(rosterData);
+  renderRoster();
+}
+
+/* ---------- Drag pool: draggable name chips, dropped straight onto a cell ---------- */
+function renderDragPool(){
+  const wrap = document.getElementById('drag-pool');
+  const editable = isLeadUnlocked();
+  wrap.style.display = editable ? 'flex' : 'none';
+  if (!editable) return;
+  wrap.innerHTML = `<div class="drag-pool-head">
+      <span class="drag-pool-label">🖐️ ${t('dragPoolLabel')}</span>
+    </div>
+    <div class="drag-pool-chips">
+      ${rosterData.agents.map(a=>`<span class="drag-chip" draggable="true" data-name="${a}"><span class="drag-chip-avatar">${initials(a)}</span>${a}</span>`).join('')}
+    </div>`;
+  wrap.querySelectorAll('.drag-chip').forEach(chip=>{
+    chip.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', chip.dataset.name); chip.classList.add('dragging'); });
+    chip.addEventListener('dragend', ()=> chip.classList.remove('dragging'));
+  });
+}
+
+/* ---------- Summary table: Daily vs Weekend/holiday shift counts per person ---------- */
+const WORK_COLUMNS = ['day1','day2','hq','night1','night2'];
+function renderSummaryTable(dates){
+  const totals = {}; // name -> {daily, weekend}
+  dates.forEach(d=>{
+    const key = ymd(d);
+    const cell = rosterData.days[key];
+    if (!cell) return;
+    const holiday = isHoliday(d);
+    WORK_COLUMNS.forEach(colKey=>{
+      const val = cell[colKey];
+      const names = Array.isArray(val) ? val : (val ? [val] : []);
+      names.forEach(n=>{
+        if (!totals[n]) totals[n] = { daily:0, weekend:0 };
+        if (holiday) totals[n].weekend++; else totals[n].daily++;
+      });
+    });
+  });
+  const rows = Object.keys(totals).sort((a,b)=> (totals[b].daily+totals[b].weekend) - (totals[a].daily+totals[a].weekend) || a.localeCompare(b));
+  const panel = document.getElementById('summary-panel');
+  if (!rows.length){
+    panel.innerHTML = `<div class="summary-title">📊 ${t('summaryTitle')}</div><div class="leave-req-empty" style="padding:10px 0;">—</div>`;
+    return;
+  }
+  const maxCount = Math.max(1, ...rows.map(n=>Math.max(totals[n].daily, totals[n].weekend)));
+  panel.innerHTML = `<div class="summary-title">📊 ${t('summaryTitle')}</div>
+    <table class="summary-table">
+      <thead><tr><th>${t('teamMember')}</th><th>${t('summaryDaily')}</th><th>${t('summaryWeekend')}</th><th>${t('summaryTotal')}</th></tr></thead>
+      <tbody>
+        ${rows.map(n=>{
+          const r = totals[n];
+          const dailyPct = Math.round((r.daily/maxCount)*100);
+          const weekendPct = Math.round((r.weekend/maxCount)*100);
+          return `<tr>
+            <td class="summary-name"><span class="summary-avatar">${initials(n)}</span>${n}</td>
+            <td><div class="summary-bar-cell"><span>${r.daily}</span><div class="summary-bar-track"><div class="summary-bar-fill daily" style="width:${dailyPct}%;"></div></div></div></td>
+            <td><div class="summary-bar-cell"><span>${r.weekend}</span><div class="summary-bar-track"><div class="summary-bar-fill weekend" style="width:${weekendPct}%;"></div></div></div></td>
+            <td><b>${r.daily+r.weekend}</b></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ---------- Import from Excel (maps the team's existing xlsx roster into this tool) ---------- */
+const IMPORT_BUILTIN_MATCH = [
+  { test:h=>h.startsWith('day_1'), key:'day1' },
+  { test:h=>h.startsWith('day_2'), key:'day2' },
+  { test:h=>h.startsWith('day_3'), key:'day3', label:{en:'Day_3 (07:00-19:00)', fa:'روز_۳ (۰۷:۰۰-۱۹:۰۰)'}, color:'#DBEAFE', text:'#1D4ED8' },
+  { test:h=>h.includes('hq office'), key:'hq' },
+  { test:h=>h.startsWith('night_1'), key:'night1' },
+  { test:h=>h.startsWith('night_2'), key:'night2' },
+  { test:h=>h.includes('leadership on-call'), key:'oncall', preferLast:true },
+  { test:h=>h==='off', key:'off' },
+  { test:h=>h.includes('leave request'), key:'leaveRequest' },
+  { test:h=>h==='cab', key:'cab' },
+];
+const IMPORT_SKIP = h => !h || h==='date' || h==='day' || h.includes('eligible');
+function normHeader(h){ return String(h||'').toLowerCase().replace(/\s+/g,' ').replace(/\(.*?\)/g,'').trim(); }
+function slugifyHeader(h){ return 'imp_' + String(h||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,24); }
+const IMPORT_PLACEHOLDER_TOKENS = new Set(['na','n/a','n.a','none','nil','tbd','-','—','all','n\\a']);
+function splitNames(raw){
+  return String(raw==null?'':raw).split(/[\n\r,\/]+/)
+    .map(s=>s.trim())
+    .filter(s=>s && !IMPORT_PLACEHOLDER_TOKENS.has(s.toLowerCase()));
+}
+
+async function importFromExcelFile(file){
+  if (typeof XLSX === 'undefined'){ alert(t('importLibFail')); return; }
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type:'array', cellDates:true });
+  const sheetName = wb.SheetNames.includes('Roster') ? 'Roster' : wb.SheetNames[0];
+  const sheet = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'', raw:true });
+  if (!rows.length){ alert(t('importNoData')); return; }
+
+  const header = rows[0].map(h=>String(h||''));
+  const normed = header.map(normHeader);
+
+  // Resolve the Gregorian "Date" column: the first column literally named "Date" whose cells parse as dates.
+  const dateColIdx = normed.findIndex(h=>h==='date');
+  if (dateColIdx===-1){ alert(t('importNoDateCol')); return; }
+
+  // Map each column index to either a builtin roster column or a new custom column (skip Date/Day/Eligible/blank).
+  const colMap = {}; // colIdx -> {key, multi}
+  const oncallCandidates = [];
+  header.forEach((raw, idx)=>{
+    if (idx===dateColIdx) return;
+    const h = normed[idx];
+    if (IMPORT_SKIP(h)) return;
+    const builtin = IMPORT_BUILTIN_MATCH.find(m=>m.test(h));
+    if (builtin){
+      if (builtin.key==='day3' && !rosterData.columns.find(c=>c.key==='day3')){
+        rosterData.columns.push({ key:'day3', label:builtin.label, color:builtin.color, text:builtin.text, multi:true, builtin:false });
+      }
+      if (builtin.preferLast){ oncallCandidates.push(idx); return; } // resolved after the loop — use the last match
+      colMap[idx] = { key:builtin.key, multi: getColumn(builtin.key).multi };
+    } else {
+      const key = slugifyHeader(raw) || ('imp_col_'+idx);
+      if (!rosterData.columns.find(c=>c.key===key)){
+        rosterData.columns.push({ key, label:{en:raw.split('\n')[0].trim(), fa:raw.split('\n')[0].trim()}, color:'#E2E8F0', text:'#334155', multi:true, builtin:false });
+      }
+      colMap[idx] = { key, multi:true };
+    }
+  });
+  if (oncallCandidates.length){
+    const idx = oncallCandidates[oncallCandidates.length-1]; // the more detailed "Leadership On-Call" header comes last in the sheet
+    colMap[idx] = { key:'oncall', multi:false };
+  }
+
+  let importedDays = 0;
+  const newAgents = new Set(rosterData.agents);
+  for (let r=1; r<rows.length; r++){
+    const row = rows[r];
+    const rawDate = row[dateColIdx];
+    let d = null;
+    if (rawDate instanceof Date && !isNaN(rawDate)) d = rawDate;
+    else if (typeof rawDate === 'string' && /^\d{4}-\d{2}-\d{2}/.test(rawDate)) d = new Date(rawDate);
+    if (!d || isNaN(d)) continue; // skips separator rows like "Nowruz 1405" and blank rows
+
+    const key = ymd(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+    const cell = dayCell(key);
+    Object.entries(colMap).forEach(([idxStr, m])=>{
+      const raw = row[Number(idxStr)];
+      if (raw==null || raw==='') return;
+      if (m.multi){
+        const names = splitNames(raw);
+        if (!names.length) return;
+        cell[m.key] = names;
+        if (WORK_COLUMNS.includes(m.key) || m.key==='off') names.forEach(n=>newAgents.add(n));
+      } else {
+        const v = String(raw).trim();
+        if (v && !IMPORT_PLACEHOLDER_TOKENS.has(v.toLowerCase())){
+          cell[m.key] = v;
+          newAgents.add(v);
+        }
+      }
+    });
+    importedDays++;
+  }
+
+  rosterData.agents = Array.from(newAgents).filter(Boolean);
+  saveRoster(rosterData);
+  renderRoster();
+  alert(t('importDone').replace('{n}', importedDays));
+}
+
+/* ---------- Cell editor (works for both multi-name and single-name columns) ---------- */
+function openCellEditor(dateKey, colKey){
+  const col = getColumn(colKey);
+  let overlay = document.getElementById('cellEditorOverlay');
+  if (!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'cellEditorOverlay';
+    overlay.className = 'lead-overlay';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if (e.target===overlay){ overlay.classList.remove('show'); renderRoster(); } });
+  }
+  renderCellEditor(overlay, dateKey, col);
+  overlay.classList.add('show');
+}
+function renderCellEditor(overlay, dateKey, col){
+  const cell = dayCell(dateKey);
+  const val = cell[col.key];
+  const names = col.multi ? (Array.isArray(val)?val:[]) : (val ? [val] : []);
+  const jal = jalaliStr(new Date(...dateKey.split('-').map((v,i)=>i===1?Number(v)-1:Number(v))), currentLang);
+  overlay.innerHTML = `<div class="lead-modal" style="max-width:420px;">
+    <h3 style="color:${col.text};">${colLabel(col)}</h3>
+    <p>${jal}</p>
+    <div class="cell-editor-chips" id="cell-editor-chips">
+      ${names.map(n=>`<span class="cell-chip lg" style="background:${col.color}; color:${col.text};">${n}<button data-rm-name="${n}">✕</button></span>`).join('') || `<span class="leave-req-empty">—</span>`}
+    </div>
+    <div class="lead-sub-label" style="margin-top:14px;">${t('pickExisting')}</div>
+    <div class="jalali-select-row" style="margin-bottom:10px;">
+      <select id="cell-editor-pick" style="flex:1;">
+        <option value="">—</option>
+        ${rosterData.agents.map(a=>`<option value="${a}">${a}</option>`).join('')}
+      </select>
+      <button class="tbtn small" id="cell-editor-pick-add">${t('addShift')}</button>
+    </div>
+    <input type="text" id="cell-editor-free" placeholder="${t('addName')}">
+    <div class="lead-actions" style="margin-top:16px;">
+      <button class="tbtn" id="cell-editor-close" style="background:var(--teal); color:#fff; border-color:var(--teal);">${t('done')}</button>
+    </div>
+  </div>`;
+
+  function addName(name){
+    if (!name) return;
+    if (col.multi){
+      const list = Array.isArray(cell[col.key]) ? cell[col.key] : [];
+      if (!list.includes(name)) list.push(name);
+      cell[col.key] = list;
+    } else {
+      cell[col.key] = name;
+    }
+    saveRoster(rosterData);
+    renderCellEditor(overlay, dateKey, col);
+    renderRoster();
+  }
+  overlay.querySelectorAll('[data-rm-name]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const name = btn.dataset.rmName;
+    if (col.multi){ cell[col.key] = (cell[col.key]||[]).filter(n=>n!==name); }
+    else { cell[col.key] = ''; }
+    saveRoster(rosterData);
+    renderCellEditor(overlay, dateKey, col);
+    renderRoster();
+  }));
+  document.getElementById('cell-editor-pick-add').addEventListener('click', ()=>{
+    const sel = document.getElementById('cell-editor-pick');
+    addName(sel.value);
+  });
+  const freeInp = document.getElementById('cell-editor-free');
+  freeInp.addEventListener('keydown', (e)=>{
+    if (e.key==='Enter' && freeInp.value.trim()){ addName(freeInp.value.trim()); freeInp.value=''; }
+  });
+  document.getElementById('cell-editor-close').addEventListener('click', ()=>{
+    overlay.classList.remove('show');
+    renderRoster();
+  });
+}
+
+/* ---------- Team (agent pool) manager ---------- */
+function openTeamManager(){
+  let overlay = document.getElementById('teamMgrOverlay');
+  if (!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'teamMgrOverlay';
+    overlay.className = 'lead-overlay';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if (e.target===overlay) overlay.classList.remove('show'); });
+  }
+  renderTeamManager(overlay);
+  overlay.classList.add('show');
+}
+function renderTeamManager(overlay){
+  const rows = rosterData.agents.map(a=>`<div class="shiftmgr-row">
+      <span class="shiftmgr-label" style="flex:1; border:none; padding:6px 2px;">${a}</span>
+      <button class="agent-rm" data-remove-agent="${a}" title="${t('remove')}">✕</button>
+    </div>`).join('') || `<div class="leave-req-empty" style="padding:8px 0;">—</div>`;
+  overlay.innerHTML = `<div class="lead-modal" style="max-width:420px;">
+    <h3>👥 ${t('manageTeam')}</h3>
+    <p>${t('manageTeamDesc')}</p>
+    <div id="teammgr-rows" style="max-height:280px; overflow-y:auto;">${rows}</div>
+    <div class="shiftmgr-add">
+      <input type="text" id="teammgr-new-name" placeholder="${t('newMemberPlaceholder')}">
+      <button class="tbtn small" id="teammgr-add-btn" style="background:var(--teal); color:#fff; border-color:var(--teal);">${t('addMember')}</button>
+    </div>
+    <div class="lead-actions" style="margin-top:16px;">
+      <button class="tbtn" id="teammgr-close">${t('done')}</button>
+    </div>
+  </div>`;
+  overlay.querySelectorAll('[data-remove-agent]').forEach(btn=>btn.addEventListener('click', ()=>{
+    rosterData.agents = rosterData.agents.filter(a=>a!==btn.dataset.removeAgent);
+    saveRoster(rosterData);
+    renderTeamManager(overlay);
+  }));
+  document.getElementById('teammgr-add-btn').addEventListener('click', ()=>{
+    const inp = document.getElementById('teammgr-new-name');
+    const name = inp.value.trim();
+    if (!name) return;
+    if (rosterData.agents.includes(name)){ alert(t('alreadyInRoster')); return; }
+    rosterData.agents.push(name);
+    saveRoster(rosterData);
+    inp.value='';
+    renderTeamManager(overlay);
+  });
+  document.getElementById('teammgr-close').addEventListener('click', ()=>{
+    overlay.classList.remove('show');
+  });
+}
+
+/* ---------- Official-holiday manager (Jalali date entry) ---------- */
+function openHolidayManager(){
+  let overlay = document.getElementById('holidayMgrOverlay');
+  if (!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'holidayMgrOverlay';
+    overlay.className = 'lead-overlay';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if (e.target===overlay) overlay.classList.remove('show'); });
+  }
+  renderHolidayManager(overlay);
+  overlay.classList.add('show');
+}
+function renderHolidayManager(overlay){
+  const entries = Object.entries(rosterData.holidays).sort((a,b)=>a[0]<b[0]?-1:1);
+  const rows = entries.map(([date,label])=>{
+    const [y,m,d]=date.split('-').map(Number);
+    const jal = jalaliStr(new Date(y,m-1,d), currentLang);
+    return `<div class="shiftmgr-row">
+      <span class="holiday-date">${jal} <span class="jalali-sub">(${date})</span></span>
+      <span class="holiday-label">${label}</span>
+      <button class="agent-rm" data-remove-holiday="${date}" title="${t('remove')}">✕</button>
+    </div>`;
+  }).join('') || `<div class="leave-req-empty" style="padding:8px 0;">—</div>`;
+  overlay.innerHTML = `<div class="lead-modal" style="max-width:460px;">
+    <h3>📅 ${t('manageHolidays')}</h3>
+    <p>${t('manageHolidaysDesc')}</p>
+    <div id="holidaymgr-rows" style="max-height:220px; overflow-y:auto;">${rows}</div>
+    <div class="shiftmgr-add" style="flex-wrap:wrap;">
+      <div class="jalali-select-row">
+        <input type="number" id="holidaymgr-jy" value="${currentJY}" style="width:64px;">
+        <select id="holidaymgr-jm">${JALALI_MONTHS_FA.map((mfa,i)=>`<option value="${i+1}" ${i+1===currentJM?'selected':''}>${currentLang==='fa'?mfa:JALALI_MONTHS_EN[i]}</option>`).join('')}</select>
+        <input type="number" id="holidaymgr-jd" min="1" max="31" value="1" style="width:56px;">
+      </div>
+      <input type="text" id="holidaymgr-new-label" placeholder="${t('holidayNamePlaceholder')}" style="flex:1; min-width:140px;">
+      <button class="tbtn small" id="holidaymgr-add-btn" style="background:var(--teal); color:#fff; border-color:var(--teal);">${t('addShift')}</button>
+    </div>
+    <div class="lead-actions" style="margin-top:16px;">
+      <button class="tbtn" id="holidaymgr-close">${t('done')}</button>
+    </div>
+  </div>`;
+  overlay.querySelectorAll('[data-remove-holiday]').forEach(btn=>btn.addEventListener('click', ()=>{
+    delete rosterData.holidays[btn.dataset.removeHoliday];
+    saveRoster(rosterData);
+    renderHolidayManager(overlay);
+    renderRoster();
+  }));
+  document.getElementById('holidaymgr-add-btn').addEventListener('click', ()=>{
+    const jy = Number(document.getElementById('holidaymgr-jy').value);
+    const jm = Number(document.getElementById('holidaymgr-jm').value);
+    const jd = Number(document.getElementById('holidaymgr-jd').value);
+    const label = document.getElementById('holidaymgr-new-label').value.trim() || t('officialHoliday');
+    if (!jy || !jm || !jd) return;
+    const [gy,gm,gd] = jalaliToGregorian(jy, jm, jd);
+    const date = `${gy}-${String(gm).padStart(2,'0')}-${String(gd).padStart(2,'0')}`;
+    rosterData.holidays[date] = label;
+    saveRoster(rosterData);
+    renderHolidayManager(overlay);
+    renderRoster();
+  });
+  document.getElementById('holidaymgr-close').addEventListener('click', ()=>{
+    overlay.classList.remove('show');
+    renderRoster();
+  });
+}
+
+/* ---------- Column manager (leadership can add/rename/recolor columns) ---------- */
+function openColumnManager(){
+  let overlay = document.getElementById('colMgrOverlay');
+  if (!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'colMgrOverlay';
+    overlay.className = 'lead-overlay';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if (e.target===overlay) overlay.classList.remove('show'); });
+  }
+  renderColumnManager(overlay);
+  overlay.classList.add('show');
+}
+function renderColumnManager(overlay){
+  const rows = rosterData.columns.map(c=>`<div class="shiftmgr-row" data-key="${c.key}">
+      <input type="color" class="shiftmgr-color" data-color="${c.key}" value="${c.color}">
+      <input type="text" class="shiftmgr-label" data-label="${c.key}" value="${colLabel(c)}">
+      ${!c.builtin ? `<button class="agent-rm" data-remove-col="${c.key}" title="${t('remove')}">✕</button>` : `<span class="shiftmgr-builtin">${t('builtin')}</span>`}
+    </div>`).join('');
+  overlay.innerHTML = `<div class="lead-modal" style="max-width:480px;">
+    <h3>🎨 ${t('manageShifts')}</h3>
+    <p>${t('manageShiftsDesc')}</p>
+    <div id="colmgr-rows" style="max-height:280px; overflow-y:auto;">${rows}</div>
+    <div class="shiftmgr-add">
+      <input type="color" id="colmgr-new-color" value="#93C5FD">
+      <input type="text" id="colmgr-new-label" placeholder="${t('newShiftPlaceholder')}">
+      <select id="colmgr-new-type"><option value="multi">${t('colTypeMulti')}</option><option value="single">${t('colTypeSingle')}</option></select>
+      <button class="tbtn small" id="colmgr-add-btn" style="background:var(--teal); color:#fff; border-color:var(--teal);">${t('addShift')}</button>
+    </div>
+    <div class="lead-actions" style="margin-top:16px;">
+      <button class="tbtn" id="colmgr-close">${t('done')}</button>
+    </div>
+  </div>`;
+  overlay.querySelectorAll('[data-color]').forEach(inp=>inp.addEventListener('input', ()=>{
+    getColumn(inp.dataset.color).color = inp.value;
+    saveRoster(rosterData);
+  }));
+  overlay.querySelectorAll('[data-label]').forEach(inp=>inp.addEventListener('change', ()=>{
+    const col = getColumn(inp.dataset.label);
+    col.label[currentLang] = inp.value;
+    saveRoster(rosterData);
+  }));
+  overlay.querySelectorAll('[data-remove-col]').forEach(btn=>btn.addEventListener('click', ()=>{
+    if (!confirm(t('confirmRemoveShift'))) return;
+    const key = btn.dataset.removeCol;
+    rosterData.columns = rosterData.columns.filter(c=>c.key!==key);
+    Object.values(rosterData.days).forEach(cell=>{ delete cell[key]; });
+    saveRoster(rosterData);
+    renderColumnManager(overlay);
+    renderRoster();
+  }));
+  document.getElementById('colmgr-add-btn').addEventListener('click', ()=>{
+    const label = document.getElementById('colmgr-new-label').value.trim();
+    const color = document.getElementById('colmgr-new-color').value;
+    const type = document.getElementById('colmgr-new-type').value;
+    if (!label) return;
+    const key = 'custom_' + Date.now();
+    rosterData.columns.push({ key, label:{en:label, fa:label}, color, text:'#1E293B', multi: type==='multi', builtin:false });
+    saveRoster(rosterData);
+    renderColumnManager(overlay);
+    renderRoster();
+  });
+  document.getElementById('colmgr-close').addEventListener('click', ()=>{
+    overlay.classList.remove('show');
+    renderRoster();
+  });
+}
+
+applyI18n();
+</script>
+</body>
+</html>

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Desk Analytics Hub</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230D9488'/%3E%3Ctext x='50' y='66' font-size='54' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%97%8E%3C/text%3E%3C/svg%3E">
+<!-- perf: XLSX only runs inside the three report iframes (each bundles its own copy) — not needed here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+<style>
+  :root{
+    --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F1F4F9; --border:#E3E8F0;
+    --text:#1E293B; --muted:#64748B; --teal:#0D9488; --teal-dark:#0B7A70; --amber:#D97706; --red:#DC2626; --blue:#2563EB;
+    --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 2px 8px rgba(15,23,42,0.05);
+    --shadow-lg: 0 8px 24px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.06);
+    --sidebar-w: 272px; --topbar-h: 68px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ margin:0; background:var(--panel-alt); color:var(--text); font-family:'Vazirmatn','Inter','Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
+  button,input,select{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--teal); outline-offset:2px; border-radius:6px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+
+  .shell{ display:flex; min-height:100vh; }
+
+  .sidebar{ width:var(--sidebar-w); flex-shrink:0; background:linear-gradient(190deg,#0F172A 0%, #0B2A27 85%); color:#E2E8F0; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; z-index:40; transition:transform .25s ease; }
+  .brand{ display:flex; align-items:center; gap:12px; padding:22px 20px 18px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .brand-icon{ width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,var(--teal),#14B8A6); display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 4px 14px rgba(13,148,136,0.45); flex-shrink:0; }
+  .brand-title{ font-size:14.5px; font-weight:800; color:#fff; }
+  .brand-sub{ font-size:11px; color:#94A3B8; margin-top:2px; }
+
+  .nav{ padding:16px 12px; display:flex; flex-direction:column; gap:4px; flex:1; overflow-y:auto; }
+  .nav-group-label{ font-size:10.5px; color:#64748B; font-weight:700; letter-spacing:.04em; margin:14px 10px 4px; text-transform:uppercase; }
+  .nav-item{ display:flex; align-items:center; gap:12px; width:100%; text-align:right; background:transparent; border:none; border-radius:12px; padding:10px 12px; cursor:pointer; color:#CBD5E1; position:relative; transition:background .15s, color .15s; }
+  html[dir="ltr"] .nav-item{ text-align:left; }
+  .nav-item:hover{ background:rgba(255,255,255,0.06); color:#fff; }
+  .nav-item.active{ background:rgba(13,148,136,0.18); color:#fff; }
+  .nav-item.active::before{ content:""; position:absolute; right:0; top:8px; bottom:8px; width:3px; border-radius:3px; background:var(--teal); }
+  .nav-icon{ font-size:18px; width:26px; text-align:center; flex-shrink:0; }
+  .nav-label{ display:flex; flex-direction:column; gap:1px; line-height:1.3; min-width:0; flex:1; }
+  .nav-label b{ font-size:12.8px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nav-label small{ font-size:10.5px; color:#8CA0B3; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nav-item.active .nav-label small{ color:#9FE0D8; }
+  .nav-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; background:#475569; }
+  .nav-dot.ready{ background:#2DD4BF; box-shadow:0 0 0 3px rgba(45,212,191,0.18); }
+
+  .sidebar-footer{ padding:14px 16px 18px; border-top:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:10px; }
+  .date-chip{ display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#E2E8F0; font-size:11.5px; padding:6px 12px; border-radius:999px; }
+  .lead-btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:linear-gradient(135deg,#F59E0B,#D97706); color:#fff; border:none; border-radius:12px; padding:11px 14px; font-size:12.5px; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(217,119,6,0.35); transition:transform .15s; }
+  .lead-btn:hover{ transform:translateY(-1px); }
+  .lead-btn.unlocked{ background:linear-gradient(135deg,#14B8A6,#0D9488); box-shadow:0 4px 14px rgba(13,148,136,0.35); }
+  .version{ font-size:10px; color:#4B5768; text-align:center; }
+  .sidebar-close{ display:none; margin-inline-start:auto; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; border-radius:8px; width:28px; height:28px; cursor:pointer; }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{ height:var(--topbar-h); flex-shrink:0; background:#fff; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 26px; position:sticky; top:0; z-index:30; }
+  .crumb{ display:flex; align-items:center; gap:10px; font-size:15px; font-weight:800; }
+  .crumb .eyebrow-dot{ width:8px; height:8px; border-radius:50%; background:var(--teal); }
+  .topbar-actions{ display:flex; gap:8px; align-items:center; }
+  .tbtn{ display:inline-flex; align-items:center; gap:6px; background:var(--panel-alt); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:8px 14px; font-size:12.5px; cursor:pointer; font-weight:600; transition:.15s; text-decoration:none; }
+  .tbtn:hover{ border-color:var(--teal); background:#F0FDFA; }
+  .tbtn.small{ padding:6px 10px; font-size:11.5px; }
+  .lang-switch{ display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+  .lang-switch button{ background:var(--panel-alt); border:none; padding:8px 12px; font-size:11.5px; font-weight:700; cursor:pointer; color:var(--muted); }
+  .lang-switch button.active{ background:var(--teal); color:#fff; }
+
+  .content{ padding:26px; flex:1; }
+  .tab-panel{ display:none; animation:fadeUp .35s ease; }
+  .tab-panel.active{ display:block; }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:translateY(0);} }
+
+  .hero{ background:linear-gradient(120deg,#0F172A 0%, #0B2A27 60%, #0D9488 140%); border-radius:22px; padding:34px 34px 28px; color:#fff; position:relative; overflow:hidden; margin-bottom:26px; }
+  .hero::after{ content:""; position:absolute; inset:0; background:radial-gradient(420px 220px at 90% -20%, rgba(45,212,191,0.35), transparent); pointer-events:none; }
+  .hero-eyebrow{ font-size:12px; font-weight:700; color:#7DEAD9; letter-spacing:.04em; text-transform:uppercase; position:relative; }
+  .hero h1{ font-size:25px; font-weight:800; margin:8px 0 10px; position:relative; max-width:660px; line-height:1.55; }
+  .hero p{ font-size:13.5px; color:#CBD5E1; max-width:620px; line-height:1.9; position:relative; }
+  .hero-stats{ display:flex; gap:14px; margin-top:22px; flex-wrap:wrap; position:relative; }
+  .hero-stat{ background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:14px; padding:12px 18px; backdrop-filter:blur(4px); min-width:118px; }
+  .hero-stat b{ display:block; font-size:18px; font-weight:800; }
+  .hero-stat span{ font-size:11px; color:#9FB3C8; }
+  .hero-stat.good b{ color:#7DEAD9; }
+  .hero-stat.warn b{ color:#FCD34D; }
+  .hero-stat.muted b{ color:#94A3B8; }
+
+  .section-title{ font-size:15px; font-weight:800; margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+  .section-title .dot{ width:8px; height:8px; border-radius:50%; background:var(--teal); }
+
+  .card-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
+  @media (max-width:1100px){ .card-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:700px){ .card-grid{ grid-template-columns:1fr; } }
+  .report-card{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px; cursor:pointer; transition:transform .18s, box-shadow .18s, border-color .18s; position:relative; }
+  .report-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg); border-color:var(--teal); }
+  .rc-icon{ width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .rc-icon.blue{ background:#EFF6FF; } .rc-icon.teal{ background:#F0FDFA; } .rc-icon.amber{ background:#FFFBEB; }
+  .rc-title{ font-size:15px; font-weight:800; }
+  .rc-desc{ font-size:12.5px; color:var(--muted); line-height:1.8; }
+  .rc-meta{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+  .rc-chip{ font-size:10.5px; background:var(--panel-alt); border:1px solid var(--border); color:var(--muted); padding:4px 9px; border-radius:999px; }
+  .rc-badge{ position:absolute; top:16px; left:16px; font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .rc-badge.ready{ background:#F0FDFA; color:var(--teal-dark); border:1px solid #99E6DC; }
+  .rc-badge.pending{ background:var(--panel-alt); color:var(--muted); border:1px solid var(--border); }
+  .rc-cta{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--teal); padding-top:8px; }
+
+  .info-callout{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:22px 24px; box-shadow:var(--shadow); margin-bottom:30px; display:flex; gap:18px; align-items:flex-start; }
+  .info-callout .fc-icon{ font-size:28px; flex-shrink:0; }
+  .info-callout h3{ font-size:14.5px; margin:0 0 6px; font-weight:800; }
+  .info-callout p{ font-size:12.5px; color:var(--muted); line-height:1.85; margin:0; }
+
+  .guide-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:32px; }
+  @media (max-width:900px){ .guide-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .guide-grid{ grid-template-columns:1fr; } }
+  .guide-step{ background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
+  .guide-num{ width:26px; height:26px; border-radius:8px; background:var(--panel-alt); color:var(--teal); font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .guide-step h4{ font-size:13px; margin:0 0 6px; font-weight:700; }
+  .guide-step p{ font-size:11.8px; color:var(--muted); line-height:1.75; margin:0; }
+
+  .standards-panel{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:22px 24px; box-shadow:var(--shadow); margin-bottom:10px; }
+  .standards-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px 26px; margin-top:14px; }
+  @media (max-width:760px){ .standards-grid{ grid-template-columns:1fr; } }
+  .standard-item{ display:flex; align-items:flex-start; gap:10px; font-size:12.5px; color:var(--text); line-height:1.8; }
+  .standard-item .chk{ color:var(--teal); font-weight:900; flex-shrink:0; margin-top:1px; }
+
+  .frame-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .frame-head-text h2{ font-size:16.5px; margin:0 0 4px; font-weight:800; }
+  .frame-head-text p{ font-size:12px; color:var(--muted); margin:0; max-width:560px; line-height:1.8; }
+  .frame-actions{ display:flex; gap:8px; }
+  .frame-wrap{ background:#fff; border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-lg); }
+  .frame-wrap iframe{ width:100%; height:80vh; min-height:640px; border:none; display:block; background:#fff; }
+  .frame-wrap:fullscreen iframe{ height:100vh; }
+
+  .lead-overlay{ position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(2px); z-index:200; display:none; align-items:center; justify-content:center; padding:20px; }
+  .lead-overlay.show{ display:flex; }
+  .lead-modal{ background:#fff; border-radius:18px; padding:26px; width:100%; max-width:420px; box-shadow:var(--shadow-lg); }
+  .lead-modal h3{ font-size:15px; margin:0 0 6px; font-weight:800; }
+  .lead-modal p{ font-size:12px; color:var(--muted); margin:0 0 14px; line-height:1.8; }
+  .lead-modal input{ width:100%; border:1px solid var(--border); border-radius:10px; padding:11px 14px; font-size:13px; margin-bottom:12px; direction:ltr; text-align:left; }
+  .lead-modal .lead-actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .lead-modal .err-msg{ color:var(--red); font-size:11.5px; margin:-6px 0 12px; display:none; }
+
+  .lead-drawer{ position:fixed; inset:0; background:rgba(15,23,42,0.5); z-index:190; display:none; align-items:stretch; justify-content:flex-end; }
+  .lead-drawer.show{ display:flex; }
+  .lead-panel{ width:560px; max-width:94vw; background:#fff; height:100%; overflow-y:auto; padding:26px; box-shadow:-10px 0 30px rgba(0,0,0,.2); }
+  .lead-panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .lead-panel-head h3{ font-size:16px; margin:0; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .lead-badge{ font-size:10px; font-weight:700; background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:3px 9px; border-radius:999px; }
+  .lead-close{ background:var(--panel-alt); border:1px solid var(--border); border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; }
+  .lead-note{ font-size:11.8px; color:var(--muted); line-height:1.85; margin:10px 0 20px; background:var(--panel-alt); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+  .lead-row{ border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; }
+  .lead-row-label{ font-size:12.5px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .lead-sub-label{ font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.03em; margin:10px 0 6px; }
+  .folder-sync-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .folder-status-text{ font-size:11px; color:var(--muted); flex:1; min-width:140px; }
+  .lead-row input[type=url]{ width:100%; border:1px solid var(--border); border-radius:9px; padding:9px 11px; font-size:11.8px; direction:ltr; text-align:left; margin-bottom:8px; }
+  .lead-row-actions{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .lead-auto{ font-size:11px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+  .lead-interval{ width:44px; border:1px solid var(--border); border-radius:6px; padding:3px 5px; font-size:11px; text-align:center; }
+  .lead-divider{ border:none; border-top:1px dashed var(--border); margin:12px 0; }
+  .lead-logout{ margin-top:6px; width:100%; }
+
+  .hamburger{ display:none; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:#fff; align-items:center; justify-content:center; font-size:16px; cursor:pointer; }
+  .backdrop{ display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:39; }
+  .backdrop.show{ display:block; }
+  @media (max-width:960px){
+    .sidebar{ position:fixed; right:0; top:0; transform:translateX(100%); box-shadow:-10px 0 30px rgba(0,0,0,0.25); }
+    .sidebar.open{ transform:translateX(0); }
+    .sidebar-close{ display:block; }
+    .hamburger{ display:flex; }
+    .card-grid, .guide-grid{ grid-template-columns:1fr; }
+    .content{ padding:16px; }
+    .hero{ padding:24px 18px; }
+    .topbar{ padding:0 14px; }
+    .info-callout{ flex-direction:column; }
+  }
+
+  /* ---------- Roster ---------- */
+  .roster-toolbar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .roster-week-nav{ display:flex; align-items:center; gap:8px; }
+  .roster-week-label{ font-size:12.5px; font-weight:700; color:var(--text); background:var(--panel-alt); border:1px solid var(--border); border-radius:9px; padding:8px 14px; min-width:170px; text-align:center; }
+  .roster-add-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .roster-add-row select, .roster-add-row input{ border:1px solid var(--border); border-radius:9px; padding:8px 10px; font-size:12px; }
+  .roster-wrap{ background:var(--panel); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); overflow-x:auto; padding:6px; }
+  table.roster-table{ border-collapse:separate; border-spacing:0 6px; width:100%; min-width:760px; }
+  table.roster-table th{ font-size:11.5px; font-weight:700; color:var(--muted); text-align:center; padding:6px 8px; }
+  table.roster-table th.today-col{ color:var(--teal-dark); }
+  table.roster-table td{ padding:4px 6px; text-align:center; }
+  table.roster-table td.agent-col, table.roster-table th.agent-col{ text-align:right; min-width:190px; position:sticky; right:0; background:var(--panel-alt); border-radius:12px 0 0 12px; }
+  html[dir="ltr"] table.roster-table td.agent-col, html[dir="ltr"] table.roster-table th.agent-col{ text-align:left; right:auto; left:0; border-radius:0 12px 12px 0; }
+  table.roster-table th.agent-col{ background:transparent; }
+  table.roster-table tr td{ background:var(--panel-alt); }
+  table.roster-table tr td:first-child{ border-radius:12px 0 0 12px; }
+  html[dir="ltr"] table.roster-table tr td:first-child{ border-radius:0 12px 12px 0; }
+  table.roster-table tr td:last-child{ border-radius:0 12px 12px 0; }
+  html[dir="ltr"] table.roster-table tr td:last-child{ border-radius:12px 0 0 12px; }
+  .agent-row-inner{ display:flex; align-items:center; gap:10px; padding:8px 4px; }
+  .agent-avatar{ width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#14B8A6); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; text-transform:uppercase; }
+  .agent-name{ font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .agent-rm{ background:transparent; border:none; color:var(--red); cursor:pointer; font-size:13px; opacity:.55; flex-shrink:0; }
+  .agent-rm:hover{ opacity:1; }
+  .shift-chip{ display:flex; align-items:center; justify-content:center; min-width:64px; height:38px; border-radius:10px; font-size:11.5px; font-weight:800; cursor:default; margin:0 auto; letter-spacing:.02em; }
+  .shift-chip.editable{ cursor:pointer; transition:transform .1s; border:2px solid transparent; }
+  .shift-chip.editable:hover{ transform:scale(1.05); }
+  .shift-chip.editable:active{ transform:scale(.96); }
+  .roster-legend{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; align-items:center; }
+  .roster-legend .lg-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); font-weight:600; }
+  .roster-legend .lg-swatch{ width:14px; height:14px; border-radius:5px; }
+  .roster-hint{ font-size:11px; color:var(--muted); margin-top:8px; }
+
+  /* ---------- Roster v3 additions ---------- */
+  table.roster-table th.holiday-col{ background:#FEF2F2; color:#B91C1C; }
+  table.roster-table td.holiday-col{ background:#FEF2F2; }
+  table.roster-table td.holiday-col .shift-chip{ box-shadow:inset 0 0 0 1px #FCA5A5; }
+  .jalali-sub{ display:block; font-size:9.5px; color:var(--muted); font-weight:600; direction:ltr; }
+  th.holiday-col .jalali-sub{ color:#B91C1C; }
+  .shift-cell{ display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .hq-tag{ font-size:8.5px; font-weight:800; letter-spacing:.03em; background:#CFFAFE; color:#0E7490; border:1px solid #67E8F9; border-radius:6px; padding:1px 6px; cursor:default; }
+  .hq-tag.editable{ cursor:pointer; }
+  .oncall-bar{ display:flex; align-items:center; gap:10px; background:linear-gradient(90deg,#ECFDF5,#F0FDFA); border:1px solid #99E6DC; border-radius:12px; padding:10px 16px; margin-bottom:14px; font-size:12.5px; font-weight:700; flex-wrap:wrap; }
+  .oncall-icon{ font-size:16px; }
+  .oncall-label{ color:var(--teal-dark); }
+  .oncall-select{ border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; }
+  .oncall-name{ background:#fff; border:1px solid var(--border); border-radius:999px; padding:4px 12px; }
+  .leave-req-panel{ background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px 18px; margin-top:16px; }
+  .leave-req-title{ font-size:12.5px; font-weight:800; margin-bottom:12px; }
+  .leave-req-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+  @media (max-width:900px){ .leave-req-grid{ grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:560px){ .leave-req-grid{ grid-template-columns:repeat(2,1fr); } }
+  .leave-req-day-label{ font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:6px; }
+  .leave-req-chips{ display:flex; flex-wrap:wrap; gap:5px; min-height:22px; }
+  .leave-req-chip{ display:inline-flex; align-items:center; gap:4px; background:#FDF2F8; color:#9D174D; border:1px solid #FBCFE8; font-size:10.5px; font-weight:700; padding:3px 7px; border-radius:999px; }
+  .leave-req-chip button{ background:transparent; border:none; color:#9D174D; cursor:pointer; font-size:10px; padding:0; opacity:.6; }
+  .leave-req-chip button:hover{ opacity:1; }
+  .leave-req-empty{ font-size:11px; color:#CBD5E1; }
+  .leave-req-input{ width:100%; margin-top:6px; border:1px solid var(--border); border-radius:7px; padding:5px 8px; font-size:11px; }
+  .shiftmgr-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .lead-modal input.shiftmgr-color{ width:34px !important; height:34px !important; border:1px solid var(--border) !important; border-radius:8px !important; padding:2px !important; cursor:pointer; flex:0 0 auto; margin-bottom:0 !important; }
+  .lead-modal input.shiftmgr-label, .lead-modal input.holiday-label{ flex:1; width:auto !important; border:1px solid var(--border) !important; border-radius:8px !important; padding:7px 10px !important; font-size:12px !important; direction:auto !important; text-align:inherit !important; margin-bottom:0 !important; color:var(--text) !important; }
+  .shiftmgr-builtin{ font-size:10px; color:var(--muted); background:var(--panel-alt); padding:3px 8px; border-radius:999px; flex:0 0 auto; white-space:nowrap; }
+  .shiftmgr-add{ display:flex; align-items:center; gap:8px; margin-top:12px; }
+  .lead-modal .shiftmgr-add input[type=text], .lead-modal .shiftmgr-add input[type=date]{ flex:1; width:auto !important; border:1px solid var(--border) !important; border-radius:8px !important; padding:8px 10px !important; font-size:12px !important; margin-bottom:0 !important; }
+  .lead-modal .shiftmgr-add input[type=color]{ width:34px !important; height:34px !important; padding:2px !important; border-radius:8px !important; margin-bottom:0 !important; flex:0 0 auto; }
+  .holiday-date{ font-size:11.5px; font-weight:700; direction:ltr; white-space:nowrap; }
+  .jalali-select-row{ display:flex; gap:6px; align-items:center; }
+  .jalali-select-row select, .jalali-select-row input{ border:1px solid var(--border) !important; border-radius:8px !important; padding:7px 8px !important; font-size:12px !important; margin-bottom:0 !important; width:auto !important; }
+  .jalali-select-row input{ width:64px !important; text-align:center !important; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="backdrop" id="backdrop"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">🎧</div>
+      <div>
+        <div class="brand-title">Service Desk Hub</div>
+        <div class="brand-sub" data-i18n="brandSub">Analytics & Reporting Center</div>
+      </div>
+      <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">✕</button>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-tab="overview">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label"><b data-i18n="navOverview">Overview</b><small data-i18n="navOverviewSub">Summary & guide</small></span>
+      </button>
+
+      <div class="nav-group-label" data-i18n="navGroupReports">Specialized reports</div>
+
+      <button class="nav-item" data-tab="sdcm">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label"><b data-i18n="navSdcm">SDCM Registration</b><small data-i18n="navSdcmSub">Inbound / outbound calls</small></span>
+        <span class="nav-dot" id="nav-dot-sdcm"></span>
+      </button>
+
+      <button class="nav-item" data-tab="aicc">
+        <span class="nav-icon">📞</span>
+        <span class="nav-label"><b data-i18n="navAicc">AICC Performance</b><small data-i18n="navAiccSub">Answer & occupancy rate</small></span>
+        <span class="nav-dot" id="nav-dot-aicc"></span>
+      </button>
+
+      <button class="nav-item" data-tab="sla">
+        <span class="nav-icon">⏱️</span>
+        <span class="nav-label"><b data-i18n="navSla">SLA Incident</b><small data-i18n="navSlaSub">Incident & OOSLA distribution</small></span>
+        <span class="nav-dot" id="nav-dot-sla"></span>
+      </button>
+
+      <div class="nav-group-label" data-i18n="navGroupTeam">Team</div>
+      <button class="nav-item" data-tab="roster">
+        <span class="nav-icon">🗓️</span>
+        <span class="nav-label"><b data-i18n="navRoster">Shift Roster</b><small data-i18n="navRosterSub">Plan agent shifts</small></span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="date-chip">📅 <span id="today-str">—</span></div>
+      <button class="lead-btn" id="leadBtn">👑 <span data-i18n="leadBtnLocked">Leadership</span></button>
+      <div class="version">v3.1 — Service Desk Analytics</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" id="hamburger" aria-label="Open menu">☰</button>
+        <div class="crumb"><span class="eyebrow-dot"></span><span id="crumb-title" data-i18n="navOverview">Overview</span></div>
+      </div>
+      <div class="topbar-actions">
+        <div class="lang-switch">
+          <button id="langEnBtn" class="active">EN</button>
+          <button id="langFaBtn">فا</button>
+        </div>
+        <div id="topbarActions"></div>
+      </div>
+    </header>
+
+    <section class="content">
+
+      <!-- ===================== OVERVIEW ===================== -->
+      <div class="tab-panel active" id="tab-overview">
+        <div class="hero">
+          <div class="hero-eyebrow" data-i18n="heroEyebrow">Service Desk Reporting Platform</div>
+          <h1 data-i18n="heroTitle">Three independent reports, one control center — synced automatically from your own folders</h1>
+          <p data-i18n="heroText">Each report is a fully independent, ready-to-use page. Leadership can point each report at a local folder once — from then on it refreshes on its own, no re-selecting a file or folder every time.</p>
+          <div class="hero-stats" id="hero-stats">
+            <div class="hero-stat muted"><b>—</b><span data-i18n="statSdcm">SDCM registration rate</span></div>
+            <div class="hero-stat muted"><b>—</b><span data-i18n="statAicc">AICC answer rate</span></div>
+            <div class="hero-stat muted"><b>—</b><span data-i18n="statSla">SLA compliance</span></div>
+            <div class="hero-stat muted"><b>—</b><span data-i18n="statUpdated">Last updated</span></div>
+          </div>
+        </div>
+
+        <div class="section-title"><span class="dot"></span><span data-i18n="sectionReports">Reports</span></div>
+        <div class="card-grid">
+          <div class="report-card" data-tab="sdcm">
+            <div class="rc-badge pending" id="rc-badge-sdcm" data-i18n="badgePending">⏳ Awaiting data</div>
+            <div class="rc-icon blue">📋</div>
+            <div class="rc-title" data-i18n="navSdcm">SDCM Registration Report</div>
+            <div class="rc-desc" data-i18n="rcSdcmDesc">Compares inbound and outbound calls by SDCM registration status, per agent.</div>
+            <div class="rc-meta"><span class="rc-chip" data-i18n="chipSdcmTicket">SDCM ticketing file</span><span class="rc-chip" data-i18n="chipAiccLog">AICC call log</span></div>
+            <div class="rc-cta"><span data-i18n="ctaView">View report</span><span>←</span></div>
+          </div>
+
+          <div class="report-card" data-tab="aicc">
+            <div class="rc-badge pending" id="rc-badge-aicc" data-i18n="badgePending">⏳ Awaiting data</div>
+            <div class="rc-icon teal">📞</div>
+            <div class="rc-title" data-i18n="navAicc">AICC Agent Performance Dashboard</div>
+            <div class="rc-desc" data-i18n="rcAiccDesc">Answer rate, calls received vs. answered, and a full agent performance ranking.</div>
+            <div class="rc-meta"><span class="rc-chip" data-i18n="chipPerf">Performance file</span><span class="rc-chip" data-i18n="chipActivity">Activity file</span></div>
+            <div class="rc-cta"><span data-i18n="ctaView">View report</span><span>←</span></div>
+          </div>
+
+          <div class="report-card" data-tab="sla">
+            <div class="rc-badge pending" id="rc-badge-sla" data-i18n="badgePending">⏳ Awaiting data</div>
+            <div class="rc-icon amber">⏱️</div>
+            <div class="rc-title" data-i18n="navSla">Incident SLA Distribution</div>
+            <div class="rc-desc" data-i18n="rcSlaDesc">Incident distribution table by priority, plus the OOSLA breakdown by assignee group.</div>
+            <div class="rc-meta"><span class="rc-chip" data-i18n="chipIcare">Daily iCare export</span></div>
+            <div class="rc-cta"><span data-i18n="ctaView">View report</span><span>←</span></div>
+          </div>
+        </div>
+
+        <div class="info-callout">
+          <div class="fc-icon">👑</div>
+          <div>
+            <h3 data-i18n="calloutTitle">Folder sync now lives in the Leadership panel</h3>
+            <p data-i18n="calloutText">To keep this control in one trusted place, connecting a report to a local folder — and re-syncing it — is done from the Leadership panel (bottom-left), not inside each report page. Open Leadership once, pick a folder for each report, and every future visit reads the latest files automatically.</p>
+          </div>
+        </div>
+
+        <div class="section-title"><span class="dot"></span><span data-i18n="sectionGuide">Quick start guide</span></div>
+        <div class="guide-grid">
+          <div class="guide-step"><div class="guide-num">1</div><h4 data-i18n="guide1Title">Open a report</h4><p data-i18n="guide1Text">Use the sidebar menu or the cards above to enter one of the three reports.</p></div>
+          <div class="guide-step"><div class="guide-num">2</div><h4 data-i18n="guide2Title">Connect a folder once</h4><p data-i18n="guide2Text">In the Leadership panel, point each report at the folder where its daily files are saved.</p></div>
+          <div class="guide-step"><div class="guide-num">3</div><h4 data-i18n="guide3Title">Sync anytime</h4><p data-i18n="guide3Text">One click on "Sync now" reads the newest files and rebuilds the report — no re-browsing.</p></div>
+          <div class="guide-step"><div class="guide-num">4</div><h4 data-i18n="guide4Title">Export as image</h4><p data-i18n="guide4Text">Grab a ready-to-share snapshot of any report with a single click.</p></div>
+        </div>
+
+        <div class="section-title"><span class="dot"></span><span data-i18n="sectionStandards">Platform standards</span></div>
+        <div class="standards-panel">
+          <div class="standards-grid">
+            <div class="standard-item"><span class="chk">✓</span><span data-i18n="std1">Every report is an independent page with a unified design language (color, Vazirmatn/Inter font, spacing)</span></div>
+            <div class="standard-item"><span class="chk">✓</span><span data-i18n="std2">Persistent per-report folder access with one-click re-sync — no repeated file picking</span></div>
+            <div class="standard-item"><span class="chk">✓</span><span data-i18n="std3">Fully client-side processing — files are never uploaded to a server</span></div>
+            <div class="standard-item"><span class="chk">✓</span><span data-i18n="std4">Bilingual interface (English / Persian) with full RTL support</span></div>
+            <div class="standard-item"><span class="chk">✓</span><span data-i18n="std5">Accessible color contrast and visible keyboard focus</span></div>
+            <div class="standard-item"><span class="chk">✓</span><span data-i18n="std6">Standard PNG export for fast reporting to management</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== SDCM ===================== -->
+      <div class="tab-panel" id="tab-sdcm">
+        <div class="frame-head">
+          <div class="frame-head-text">
+            <h2>📋 <span data-i18n="navSdcm">SDCM Registration Report</span></h2>
+            <p data-i18n="frameSdcmDesc">Connect this report to its data folder from the Leadership panel, or open it directly.</p>
+          </div>
+          <div class="frame-actions">
+            <button class="tbtn" data-fullscreen="frame-sdcm">⛶ <span data-i18n="fullscreen">Fullscreen</span></button>
+            <a class="tbtn" href="SDCM_Registration_Report.html" target="_blank" rel="noopener">↗ <span data-i18n="openNewTab">Open in new tab</span></a>
+          </div>
+        </div>
+        <div class="frame-wrap" id="frame-sdcm">
+          <iframe id="iframe-sdcm" data-src="SDCM_Registration_Report.html" title="SDCM Registration Report"></iframe>
+        </div>
+      </div>
+
+      <!-- ===================== AICC ===================== -->
+      <div class="tab-panel" id="tab-aicc">
+        <div class="frame-head">
+          <div class="frame-head-text">
+            <h2>📞 <span data-i18n="navAicc">AICC Agent Performance Dashboard</span></h2>
+            <p data-i18n="frameAiccDesc">Connect this report to its data folder from the Leadership panel, or open it directly.</p>
+          </div>
+          <div class="frame-actions">
+            <button class="tbtn" data-fullscreen="frame-aicc">⛶ <span data-i18n="fullscreen">Fullscreen</span></button>
+            <a class="tbtn" href="Service_Desk_AICC_Agent_Performance_Dashboard.html" target="_blank" rel="noopener">↗ <span data-i18n="openNewTab">Open in new tab</span></a>
+          </div>
+        </div>
+        <div class="frame-wrap" id="frame-aicc">
+          <iframe id="iframe-aicc" data-src="Service_Desk_AICC_Agent_Performance_Dashboard.html" title="AICC Agent Performance Dashboard"></iframe>
+        </div>
+      </div>
+
+      <!-- ===================== SLA ===================== -->
+      <div class="tab-panel" id="tab-sla">
+        <div class="frame-head">
+          <div class="frame-head-text">
+            <h2>⏱️ <span data-i18n="navSla">Incident SLA Distribution</span></h2>
+            <p data-i18n="frameSlaDesc">Connect this report to its data folder from the Leadership panel, or open it directly.</p>
+          </div>
+          <div class="frame-actions">
+            <button class="tbtn" data-fullscreen="frame-sla">⛶ <span data-i18n="fullscreen">Fullscreen</span></button>
+            <a class="tbtn" href="Incident_SLA_Distribution_Dashboard.html" target="_blank" rel="noopener">↗ <span data-i18n="openNewTab">Open in new tab</span></a>
+          </div>
+        </div>
+        <div class="frame-wrap" id="frame-sla">
+          <iframe id="iframe-sla" data-src="Incident_SLA_Distribution_Dashboard.html" title="Incident SLA Distribution Dashboard"></iframe>
+        </div>
+      </div>
+
+      <!-- ===================== ROSTER (standalone file — consistent with the other 3 reports) ===================== -->
+      <div class="tab-panel" id="tab-roster">
+        <div class="frame-head">
+          <div class="frame-head-text">
+            <h2>🗓️ <span data-i18n="navRoster">Shift Roster</span></h2>
+            <p data-i18n="rosterDesc">Weekly shift plan for the service desk team. Click a cell to cycle through Normal / PM / Leave / Off. Only Leadership can edit.</p>
+          </div>
+          <div class="frame-actions">
+            <button class="tbtn" data-fullscreen="frame-roster">⛶ <span data-i18n="fullscreen">Fullscreen</span></button>
+            <a class="tbtn" href="Shift_Roster.html" target="_blank" rel="noopener">↗ <span data-i18n="openNewTab">Open in new tab</span></a>
+          </div>
+        </div>
+        <div class="frame-wrap" id="frame-roster">
+          <iframe id="iframe-roster" data-src="Shift_Roster.html" title="Shift Roster"></iframe>
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<!-- ===================== LEADERSHIP GATE ===================== -->
+<div class="lead-overlay" id="leadOverlay">
+  <div class="lead-modal">
+    <h3 data-i18n="gateTitle">🔐 Leadership Access</h3>
+    <p data-i18n="gateText">This area lets you connect report folders and edit the roster. Please enter the passcode.</p>
+    <input type="password" id="leadPassInput" data-i18n-placeholder="gatePlaceholder" placeholder="Passcode">
+    <div class="err-msg" id="leadErr" data-i18n="gateErr">Incorrect passcode</div>
+    <div class="lead-actions">
+      <button class="tbtn" id="leadCancelBtn" type="button" data-i18n="cancel">Cancel</button>
+      <button class="tbtn" id="leadSubmitBtn" type="button" style="background:var(--teal); color:#fff; border-color:var(--teal);" data-i18n="submit">Enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LEADERSHIP DRAWER ===================== -->
+<div class="lead-drawer" id="leadDrawer">
+  <div class="lead-panel">
+    <div class="lead-panel-head">
+      <h3>🔌 <span data-i18n="drawerTitle">Data Connections</span> <span class="lead-badge" data-i18n="drawerBadge">Leadership only</span></h3>
+      <button class="lead-close" id="leadCloseBtn" type="button">✕</button>
+    </div>
+    <div class="lead-note" data-i18n="drawerNote">Pick a local folder once per report — permission is remembered by the browser, so future visits sync with a single click, no re-browsing. You can also enter an API URL instead if you prefer to pull files from a server.</div>
+    <div id="leadRows"></div>
+    <button class="tbtn lead-logout" id="leadLogoutBtn" type="button" data-i18n="drawerLogout">🔒 Exit leadership mode</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0F172A; color:#fff; padding:10px 18px; border-radius:10px; font-size:12.5px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:300;"></div>
+
+<script>
+/* =========================================================================
+   I18N
+   ========================================================================= */
+const SHELL_I18N = {
+  en: {
+    brandSub:"Analytics & Reporting Center", navOverview:"Overview", navOverviewSub:"Summary & guide",
+    navGroupReports:"Specialized reports", navSdcm:"SDCM Registration", navSdcmSub:"Inbound / outbound calls",
+    navAicc:"AICC Performance", navAiccSub:"Answer & occupancy rate", navSla:"SLA Incident", navSlaSub:"Incident & OOSLA distribution",
+    navGroupTeam:"Team", navRoster:"Shift Roster", navRosterSub:"Plan agent shifts",
+    leadBtnLocked:"Leadership", leadBtnUnlocked:"Leadership (unlocked)",
+    heroEyebrow:"Service Desk Reporting Platform",
+    heroTitle:"Three independent reports, one control center — synced automatically from your own folders",
+    heroText:"Each report is a fully independent, ready-to-use page. Leadership can point each report at a local folder once — from then on it refreshes on its own, no re-selecting a file or folder every time.",
+    statSdcm:"SDCM registration rate", statAicc:"AICC answer rate", statSla:"SLA compliance", statUpdated:"Last updated",
+    sectionReports:"Reports", badgePending:"⏳ Awaiting data", badgeReady:"✅ Ready",
+    rcSdcmDesc:"Compares inbound and outbound calls by SDCM registration status, per agent.",
+    chipSdcmTicket:"SDCM ticketing file", chipAiccLog:"AICC call log", ctaView:"View report",
+    rcAiccDesc:"Answer rate, calls received vs. answered, and a full agent performance ranking.",
+    chipPerf:"Performance file", chipActivity:"Activity file",
+    rcSlaDesc:"Incident distribution table by priority, plus the OOSLA breakdown by assignee group.",
+    chipIcare:"Daily iCare export",
+    calloutTitle:"Folder sync now lives in the Leadership panel",
+    calloutText:"To keep this control in one trusted place, connecting a report to a local folder — and re-syncing it — is done from the Leadership panel (bottom-left), not inside each report page. Open Leadership once, pick a folder for each report, and every future visit reads the latest files automatically.",
+    sectionGuide:"Quick start guide",
+    guide1Title:"Open a report", guide1Text:"Use the sidebar menu or the cards above to enter one of the three reports.",
+    guide2Title:"Connect a folder once", guide2Text:"In the Leadership panel, point each report at the folder where its daily files are saved.",
+    guide3Title:"Sync anytime", guide3Text:"One click on \"Sync now\" reads the newest files and rebuilds the report — no re-browsing.",
+    guide4Title:"Export as image", guide4Text:"Grab a ready-to-share snapshot of any report with a single click.",
+    sectionStandards:"Platform standards",
+    std1:"Every report is an independent page with a unified design language (color, Vazirmatn/Inter font, spacing)",
+    std2:"Persistent per-report folder access with one-click re-sync — no repeated file picking",
+    std3:"Fully client-side processing — files are never uploaded to a server",
+    std4:"Bilingual interface (English / Persian) with full RTL support",
+    std5:"Accessible color contrast and visible keyboard focus",
+    std6:"Standard PNG export for fast reporting to management",
+    frameSdcmDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
+    frameAiccDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
+    frameSlaDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
+    fullscreen:"Fullscreen", openNewTab:"Open in new tab",
+    rosterDesc:"Weekly shift plan for the service desk team. Click a cell to cycle through AM / PM / Off. Only Leadership can edit.",
+    rosterLocked:"You're in view-only mode. Open the Leadership panel (bottom-left) to edit the roster.",
+    rosterHint:"Tip: click any shift cell to cycle AM → PM → Off.",
+    gateTitle:"🔐 Leadership Access", gateText:"This area lets you connect report folders and edit the roster. Please enter the passcode.",
+    gatePlaceholder:"Passcode", gateErr:"Incorrect passcode", cancel:"Cancel", submit:"Enter",
+    drawerTitle:"Data Connections", drawerBadge:"Leadership only",
+    drawerNote:"Pick a local folder once per report — permission is remembered by the browser, so future visits sync with a single click, no re-browsing. You can also enter an API URL instead if you prefer to pull files from a server.",
+    drawerLogout:"🔒 Exit leadership mode", backToHub:"Back to hub",
+    rosterSectionDaily:"Daily", roster_am:"AM", roster_pm:"PM", roster_off:"Off",
+    folderChoose:"Choose folder", folderSync:"Sync now", folderNone:"No folder connected yet",
+    folderSynced:"Synced", folderPermNeeded:"Permission needed — click Sync now", folderDenied:"Permission denied",
+    folderNotSupported:"Folder access isn't supported in this browser (use Chrome/Edge).",
+    apiSectionLabel:"Or use an API URL instead", fetchNow:"Fetch now", auto:"Auto every", minutes:"min",
+    addMember:"＋ Add member", pickExisting:"— pick from roster staff —", newMemberPlaceholder:"or type a new name/username…",
+    alreadyInRoster:"This member is already in the roster.", confirmRemove:"Remove \"{name}\" from the roster? Their shifts will be cleared too.",
+    thisWeek:"This week", prevWeek:"‹ Prev week", nextWeek:"Next week ›", teamMember:"Team member",
+    filesFound:"files",
+    manageShifts:"Manage shifts", manageShiftsDesc:"Add new shift types, rename them, or change their colors. Built-in shifts can be recolored/renamed but not removed.",
+    newShiftPlaceholder:"New shift name…", addShift:"＋ Add", done:"Done", remove:"Remove", builtin:"Built-in",
+    confirmRemoveShift:"Remove this shift type? Any cells using it will reset to Normal.",
+    holidayLegend:"Weekly/official holiday", hqLegend:"HQ office day", hqToggle:"Toggle HQ office day",
+    oncallLabel:"On-call supervisor this week:",
+    leaveReqTitle:"Leave requests (pending, not yet assigned)", addName:"Add name + Enter",
+    manageHolidays:"Manage holidays", manageHolidaysDesc:"Thursdays & Fridays are marked automatically. Add official/religious holidays here — Iran's calendar isn't fetched automatically, so please add and verify dates as they're announced.",
+    holidayNamePlaceholder:"Holiday name…", officialHoliday:"Official holiday",
+  },
+  fa: {
+    brandSub:"مرکز گزارش و آنالیز", navOverview:"نمای کلی", navOverviewSub:"خلاصه و راهنما",
+    navGroupReports:"گزارش‌های تخصصی", navSdcm:"ثبت SDCM", navSdcmSub:"تماس‌های ورودی/خروجی",
+    navAicc:"عملکرد AICC", navAiccSub:"نرخ پاسخ‌گویی و اشغالی", navSla:"SLA Incident", navSlaSub:"توزیع Incident و OOSLA",
+    navGroupTeam:"تیم", navRoster:"راستر شیفت", navRosterSub:"چیدمان شیفت پرسنل",
+    leadBtnLocked:"لیدرشیپ", leadBtnUnlocked:"لیدرشیپ (باز)",
+    heroEyebrow:"پلتفرم گزارش‌گیری سرویس دسک",
+    heroTitle:"سه گزارش مستقل، یک مرکز کنترل — با همگام‌سازی خودکار از پوشه‌های شما",
+    heroText:"هر گزارش یک صفحه کاملاً مستقل و آماده است. لیدرشیپ فقط یک‌بار هر گزارش را به پوشه‌ی محلی متصل می‌کند و از آن پس بدون انتخاب دوباره‌ی فایل یا پوشه، خودش به‌روزرسانی می‌شود.",
+    statSdcm:"نرخ ثبت SDCM", statAicc:"نرخ پاسخ‌گویی AICC", statSla:"رعایت SLA", statUpdated:"آخرین به‌روزرسانی",
+    sectionReports:"گزارش‌ها", badgePending:"⏳ در انتظار داده", badgeReady:"✅ آماده",
+    rcSdcmDesc:"مقایسه تماس‌های ورودی و خروجی از نظر ثبت‌شدن در سیستم SDCM، به تفکیک اپراتور.",
+    chipSdcmTicket:"فایل تیکتینگ SDCM", chipAiccLog:"لاگ تماس AICC", ctaView:"مشاهده گزارش",
+    rcAiccDesc:"نرخ پاسخ‌گویی، تماس دریافتی در مقابل پاسخ‌داده و رتبه‌بندی کامل عملکرد اپراتورها.",
+    chipPerf:"فایل Performance", chipActivity:"فایل Activity",
+    rcSlaDesc:"جدول توزیع Incident بر اساس اولویت و جدول OOSLA به تفکیک گروه اساینی.",
+    chipIcare:"خروجی روزانه iCare",
+    calloutTitle:"همگام‌سازی پوشه اکنون در پنل لیدرشیپ است",
+    calloutText:"برای اینکه این کنترل فقط در یک جای امن باشد، اتصال هر گزارش به پوشه محلی و همگام‌سازی مجدد آن از پنل لیدرشیپ (پایین سمت چپ منو) انجام می‌شود، نه داخل هر گزارش. یک‌بار لیدرشیپ را باز کنید، برای هر گزارش پوشه انتخاب کنید و از آن پس هر بار جدیدترین فایل‌ها خودکار خوانده می‌شود.",
+    sectionGuide:"راهنمای شروع سریع",
+    guide1Title:"گزارش موردنظر را باز کنید", guide1Text:"از منوی سمت راست یا کارت‌های بالا وارد یکی از سه گزارش شوید.",
+    guide2Title:"یک‌بار پوشه را متصل کنید", guide2Text:"در پنل لیدرشیپ، هر گزارش را به پوشه‌ای که فایل‌های روزانه در آن ذخیره می‌شود معرفی کنید.",
+    guide3Title:"هر زمان همگام‌سازی کنید", guide3Text:"با یک کلیک روی «همگام‌سازی الان»، جدیدترین فایل‌ها خوانده و گزارش دوباره ساخته می‌شود.",
+    guide4Title:"خروجی تصویر بگیرید", guide4Text:"تصویر آماده هر گزارش را با یک کلیک برای مدیریت دانلود کنید.",
+    sectionStandards:"استانداردهای این پلتفرم",
+    std1:"هر گزارش یک صفحه مستقل با طراحی یکپارچه (رنگ، فونت Vazirmatn/Inter و فاصله‌گذاری یکسان)",
+    std2:"دسترسی مانا به پوشه هر گزارش با همگام‌سازی یک‌کلیکی — بدون انتخاب مکرر فایل",
+    std3:"پردازش کاملاً سمت کاربر — فایل‌ها هیچ‌گاه به سروری ارسال نمی‌شوند",
+    std4:"رابط دو زبانه (انگلیسی/فارسی) با پشتیبانی کامل راست‌به‌چپ",
+    std5:"کنتراست رنگی مناسب و فوکوس قابل مشاهده با کیبورد",
+    std6:"خروجی تصویری استاندارد (PNG) برای گزارش‌دهی سریع به مدیریت",
+    frameSdcmDesc:"این گزارش را از پنل لیدرشیپ به پوشه داده‌اش متصل کنید یا مستقیم بازش کنید.",
+    frameAiccDesc:"این گزارش را از پنل لیدرشیپ به پوشه داده‌اش متصل کنید یا مستقیم بازش کنید.",
+    frameSlaDesc:"این گزارش را از پنل لیدرشیپ به پوشه داده‌اش متصل کنید یا مستقیم بازش کنید.",
+    fullscreen:"تمام‌صفحه", openNewTab:"باز کردن در تب جدید",
+    rosterDesc:"برنامه هفتگی شیفت تیم سرویس دسک. روی هر خانه کلیک کنید تا بین AM / PM / آف بچرخد. فقط لیدرشیپ می‌تواند ویرایش کند.",
+    rosterLocked:"شما در حالت مشاهده هستید. برای ویرایش، پنل لیدرشیپ (پایین سمت چپ منو) را باز کنید.",
+    rosterHint:"نکته: روی هر خانه‌ی شیفت کلیک کنید تا بین AM ← PM ← آف بچرخد.",
+    gateTitle:"🔐 دسترسی لیدرشیپ", gateText:"این بخش اتصال پوشه گزارش‌ها و ویرایش راستر را فعال می‌کند. رمز عبور را وارد کنید.",
+    gatePlaceholder:"رمز عبور", gateErr:"رمز عبور نادرست است", cancel:"انصراف", submit:"ورود",
+    drawerTitle:"اتصال داده‌ها", drawerBadge:"فقط لیدرشیپ",
+    drawerNote:"برای هر گزارش یک‌بار پوشه محلی انتخاب کنید — مرورگر این اجازه را به‌خاطر می‌سپارد، پس دفعات بعد فقط با یک کلیک همگام می‌شود. در صورت تمایل می‌توانید به‌جای پوشه، از آدرس API هم استفاده کنید.",
+    drawerLogout:"🔒 خروج از حالت لیدرشیپ", backToHub:"بازگشت به مرکز داشبورد",
+    rosterSectionDaily:"روزانه", roster_am:"AM", roster_pm:"PM", roster_off:"آف",
+    folderChoose:"انتخاب پوشه", folderSync:"همگام‌سازی الان", folderNone:"هنوز پوشه‌ای متصل نشده",
+    folderSynced:"همگام شد", folderPermNeeded:"نیاز به تأیید دسترسی — همگام‌سازی الان را بزنید", folderDenied:"دسترسی رد شد",
+    folderNotSupported:"این مرورگر از دسترسی به پوشه پشتیبانی نمی‌کند (از Chrome یا Edge استفاده کنید).",
+    apiSectionLabel:"یا به‌جای آن از آدرس API استفاده کنید", fetchNow:"دریافت الان", auto:"خودکار هر", minutes:"دقیقه",
+    addMember:"＋ افزودن عضو", pickExisting:"— انتخاب از پرسنل موجود —", newMemberPlaceholder:"یا نام/یوزرنیم جدید…",
+    alreadyInRoster:"این عضو از قبل در راستر است.", confirmRemove:"«{name}» از راستر حذف شود؟ شیفت‌های ثبت‌شده او هم پاک می‌شود.",
+    thisWeek:"این هفته", prevWeek:"‹ هفته قبل", nextWeek:"هفته بعد ›", teamMember:"عضو تیم",
+    filesFound:"فایل",
+    manageShifts:"مدیریت شیفت‌ها", manageShiftsDesc:"می‌توانید شیفت جدید اضافه کنید، نامش را عوض کنید یا رنگش را تغییر دهید. شیفت‌های پیش‌فرض قابل تغییر نام/رنگ هستند ولی حذف نمی‌شوند.",
+    newShiftPlaceholder:"نام شیفت جدید…", addShift:"＋ افزودن", done:"تمام", remove:"حذف", builtin:"پیش‌فرض",
+    confirmRemoveShift:"این نوع شیفت حذف شود؟ خانه‌هایی که این شیفت را دارند به «روز (Normal)» برمی‌گردند.",
+    holidayLegend:"تعطیل هفتگی/رسمی", hqLegend:"روز حضور در HQ", hqToggle:"فعال/غیرفعال کردن حضور در HQ",
+    oncallLabel:"سوپروایزر آنکال این هفته:",
+    leaveReqTitle:"درخواست‌های مرخصی (در انتظار، هنوز ثبت‌نشده)", addName:"نام را بنویس و Enter بزن",
+    manageHolidays:"مدیریت تعطیلات", manageHolidaysDesc:"پنجشنبه و جمعه خودکار قرمز می‌شن. تعطیلات رسمی/مذهبی رو اینجا اضافه کن — تقویم رسمی ایران خودکار دریافت نمی‌شه، پس لطفاً تاریخ‌ها رو خودتون اضافه و تأیید کنید.",
+    holidayNamePlaceholder:"نام تعطیلی…", officialHoliday:"تعطیل رسمی",
+  }
+};
+let currentLang = localStorage.getItem('sdhub_lang') || 'en';
+
+function t(key){ return (SHELL_I18N[currentLang] && SHELL_I18N[currentLang][key]) || (SHELL_I18N.en[key]) || key; }
+
+function applyI18n(){
+  document.documentElement.setAttribute('lang', currentLang);
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder'))); });
+  document.getElementById('langEnBtn').classList.toggle('active', currentLang==='en');
+  document.getElementById('langFaBtn').classList.toggle('active', currentLang==='fa');
+  document.getElementById('crumb-title').textContent = t(TAB_I18N_KEY[currentTab]||'navOverview');
+  const leadBtn=document.getElementById('leadBtn').querySelector('span');
+  leadBtn.textContent = isLeadUnlocked() ? t('leadBtnUnlocked') : t('leadBtnLocked');
+  try{
+    document.getElementById('today-str').textContent = new Date().toLocaleDateString(currentLang==='fa'?'fa-IR':'en-US', {year:'numeric', month:'long', day:'numeric'});
+  }catch(e){}
+  if (document.getElementById('leadDrawer').classList.contains('show')) renderLeadRows();
+}
+document.getElementById('langEnBtn').addEventListener('click', ()=>{ currentLang='en'; localStorage.setItem('sdhub_lang','en'); applyI18n(); });
+document.getElementById('langFaBtn').addEventListener('click', ()=>{ currentLang='fa'; localStorage.setItem('sdhub_lang','fa'); applyI18n(); });
+
+/* =========================================================================
+   TAB SWITCHING / SIDEBAR
+   ========================================================================= */
+const navItems=document.querySelectorAll('.nav-item');
+const cards=document.querySelectorAll('.report-card');
+const panels=document.querySelectorAll('.tab-panel');
+const crumbTitle=document.getElementById('crumb-title');
+const TAB_I18N_KEY={ overview:'navOverview', sdcm:'navSdcm', aicc:'navAicc', sla:'navSla', roster:'navRoster' };
+let currentTab='overview';
+
+function ensureIframeLoaded(tab){
+  const iframe = document.getElementById('iframe-'+tab);
+  if (iframe && !iframe.src && iframe.dataset.src){ iframe.src = iframe.dataset.src; }
+}
+function goTab(tab){
+  currentTab=tab;
+  navItems.forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  panels.forEach(p=>p.classList.toggle('active', p.id==='tab-'+tab));
+  crumbTitle.textContent = t(TAB_I18N_KEY[tab]||'navOverview');
+  ensureIframeLoaded(tab);
+  if (['sdcm','aicc','sla'].includes(tab)) trySilentFolderSync(tab);
+  closeSidebar();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+navItems.forEach(btn=>btn.addEventListener('click', ()=>goTab(btn.dataset.tab)));
+cards.forEach(card=>card.addEventListener('click', ()=>goTab(card.dataset.tab)));
+
+document.querySelectorAll('[data-fullscreen]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const el=document.getElementById(btn.dataset.fullscreen);
+    if (!document.fullscreenElement) el.requestFullscreen?.(); else document.exitFullscreen?.();
+  });
+});
+
+const sidebar=document.getElementById('sidebar'), backdrop=document.getElementById('backdrop');
+function openSidebar(){ sidebar.classList.add('open'); backdrop.classList.add('show'); }
+function closeSidebar(){ sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+document.getElementById('hamburger').addEventListener('click', openSidebar);
+document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
+backdrop.addEventListener('click', closeSidebar);
+
+function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.style.opacity='1'; setTimeout(()=>el.style.opacity='0', 2600); }
+
+/* =========================================================================
+   LIVE HERO STATS — populated via postMessage from each report iframe
+   ========================================================================= */
+function faNum(n, digits=0){ const num=Number(n)||0; return num.toLocaleString(currentLang==='fa'?'fa-IR':'en-US',{maximumFractionDigits:digits, minimumFractionDigits:digits}); }
+function fmtDateTime(ts){ if(!ts) return '—'; try{ return new Date(ts).toLocaleString(currentLang==='fa'?'fa-IR':'en-US',{dateStyle:'short', timeStyle:'short'});}catch(e){return '—';} }
+
+const reportStats = { sdcm:null, aicc:null, sla:null };
+
+function renderHeroStats(){
+  const container=document.getElementById('hero-stats');
+  const items=[];
+  items.push(reportStats.sdcm
+    ? {value:faNum(reportStats.sdcm.regRate,1)+'%', label:t('statSdcm'), cls: reportStats.sdcm.regRate>=90?'good':'warn'}
+    : {value:'—', label:t('statSdcm'), cls:'muted'});
+  items.push(reportStats.aicc
+    ? {value:faNum(reportStats.aicc.answerRate,1)+'%', label:t('statAicc'), cls: reportStats.aicc.answerRate>=80?'good':'warn'}
+    : {value:'—', label:t('statAicc'), cls:'muted'});
+  items.push(reportStats.sla
+    ? {value:faNum(reportStats.sla.compliance,1)+'%', label:t('statSla'), cls: reportStats.sla.compliance>=90?'good':'warn'}
+    : {value:'—', label:t('statSla'), cls:'muted'});
+  const times=Object.values(reportStats).filter(Boolean).map(s=>s.updatedAt);
+  const last = times.length ? Math.max(...times) : null;
+  items.push({value:last?fmtDateTime(last):'—', label:t('statUpdated'), cls:'muted'});
+  container.innerHTML = items.map(it=>`<div class="hero-stat ${it.cls}"><b>${it.value}</b><span>${it.label}</span></div>`).join('');
+}
+function updateBadgeAndDot(report, ready){
+  const badge=document.getElementById('rc-badge-'+report);
+  const dot=document.getElementById('nav-dot-'+report);
+  if(badge){ badge.textContent = ready? t('badgeReady'): t('badgePending'); badge.className='rc-badge '+(ready?'ready':'pending'); }
+  if(dot){ dot.classList.toggle('ready', !!ready); }
+}
+window.addEventListener('message', (e)=>{
+  const d=e.data;
+  if(!d || d.source!=='sdhub' || !d.report) return;
+  reportStats[d.report]=d;
+  updateBadgeAndDot(d.report, true);
+  renderHeroStats();
+});
+
+/* =========================================================================
+   LEADERSHIP GATE
+   ========================================================================= */
+const LEAD_PASSCODE = "leadership2026"; // ⚠️ client-side gate only — hides the panel from regular agents, not a real security boundary
+const IFRAMES = { sdcm:'iframe-sdcm', aicc:'iframe-aicc', sla:'iframe-sla', roster:'iframe-roster' };
+const REPORT_KEYS = ['sdcm','aicc','sla'];
+const REPORT_META = {
+  sdcm:{ icon:'📋', labelKey:'navSdcm' },
+  aicc:{ icon:'📞', labelKey:'navAicc' },
+  sla:{ icon:'⏱️', labelKey:'navSla' },
+};
+
+function isLeadUnlocked(){ return sessionStorage.getItem('sdhub_lead_unlocked')==='1'; }
+function broadcastLeadState(){
+  const iframe = document.getElementById('iframe-roster');
+  iframe?.contentWindow?.postMessage({ type:'sdhub:lead-state', unlocked:isLeadUnlocked() }, '*');
+}
+window.addEventListener('message', (e)=>{
+  if (e.data && e.data.type==='sdhub:request-lead-state') broadcastLeadState();
+});
+
+document.getElementById('leadBtn').addEventListener('click', ()=>{
+  if (isLeadUnlocked()) openLeadDrawer(); else openLeadGate();
+});
+function openLeadGate(){
+  document.getElementById('leadPassInput').value='';
+  document.getElementById('leadErr').style.display='none';
+  document.getElementById('leadOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('leadPassInput').focus(), 50);
+}
+document.getElementById('leadCancelBtn').addEventListener('click', ()=>document.getElementById('leadOverlay').classList.remove('show'));
+document.getElementById('leadOverlay').addEventListener('click', (e)=>{ if(e.target.id==='leadOverlay') document.getElementById('leadOverlay').classList.remove('show'); });
+document.getElementById('leadSubmitBtn').addEventListener('click', submitLeadPass);
+document.getElementById('leadPassInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitLeadPass(); });
+function submitLeadPass(){
+  const val=document.getElementById('leadPassInput').value;
+  if(val===LEAD_PASSCODE){
+    document.getElementById('leadOverlay').classList.remove('show');
+    sessionStorage.setItem('sdhub_lead_unlocked','1');
+    updateLeadButton();
+    broadcastLeadState();
+    openLeadDrawer();
+    } else {
+    document.getElementById('leadErr').style.display='block';
+  }
+}
+function updateLeadButton(){
+  const btn=document.getElementById('leadBtn');
+  btn.classList.toggle('unlocked', isLeadUnlocked());
+  btn.querySelector('span').textContent = isLeadUnlocked() ? t('leadBtnUnlocked') : t('leadBtnLocked');
+}
+document.getElementById('leadCloseBtn').addEventListener('click', closeLeadDrawer);
+document.getElementById('leadLogoutBtn').addEventListener('click', ()=>{
+  sessionStorage.removeItem('sdhub_lead_unlocked');
+  updateLeadButton();
+  broadcastLeadState();
+  closeLeadDrawer();
+});
+function openLeadDrawer(){ renderLeadRows(); document.getElementById('leadDrawer').classList.add('show'); }
+function closeLeadDrawer(){ document.getElementById('leadDrawer').classList.remove('show'); }
+updateLeadButton();
+
+/* =========================================================================
+   PERSISTENT FOLDER ACCESS (File System Access API + IndexedDB)
+   ========================================================================= */
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open('sdhub_fs',1);
+    r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains('handles')) r.result.createObjectStore('handles'); };
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+async function idbSet(key,val){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction('handles','readwrite'); tx.objectStore('handles').put(val,key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+async function idbGet(key){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction('handles','readonly'); const rq=tx.objectStore('handles').get(key); rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error); }); }
+async function idbDel(key){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction('handles','readwrite'); tx.objectStore('handles').delete(key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+
+function waitForIframeReady(key){
+  return new Promise(resolve=>{
+    const iframe=document.getElementById(IFRAMES[key]);
+    if (!iframe){ resolve(null); return; }
+    if (iframe.src){ resolve(iframe); return; }
+    iframe.addEventListener('load', ()=>resolve(iframe), {once:true});
+    iframe.src = iframe.dataset.src;
+  });
+}
+
+async function pickReportFolder(key){
+  if(!window.showDirectoryPicker){ alert(t('folderNotSupported')); return; }
+  try{
+    const handle = await window.showDirectoryPicker();
+    await idbSet('folder_'+key, handle);
+    await syncReportFolder(key, true);
+  }catch(e){ /* user cancelled the picker — do nothing */ }
+}
+
+async function syncReportFolder(key, userGesture){
+  const statusEl = document.getElementById('folder-status-'+key);
+  let handle;
+  try{ handle = await idbGet('folder_'+key); }catch(e){ handle=null; }
+  if(!handle){ if(statusEl) statusEl.textContent = t('folderNone'); return; }
+
+  let perm;
+  try{ perm = await handle.queryPermission({mode:'read'}); }catch(e){ perm='denied'; }
+  if(perm!=='granted'){
+    if(!userGesture){ if(statusEl) statusEl.textContent = t('folderPermNeeded'); return; }
+    try{ perm = await handle.requestPermission({mode:'read'}); }catch(e){ perm='denied'; }
+    if(perm!=='granted'){ if(statusEl) statusEl.textContent = t('folderDenied'); return; }
+  }
+
+  const iframe = await waitForIframeReady(key);
+  let count=0;
+  try{
+    for await (const [name, entry] of handle.entries()){
+      if(entry.kind==='file' && /\.(xlsx|xls)$/i.test(name)){
+        const file = await entry.getFile();
+        const buf = await file.arrayBuffer();
+        iframe?.contentWindow?.postMessage({type:'sdhub:inject-file', name, buffer:buf}, '*');
+        count++;
+      }
+    }
+  }catch(e){ if(statusEl) statusEl.textContent = t('folderDenied'); return; }
+  if(statusEl) statusEl.textContent = `${t('folderSynced')} — 📁 ${handle.name} (${count} ${t('filesFound')})`;
+}
+
+// Called on tab-open: sync silently (no prompt) if permission was already granted before
+async function trySilentFolderSync(key){
+  let handle;
+  try{ handle = await idbGet('folder_'+key); }catch(e){ handle=null; }
+  if(!handle) return;
+  let perm;
+  try{ perm = await handle.queryPermission({mode:'read'}); }catch(e){ perm='denied'; }
+  if(perm==='granted') syncReportFolder(key, false);
+}
+
+/* =========================================================================
+   LEADERSHIP DRAWER — folder + API rows per report
+   ========================================================================= */
+function loadApiConfig(){ try{ return JSON.parse(localStorage.getItem('sdhub_api_cfg')||'{}'); }catch(e){ return {}; } }
+function saveApiConfig(cfg){ localStorage.setItem('sdhub_api_cfg', JSON.stringify(cfg)); setupAutoRefresh(cfg); }
+
+async function folderLabelFor(key){
+  try{
+    const handle = await idbGet('folder_'+key);
+    return handle ? handle.name : null;
+  }catch(e){ return null; }
+}
+
+async function renderLeadRows(){
+  const cfg=loadApiConfig();
+  const container=document.getElementById('leadRows');
+  const rowsHtml = await Promise.all(REPORT_KEYS.map(async key=>{
+    const c=cfg[key]||{};
+    const folderName = await folderLabelFor(key);
+    return `<div class="lead-row">
+      <div class="lead-row-label">${REPORT_META[key].icon} ${t(REPORT_META[key].labelKey)}</div>
+
+      <div class="lead-sub-label">📁 ${t('folderChoose')}</div>
+      <div class="folder-sync-row">
+        <button class="tbtn small" type="button" data-pick-folder="${key}">📁 ${t('folderChoose')}</button>
+        <button class="tbtn small" type="button" data-sync-folder="${key}">↻ ${t('folderSync')}</button>
+        <span class="folder-status-text" id="folder-status-${key}">${folderName ? '📁 '+folderName : t('folderNone')}</span>
+      </div>
+
+      <hr class="lead-divider">
+
+      <div class="lead-sub-label">${t('apiSectionLabel')}</div>
+      <input type="url" class="lead-input" data-slot="${key}" placeholder="https://example.com/api/export.xlsx" value="${c.url?c.url.replace(/"/g,'&quot;'):''}">
+      <div class="lead-row-actions">
+        <button class="tbtn small" type="button" data-fetch="${key}">${t('fetchNow')}</button>
+        <label class="lead-auto"><input type="checkbox" data-auto="${key}" ${c.auto?'checked':''}> ${t('auto')} <input type="number" min="1" class="lead-interval" data-interval="${key}" value="${c.interval||15}"> ${t('minutes')}</label>
+      </div>
+    </div>`;
+  }));
+  container.innerHTML = rowsHtml.join('');
+
+  container.querySelectorAll('[data-pick-folder]').forEach(btn=>btn.addEventListener('click', ()=>pickReportFolder(btn.dataset.pickFolder)));
+  container.querySelectorAll('[data-sync-folder]').forEach(btn=>btn.addEventListener('click', ()=>syncReportFolder(btn.dataset.syncFolder, true)));
+  container.querySelectorAll('[data-fetch]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const key=btn.dataset.fetch;
+    const url=container.querySelector(`.lead-input[data-slot="${key}"]`).value.trim();
+    if(!url) return;
+    fetchAndInject(url, key);
+  }));
+  container.querySelectorAll('.lead-input, [data-auto], .lead-interval').forEach(el=>el.addEventListener('change', ()=>{
+    const cfg={};
+    REPORT_KEYS.forEach(key=>{
+      const url=container.querySelector(`.lead-input[data-slot="${key}"]`)?.value.trim()||'';
+      const auto=container.querySelector(`[data-auto="${key}"]`)?.checked||false;
+      const interval=Number(container.querySelector(`[data-interval="${key}"]`)?.value)||15;
+      cfg[key]={url, auto, interval};
+    });
+    saveApiConfig(cfg);
+  }));
+}
+
+async function fetchAndInject(url, key){
+  try{
+    const res=await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const buf=await res.arrayBuffer();
+    const iframe=await waitForIframeReady(key);
+    iframe?.contentWindow?.postMessage({type:'sdhub:inject-file', name:(url.split('/').pop()||'api-file.xlsx'), buffer:buf}, '*');
+  }catch(err){
+    alert('Error fetching from API: '+err.message);
+  }
+}
+let leadAutoTimers={};
+function setupAutoRefresh(cfg){
+  Object.values(leadAutoTimers).forEach(t=>clearInterval(t));
+  leadAutoTimers={};
+  Object.keys(cfg).forEach(key=>{
+    const c=cfg[key];
+    if(c && c.auto && c.url){
+      leadAutoTimers[key]=setInterval(()=>fetchAndInject(c.url, key), Math.max(1, Number(c.interval)||15)*60000);
+    }
+  });
+}
+setupAutoRefresh(loadApiConfig());
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+applyI18n();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>گزارش ثبت SDCM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+  :root {
+    --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F1F4F9; --border:#E3E8F0;
+    --text:#1E293B; --muted:#64748B; --teal:#0D9488; --amber:#D97706; --red:#DC2626; --blue:#2563EB;
+    --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 2px 8px rgba(15,23,42,0.05);
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#FFFFFF; color:var(--text); font-family:'Vazirmatn','Segoe UI',sans-serif; padding:24px; }
+  body.lang-en { font-family:'Segoe UI','Vazirmatn',sans-serif; }
+  #app-root { max-width:1150px; margin:0 auto; background:var(--bg); border-radius:18px; padding:28px; position:relative; overflow:hidden; }
+  #app-root::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(600px 300px at 85% -10%, rgba(13,148,136,0.05), transparent),
+                radial-gradient(500px 260px at 5% 0%, rgba(37,99,235,0.04), transparent); }
+  header.topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; position:relative; z-index:1; margin-bottom:8px; flex-wrap:wrap; }
+  h1 { font-size:20px; margin:0 0 4px; font-weight:800; }
+  .subtitle { color:var(--muted); font-size:12.5px; }
+  .date-badge { display:inline-flex; align-items:center; gap:6px; background:var(--panel-alt); border:1px solid var(--border); color:var(--text); font-size:12px; padding:6px 12px; border-radius:999px; margin-top:10px; }
+  .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .btn { border:1px solid var(--border); background:var(--panel); color:var(--text); font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:10px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; gap:6px; }
+  .btn:hover { background:var(--panel-alt); }
+  .btn.primary { background:var(--teal); color:#fff; border-color:var(--teal); }
+  .btn.primary:hover { filter:brightness(1.08); }
+
+  .dropzones { display:grid; grid-template-columns:1fr 1fr; gap:14px; position:relative; z-index:1; margin:18px 0 10px; }
+  @media (max-width:760px){ .dropzones{ grid-template-columns:1fr; } }
+  .dropzone { border:2px dashed var(--border); border-radius:14px; padding:18px; text-align:center;
+    background:var(--panel-alt); cursor:pointer; transition:.15s; font-size:12.5px; color:var(--muted);
+    position:relative; z-index:1; margin:18px 0 10px; }
+  .dropzone:hover { border-color:var(--teal); background:#F0FDFA; }
+  .dropzone .dz-title { font-weight:700; color:var(--text); font-size:13px; margin-bottom:4px; }
+  .dropzone input { display:none; }
+  .file-list { display:flex; flex-wrap:wrap; gap:8px; position:relative; z-index:1; margin-bottom:10px; }
+  .folder-row { display:none !important; /* moved to Leadership panel in the hub */ } .folder-row-off{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; position:relative; z-index:1; margin:4px 0 14px; }
+  .folder-status { font-size:11.3px; color:var(--muted); }
+  .file-chip { display:flex; align-items:center; gap:6px; background:#F0FDFA; border:1px solid var(--teal); color:#0D9488; font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:999px; }
+  .file-chip .sheets { color:var(--muted); font-weight:500; }
+
+  .error-banner { display:none; align-items:center; gap:8px; color:var(--red); background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:10px 14px; font-size:13px; margin:14px 0; position:relative; z-index:1; }
+
+  .kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; position:relative; z-index:1; margin-bottom:20px; }
+  @media (max-width:700px){ .kpi-row{ grid-template-columns:1fr; } }
+  .kpi-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:var(--shadow); text-align:center; }
+  .kpi-card .kpi-label { font-size:12px; color:var(--muted); font-weight:600; margin-bottom:6px; }
+  .kpi-card .kpi-value { font-size:28px; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums; }
+  .kpi-card.total .kpi-value { color:var(--blue); }
+
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; position:relative; z-index:1; margin-bottom:18px; }
+  @media (max-width:800px){ .grid-2{ grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:20px; position:relative; z-index:1; box-shadow:var(--shadow); }
+  .panel + .panel { margin-top:18px; }
+  .panel-title { font-size:14px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .panel-title .dot { width:9px; height:9px; border-radius:50%; background:var(--teal); display:inline-block; }
+  .panel.outgoing .panel-title .dot { background:var(--blue); }
+
+  .donut-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .donut { width:170px; height:170px; border-radius:50%; position:relative; transition: background 1.1s cubic-bezier(.22,1,.36,1); }
+  .donut-hole { position:absolute; inset:20px; background:var(--panel); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow: inset 0 0 0 1px var(--border); }
+  .donut-hole b { font-size:22px; color:var(--text); font-variant-numeric:tabular-nums; }
+  .donut-hole span { font-size:11px; color:var(--muted); margin-top:2px; }
+  .legend-row { display:flex; gap:16px; font-size:12.5px; flex-wrap:wrap; justify-content:center; }
+  .legend-row .legend-item { display:flex; align-items:center; gap:6px; }
+  .legend-dot { width:10px; height:10px; border-radius:3px; display:inline-block; }
+  .legend-item b { font-variant-numeric:tabular-nums; }
+  .legend-item .pct { color:var(--muted); font-size:11.5px; }
+
+  .table-wrap { overflow-x:auto; }
+  table.agent-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .agent-table th { text-align:right; color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--border); font-size:11.5px; white-space:nowrap; }
+  .agent-table td { padding:9px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .agent-table tbody tr:hover { background:var(--panel-alt); }
+  .agent-name { font-weight:600; }
+  .pct-good { color:var(--teal); font-weight:700; }
+  .pct-bad { color:var(--red); font-weight:700; }
+
+  .footer-note { color:var(--muted); font-size:11px; margin-top:18px; position:relative; z-index:1; line-height:1.9; text-align:center; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#F0FDFA; color:#0D9488; border:1px solid var(--teal);
+    padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; opacity:0; pointer-events:none; transition:.25s; z-index:50; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(-6px); }
+  body.lang-en [dir] { direction:ltr; }
+  /* ---- Shared hub strip (Phase 2 unification) ---- */
+  .hub-strip{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:linear-gradient(90deg,#0F172A,#0B2A27); padding:10px 22px; margin:-24px -24px 20px; font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; }
+  .hub-strip-brand{ display:flex; align-items:center; gap:8px; color:#fff; text-decoration:none; font-size:13px; font-weight:800; }
+  .hub-strip-brand .hsb-icon{ width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#0D9488,#14B8A6); display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .hub-strip-back{ color:#CBD5E1; text-decoration:none; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px 12px; transition:.15s; }
+  .hub-strip-back:hover{ background:rgba(255,255,255,0.15); color:#fff; }
+</style>
+
+</head>
+<body>
+<div class="hub-strip">
+  <a href="index.html" class="hub-strip-brand"><span class="hsb-icon">🎧</span>Service Desk Hub</a>
+  <a href="index.html" class="hub-strip-back">↩ Back to hub</a>
+</div>
+<div id="app-root">
+
+  <header class="topbar">
+    <div>
+      <h1 data-i18n="title">گزارش ثبت SDCM</h1>
+      <div class="subtitle" data-i18n="subtitle">مقایسه تماس‌های ورودی و خروجی از نظر ثبت‌شدن در سیستم SDCM، به تفکیک اپراتور</div>
+      <div class="date-badge">📅 <span data-i18n="dateRangeLabel">بازه گزارش:</span> <b id="date-range-val">—</b></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="lang-toggle">EN</button>
+      <button class="btn primary" id="snapshot-btn" data-i18n="snapshotBtn">📸 گرفتن عکس از گزارش</button>
+    </div>
+  </header>
+
+  <div class="dropzones">
+    <label class="dropzone" id="dz-ticket">
+      <div class="dz-title" data-i18n="dzTicketTitle">فایل تیکتینگ SDCM</div>
+      <div data-i18n="dzHint">فایل را بکشید و رها کنید یا کلیک کنید</div>
+      <input type="file" id="file-ticket" accept=".xlsx,.xls" multiple>
+    </label>
+    <label class="dropzone" id="dz-aicc">
+      <div class="dz-title" data-i18n="dzAiccTitle">فایل لاگ تماس‌ها AICC</div>
+      <div data-i18n="dzHint">فایل را بکشید و رها کنید یا کلیک کنید</div>
+      <input type="file" id="file-aicc" accept=".xlsx,.xls" multiple>
+    </label>
+  </div>
+  <div class="file-list" id="file-list"></div>
+
+  <div class="folder-row">
+    <button class="btn" id="folder-pick-btn" type="button">📁 انتخاب پوشه اختصاصی این گزارش</button>
+    <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none">
+    <span class="folder-status" id="folder-status">پوشه‌ای انتخاب نشده (اختیاری، Chrome/Edge/Firefox) — فایل تیکتینگ SDCM و لاگ AICC را در این پوشه قرار دهید</span>
+  </div>
+
+  <div class="error-banner" id="error-banner">⚠️ <span id="error-text"></span></div>
+
+  <div id="report-area" style="display:none;">
+    <div class="kpi-row">
+      <div class="kpi-card total"><div class="kpi-label" data-i18n="kpiTotal">تعداد کل تماس‌ها</div><div class="kpi-value" id="kpi-total">0</div></div>
+      <div class="kpi-card"><div class="kpi-label" data-i18n="kpiIncoming">تماس‌های ورودی</div><div class="kpi-value" id="kpi-incoming">0</div></div>
+      <div class="kpi-card"><div class="kpi-label" data-i18n="kpiOutgoing">تماس‌های خروجی</div><div class="kpi-value" id="kpi-outgoing">0</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel incoming">
+        <div class="panel-title"><span class="dot"></span><span data-i18n="panelIncoming">ثبت SDCM — تماس‌های ورودی</span></div>
+        <div class="donut-wrap"><div class="donut" id="donut-in"></div><div class="legend-row" id="legend-in"></div></div>
+      </div>
+      <div class="panel outgoing">
+        <div class="panel-title"><span class="dot"></span><span data-i18n="panelOutgoing">ثبت SDCM — تماس‌های خروجی</span></div>
+        <div class="donut-wrap"><div class="donut" id="donut-out"></div><div class="legend-row" id="legend-out"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span><span data-i18n="panelAgents">عملکرد هر اپراتور (ثبت SDCM)</span></div>
+      <div class="table-wrap">
+        <table class="agent-table">
+          <thead><tr>
+            <th data-i18n="thAgent">اپراتور</th>
+            <th data-i18n="thInTotal">ورودی</th><th data-i18n="thInReg">ثبت‌شده</th><th data-i18n="thInPct">درصد</th>
+            <th data-i18n="thOutTotal">خروجی</th><th data-i18n="thOutReg">ثبت‌شده</th><th data-i18n="thOutPct">درصد</th>
+          </tr></thead>
+          <tbody id="agent-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer-note" data-i18n="footerNote">این گزارش بر اساس لاگ تماس‌های AICC (هر ردیف یک تماس واقعی) تولید شده است. اگر «Call Sequence Number» یک تماس با «Call Serial Number» یک تیکت SDCM مطابقت داشته باشد، «ثبت‌شده» و در غیر این صورت «ثبت‌نشده» شمرده می‌شود.</div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const I18N = {
+  fa: {
+    title:"گزارش ثبت SDCM", subtitle:"مقایسه تماس‌های ورودی و خروجی از نظر ثبت‌شدن در سیستم SDCM، به تفکیک اپراتور",
+    dateRangeLabel:"بازه گزارش:", snapshotBtn:"📸 گرفتن عکس از گزارش",
+    dzTicketTitle:"فایل تیکتینگ SDCM", dzAiccTitle:"فایل لاگ تماس‌ها AICC",
+    dzHint:"فایل را بکشید و رها کنید یا کلیک کنید",
+    kpiTotal:"تعداد کل تماس‌ها", kpiIncoming:"تماس‌های ورودی", kpiOutgoing:"تماس‌های خروجی",
+    panelIncoming:"ثبت SDCM — تماس‌های ورودی", panelOutgoing:"ثبت SDCM — تماس‌های خروجی",
+    panelAgents:"عملکرد هر اپراتور (ثبت SDCM)",
+    thAgent:"اپراتور", thInTotal:"ورودی", thInReg:"ثبت‌شده", thInPct:"درصد",
+    thOutTotal:"خروجی", thOutReg:"ثبت‌شده", thOutPct:"درصد",
+    registered:"ثبت‌شده", notRegistered:"ثبت‌نشده",
+    footerNote:"این گزارش بر اساس لاگ تماس‌های AICC (هر ردیف یک تماس واقعی) تولید شده است. اگر «Call Sequence Number» یک تماس با «Call Serial Number» یک تیکت SDCM مطابقت داشته باشد، «ثبت‌شده» و در غیر این صورت «ثبت‌نشده» شمرده می‌شود.",
+    toastSaved:"عکس گزارش ذخیره شد", errParse:"خطا در خواندن یکی از فایل‌ها", dateSep:"تا",
+    sheetsFound:"شیت شناسایی‌شده",
+  },
+  en: {
+    title:"SDCM Registration Report", subtitle:"Comparing incoming and outgoing calls by SDCM registration status, per agent",
+    dateRangeLabel:"Report period:", snapshotBtn:"📸 Save report as image",
+    dzTicketTitle:"SDCM ticketing file", dzAiccTitle:"AICC call log file",
+    dzHint:"Drag & drop a file here or click to browse",
+    kpiTotal:"Total calls", kpiIncoming:"Incoming calls", kpiOutgoing:"Outgoing calls",
+    panelIncoming:"SDCM Registration — Incoming Calls", panelOutgoing:"SDCM Registration — Outgoing Calls",
+    panelAgents:"Per-agent breakdown (SDCM registration)",
+    thAgent:"Agent", thInTotal:"Incoming", thInReg:"Registered", thInPct:"%",
+    thOutTotal:"Outgoing", thOutReg:"Registered", thOutPct:"%",
+    registered:"Registered", notRegistered:"Not registered",
+    footerNote:"This report is based on the AICC call log (each row is one real call). If a call's \"Call Sequence Number\" matches an SDCM ticket's \"Call Serial Number\" it is counted as \"Registered\", otherwise \"Not registered\".",
+    toastSaved:"Report image saved", errParse:"Error reading one of the files", dateSep:"to",
+    sheetsFound:"sheets detected",
+  }
+};
+let lang="fa", dict=I18N.fa;
+const COLORS = { teal:"#0D9488", red:"#DC2626", blue:"#2563EB", amber:"#D97706" };
+
+// global accumulators
+let callMap = new Map();     // serial -> {serial, agent, isIn, isOut, date}  (from AICC call log = universe of real calls)
+let sdcmSet = new Set();     // known call serial numbers that HAVE an SDCM ticket
+let loadedFiles = [];        // {name, sheetsFound:[]}
+
+function faNum(n, decimals){
+  if (n==null || isNaN(n)) n=0;
+  const opts = decimals ? {minimumFractionDigits:decimals, maximumFractionDigits:decimals} : {};
+  return lang==="fa" ? Number(n).toLocaleString("fa-IR",opts) : Number(n).toLocaleString("en-US",opts);
+}
+function showError(msg){ const b=document.getElementById("error-banner"); document.getElementById("error-text").textContent=msg; b.style.display="flex"; }
+function clearError(){ document.getElementById("error-banner").style.display="none"; }
+function showToast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+
+function normHeaderRow(row){ return (row||[]).map(c=>String(c??"").trim().toLowerCase()); }
+function findHeaderRowIndex(aoa, mustHave){
+  const limit=Math.min(aoa.length,80);
+  for (let i=0;i<limit;i++){
+    const norm=normHeaderRow(aoa[i]);
+    if (mustHave.every(h=>norm.includes(h))) return i;
+  }
+  return -1;
+}
+function sheetToRows(ws, headerIdx){
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1, defval:null, raw:true});
+  const headers=(aoa[headerIdx]||[]).map(h=>String(h??"").trim());
+  const rows=[];
+  for (let i=headerIdx+1;i<aoa.length;i++){
+    const r=aoa[i]||[];
+    const obj={}; let hasValue=false;
+    headers.forEach((h,idx)=>{
+      if (!h) return;
+      const v=r[idx]??null;
+      obj[h]=v;
+      if (v!==null && v!=="") hasValue=true;
+    });
+    if (hasValue) rows.push(obj);
+  }
+  return rows;
+}
+function get(row,key){
+  if (row[key]!==undefined) return row[key];
+  const found=Object.keys(row).find(k=>k.toLowerCase().trim()===key.toLowerCase());
+  return found ? row[found] : null;
+}
+function excelDateToJs(v){
+  if (v==null) return null;
+  if (v instanceof Date) return v;
+  if (typeof v==="number") return new Date(Math.round((v-25569)*86400*1000));
+  const d=new Date(String(v).trim());
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function processWorkbook(wb, fileName){
+  const sheetsFound=[];
+  wb.SheetNames.forEach(sn=>{
+    const ws=wb.Sheets[sn];
+    const aoa=XLSX.utils.sheet_to_json(ws,{header:1, defval:null, raw:true});
+    if (!aoa.length) return;
+
+    // SDCM ticket file: only used to know WHICH call serials have a ticket (sdcmSet)
+    const ticketIdx = findHeaderRowIndex(aoa, ["call ticket","call serial number"]);
+    if (ticketIdx>=0){
+      const rows=sheetToRows(ws,ticketIdx);
+      rows.forEach(r=>{
+        const serial=String(get(r,"Call Serial Number")??"").trim();
+        if (serial) sdcmSet.add(serial);
+      });
+      sheetsFound.push(sn+" (SDCM tickets)");
+      return;
+    }
+
+    // AICC call log: this is the universe of real calls — every row is one actual call
+    const logIdx = findHeaderRowIndex(aoa, ["call sequence number"]);
+    if (logIdx>=0){
+      const rows=sheetToRows(ws,logIdx);
+      rows.forEach(r=>{
+        const serial=String(get(r,"Call Sequence Number")??"").trim();
+        if (!serial) return;
+        const skillQueue=String(get(r,"Skill Queue")??"").trim().toLowerCase();
+        const isOut=/callout/.test(skillQueue);
+        const isIn=!isOut;
+        const agent=String(get(r,"Account Name")??"").trim() || "—";
+        const date=excelDateToJs(get(r,"Start Time"));
+        callMap.set(serial, {serial, agent, isIn, isOut, date});
+      });
+      sheetsFound.push(sn+" (AICC call log)");
+    }
+  });
+  return sheetsFound;
+}
+
+["ticket","aicc"].forEach(which=>{
+  const dz=document.getElementById("dz-"+which);
+  const input=document.getElementById("file-"+which);
+  input.addEventListener("change", e=>{ handleFiles([...e.target.files]); });
+  dz.addEventListener("dragover", e=>{ e.preventDefault(); dz.style.borderColor="var(--teal)"; });
+  dz.addEventListener("dragleave", ()=>{ dz.style.borderColor=""; });
+  dz.addEventListener("drop", e=>{ e.preventDefault(); dz.style.borderColor=""; handleFiles([...e.dataTransfer.files]); });
+});
+
+function handleFiles(files){
+  clearError();
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=(e)=>{
+      try{
+        const data=new Uint8Array(e.target.result);
+        const wb=XLSX.read(data,{type:"array"});
+        const sheetsFound=processWorkbook(wb, file.name);
+        if (!sheetsFound.length) throw new Error("no matching sheet");
+        loadedFiles.push({name:file.name, sheetsFound});
+        renderFileList();
+        tryRender();
+      } catch(err){
+        showError(dict.errParse+": "+file.name);
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function renderFileList(){
+  document.getElementById("file-list").innerHTML = loadedFiles.map(f=>
+    `<div class="file-chip">📄 ${f.name} <span class="sheets">— ${f.sheetsFound.length} ${dict.sheetsFound}</span></div>`
+  ).join("");
+}
+
+function fmtGregorian(d){
+  if (!d) return "—";
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+let lastData=null;
+
+function tryRender(){
+  if (!callMap.size) return;
+  clearError();
+
+  const incoming={total:0,reg:0,notReg:0};
+  const outgoing={total:0,reg:0,notReg:0};
+  const agents=new Map(); // agent -> {inTotal,inReg,outTotal,outReg}
+  let minDate=null, maxDate=null;
+
+  callMap.forEach(t=>{
+    const registered = sdcmSet.has(t.serial);
+    const bucket = t.isIn ? incoming : outgoing;
+    bucket.total++;
+    if (registered) bucket.reg++; else bucket.notReg++;
+
+    if (!agents.has(t.agent)) agents.set(t.agent, {inTotal:0,inReg:0,outTotal:0,outReg:0});
+    const a=agents.get(t.agent);
+    if (t.isIn){ a.inTotal++; if (registered) a.inReg++; }
+    else { a.outTotal++; if (registered) a.outReg++; }
+
+    if (t.date){
+      if (!minDate || t.date<minDate) minDate=t.date;
+      if (!maxDate || t.date>maxDate) maxDate=t.date;
+    }
+  });
+
+  lastData={incoming, outgoing, agents, minDate, maxDate};
+  renderReport();
+}
+
+function renderReport(){
+  if (!lastData) return;
+  const {incoming, outgoing, agents, minDate, maxDate} = lastData;
+  document.getElementById("report-area").style.display="block";
+
+  document.getElementById("date-range-val").textContent = (minDate && maxDate)
+    ? `${fmtGregorian(minDate)} ${dict.dateSep} ${fmtGregorian(maxDate)}` : "—";
+
+  const total = incoming.total + outgoing.total;
+  try{
+    const regPctAll = total ? ((incoming.reg+outgoing.reg)/total*100) : 0;
+    window.parent.postMessage({source:"sdhub", report:"sdcm", regRate:regPctAll, total, updatedAt:Date.now()}, "*");
+  }catch(e){}
+  document.getElementById("kpi-total").textContent = faNum(total);
+  document.getElementById("kpi-incoming").textContent = faNum(incoming.total);
+  document.getElementById("kpi-outgoing").textContent = faNum(outgoing.total);
+
+  renderDonut("donut-in","legend-in", incoming);
+  renderDonut("donut-out","legend-out", outgoing);
+
+  const rows = [...agents.entries()]
+    .map(([name,a])=>({name, ...a, total:a.inTotal+a.outTotal}))
+    .sort((x,y)=>y.total-x.total);
+
+  document.getElementById("agent-body").innerHTML = rows.map(a=>{
+    const inPct = a.inTotal ? (a.inReg/a.inTotal*100) : 0;
+    const outPct = a.outTotal ? (a.outReg/a.outTotal*100) : 0;
+    const inCls = a.inTotal ? (inPct>=90?"pct-good":"pct-bad") : "";
+    const outCls = a.outTotal ? (outPct>=90?"pct-good":"pct-bad") : "";
+    return `<tr>
+      <td class="agent-name">${a.name}</td>
+      <td>${faNum(a.inTotal)}</td><td>${faNum(a.inReg)}</td><td class="${inCls}">${a.inTotal?faNum(inPct,1)+"٪":"—"}</td>
+      <td>${faNum(a.outTotal)}</td><td>${faNum(a.outReg)}</td><td class="${outCls}">${a.outTotal?faNum(outPct,1)+"٪":"—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderDonut(donutId, legendId, bucket){
+  const donut=document.getElementById(donutId);
+  const legend=document.getElementById(legendId);
+  const total=Math.max(bucket.total,1);
+  const regPct=bucket.reg/total*100, notPct=100-regPct;
+
+  donut.style.background="var(--panel-alt)";
+  donut.innerHTML=`<div class="donut-hole"><b>${faNum(regPct,1)}٪</b><span>${dict.registered}</span></div>`;
+  legend.innerHTML=`
+    <div class="legend-item"><span class="legend-dot" style="background:${COLORS.teal}"></span>${dict.registered}: <b>${faNum(bucket.reg)}</b> <span class="pct">(${faNum(regPct,1)}٪)</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:${COLORS.red}"></span>${dict.notRegistered}: <b>${faNum(bucket.notReg)}</b> <span class="pct">(${faNum(notPct,1)}٪)</span></div>`;
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    donut.style.background = bucket.total
+      ? `conic-gradient(${COLORS.teal} 0% ${regPct}%, ${COLORS.red} ${regPct}% 100%)`
+      : "var(--panel-alt)";
+  }));
+}
+
+function applyI18n(){
+  dict=I18N[lang];
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const key=el.getAttribute("data-i18n");
+    if (dict[key]) el.textContent=dict[key];
+  });
+  document.documentElement.lang=lang;
+  document.documentElement.dir = lang==="fa"?"rtl":"ltr";
+  document.body.classList.toggle("lang-en", lang==="en");
+  document.getElementById("lang-toggle").textContent = lang==="fa"?"EN":"فا";
+  renderFileList();
+  if (lastData) renderReport();
+}
+document.getElementById("lang-toggle").addEventListener("click", ()=>{ lang = lang==="fa"?"en":"fa"; applyI18n(); });
+
+document.getElementById("snapshot-btn").addEventListener("click", async ()=>{
+  if (!lastData){ showError(dict.errParse); return; }
+  const el=document.getElementById("app-root");
+  const canvas=await html2canvas(el, {backgroundColor:"#FFFFFF", scale:2, useCORS:true});
+  const link=document.createElement("a");
+  link.download="sdcm-report.png";
+  link.href=canvas.toDataURL("image/png");
+  link.click();
+  showToast(dict.toastSaved);
+});
+
+
+const folderInput = document.getElementById("folder-input");
+document.getElementById("folder-pick-btn").addEventListener("click", ()=>folderInput.click());
+folderInput.addEventListener("change", ()=>{
+  const files = [...folderInput.files].filter(f=>/\.(xlsx|xls|xlsm)$/i.test(f.name));
+  if (!files.length){ showToast("فایل اکسلی در این پوشه پیدا نشد"); return; }
+  document.getElementById("folder-status").textContent = "📁 " + files.length + " فایل از پوشه انتخاب‌شده خوانده شد";
+  handleFiles(files);
+  showToast("✅ فایل‌های پوشه بارگذاری شدند");
+});
+
+
+window.addEventListener("message", (e)=>{
+  if (!e.data || e.data.type!=="sdhub:inject-file") return;
+  try{
+    const blob = new Blob([e.data.buffer]);
+    const file = new File([blob], e.data.name || "api-file.xlsx");
+    handleFiles([file]);
+  }catch(err){ showError("خطا در دریافت فایل از API: " + err.message); }
+});
+
+applyI18n();
+</script>
+</body>
+</html>

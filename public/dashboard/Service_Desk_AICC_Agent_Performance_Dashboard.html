@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>داشبورد عملکرد اپراتورها | AICC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+  :root {
+    --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F1F4F9; --border:#E3E8F0;
+    --text:#1E293B; --muted:#64748B; --teal:#0D9488; --amber:#D97706; --red:#DC2626; --blue:#2563EB;
+    --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 2px 8px rgba(15,23,42,0.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #FFFFFF; color: var(--text);
+    font-family: 'Vazirmatn','Segoe UI',sans-serif; padding: 24px;
+  }
+  #app-root {
+    max-width: 1100px; margin: 0 auto; background: var(--bg);
+    border-radius: 18px; padding: 28px; position: relative; overflow: hidden;
+  }
+  #app-root::before {
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(600px 300px at 85% -10%, rgba(13,148,136,0.05), transparent),
+                radial-gradient(500px 260px at 5% 0%, rgba(37,99,235,0.04), transparent);
+  }
+  .header-row { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; position:relative; z-index:1; margin-bottom:22px; }
+  .eyebrow { color: var(--teal); font-size:12px; font-weight:600; margin-bottom:6px; }
+  .title { font-size:24px; font-weight:800; margin:0; }
+  .subtitle { color: var(--muted); font-size:13px; margin-top:6px; }
+  .date-badge { background: var(--panel); border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:12px; color:var(--muted); white-space:nowrap; }
+  .date-badge b { color: var(--text); }
+
+  .upload-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; position:relative; z-index:1; margin-bottom:14px; }
+  @media (max-width:640px){ .upload-row{ grid-template-columns:1fr; } }
+  .dropzone {
+    display:flex; align-items:center; gap:12px; cursor:pointer;
+    background:var(--panel); border:1.5px dashed var(--border); border-radius:14px; padding:14px 16px;
+    transition:border-color .15s, background .15s;
+  }
+  .dropzone:hover { border-color: var(--dz-accent); }
+  .dropzone.dragging { background: var(--panel-alt); }
+  .dropzone.filled { border-style:solid; border-color:var(--teal); }
+  .dz-icon { font-size:20px; }
+  .dz-text { flex:1; min-width:0; }
+  .dz-title { font-weight:700; font-size:13.5px; }
+  .dz-hint { color:var(--muted); font-size:12px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .folder-row { display:none !important; /* moved to Leadership panel in the hub */ } .folder-row-off{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; position:relative; z-index:1; margin:0 0 14px; }
+  .folder-status { font-size:11.3px; color:var(--muted); }
+
+  .error-banner { display:none; align-items:center; gap:8px; color:var(--red); background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:10px 14px; font-size:13px; margin:14px 0; position:relative; z-index:1; }
+  .empty-state { text-align:center; padding:50px 20px; color:var(--muted); font-size:13.5px; position:relative; z-index:1; }
+
+  .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:18px 0 16px; position:relative; z-index:1; }
+  .btn { display:flex; align-items:center; gap:6px; background:var(--panel-alt); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px 14px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .btn:hover { border-color: var(--teal); }
+  .btn.primary { background: var(--teal); color:#04231F; border-color:var(--teal); font-weight:700; }
+  .btn.primary:hover { filter: brightness(1.08); }
+
+  .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; position:relative; z-index:1; margin-bottom:22px; }
+  @media (max-width:900px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+  .kpi-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; gap:10px; align-items:flex-start; box-shadow:var(--shadow); }
+  .kpi-icon { padding:7px 9px; border-radius:9px; background:var(--panel-alt); font-size:16px; }
+  .kpi-value { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .kpi-label { font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .kpi-sub { font-size:10.5px; color:var(--muted); opacity:.8; margin-top:3px; }
+
+  .grid-2 { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; position:relative; z-index:1; margin-bottom:18px; }
+  @media (max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px; position:relative; z-index:1; box-shadow:var(--shadow); }
+  .panel-title { font-size:13.5px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .panel-title .dot { width:7px; height:7px; border-radius:50%; background:var(--teal); }
+
+  .hbar-row { display:grid; grid-template-columns:100px 1fr; align-items:center; gap:10px; margin-bottom:12px; font-size:11.5px; }
+  .hbar-name { color:var(--text); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hbar-bars { display:flex; flex-direction:column; gap:4px; }
+  .hbar-line { display:flex; align-items:center; gap:8px; }
+  .hbar-track { position:relative; height:14px; background:var(--panel-alt); border-radius:5px; overflow:hidden; flex:1; }
+  .hbar-fill { position:absolute; top:0; right:0; height:100%; border-radius:5px; }
+  .hbar-num { min-width:30px; text-align:left; font-variant-numeric:tabular-nums; color:var(--muted); font-size:11px; }
+
+  .donut-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .donut { width:170px; height:170px; border-radius:50%; position:relative; }
+  .donut-hole { position:absolute; inset:22px; background:var(--panel); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .donut-hole b { font-size:18px; }
+  .donut-hole span { font-size:10.5px; color:var(--muted); }
+  .legend-row { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
+  .legend-row span { display:inline-flex; align-items:center; gap:5px; }
+  .legend-dot { width:8px; height:8px; border-radius:50%; }
+
+  .table-wrap { overflow-x:auto; }
+  table.agent-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .agent-table th { text-align:right; color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--border); font-size:11.5px; white-space:nowrap; }
+  .agent-table td { padding:9px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .agent-table tbody tr { transition: background .12s; }
+  .agent-table tbody tr:hover { background: var(--panel-alt); }
+  .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--panel-alt); color:var(--muted); font-size:11px; font-weight:700; }
+  .rank-badge.gold { background:#FEF3C7; color:#92400E; }
+  .rank-badge.silver { background:#E5E7EB; color:#374151; }
+  .rank-badge.bronze { background:#FDE7D8; color:#9A3412; }
+  .agent-name { font-weight:600; }
+  .hangup-text { color:var(--muted); font-variant-numeric:tabular-nums; }
+  .rate-text { font-weight:700; font-variant-numeric:tabular-nums; }
+  .pulse-bar { display:flex; height:22px; width:130px; border-radius:7px; overflow:hidden; background:var(--panel-alt); box-shadow: inset 0 0 0 1px var(--border); transition: transform .15s; }
+  .pulse-bar:hover { transform: scaleY(1.08); }
+  .pulse-seg { height:100%; width:0%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; font-weight:700; font-variant-numeric:tabular-nums; overflow:hidden; white-space:nowrap; transition: width .9s cubic-bezier(.22,1,.36,1); }
+
+  .footer-note { color:var(--muted); font-size:11px; margin-top:14px; position:relative; z-index:1; line-height:1.9; }
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:#F0FDFA; color:#0D9488; border:1px solid var(--teal);
+    padding:10px 18px; border-radius:10px; font-size:13px; display:none; z-index:999;
+  }
+
+  .header-side { display:flex; flex-direction:column; align-items:flex-end; gap:8px; position:relative; z-index:1; }
+  .lang-toggle { display:flex; align-items:center; gap:2px; background:var(--panel-alt); border:1px solid var(--border); border-radius:20px; padding:3px; }
+  .lang-toggle button { border:none; background:transparent; color:var(--muted); font-family:inherit; font-size:11.5px; font-weight:700; padding:6px 13px; border-radius:16px; cursor:pointer; transition:background .15s, color .15s; }
+  .lang-toggle button.active { background:var(--teal); color:#fff; }
+  .date-badges { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+
+  .busy-stats { display:flex; gap:10px; width:100%; margin-top:14px; }
+  .busy-stat { flex:1; background:var(--panel-alt); border:1px solid var(--border); border-radius:12px; padding:10px 8px; text-align:center; }
+  .busy-stat b { display:block; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .busy-stat span { font-size:10.5px; color:var(--muted); }
+
+  body.lang-en #app-root { direction:ltr; }
+  body.lang-en .agent-table th, body.lang-en .agent-table td { text-align:left; }
+  body.lang-en .hbar-fill { right:auto; left:0; }
+  body.lang-en .date-badges { justify-content:flex-start; }
+  body.lang-en .header-side { align-items:flex-start; }
+  /* ---- Shared hub strip (Phase 2 unification) ---- */
+  .hub-strip{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:linear-gradient(90deg,#0F172A,#0B2A27); padding:10px 22px; margin:-24px -24px 20px; font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; }
+  .hub-strip-brand{ display:flex; align-items:center; gap:8px; color:#fff; text-decoration:none; font-size:13px; font-weight:800; }
+  .hub-strip-brand .hsb-icon{ width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#0D9488,#14B8A6); display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .hub-strip-back{ color:#CBD5E1; text-decoration:none; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px 12px; transition:.15s; }
+  .hub-strip-back:hover{ background:rgba(255,255,255,0.15); color:#fff; }
+</style>
+
+</head>
+<body>
+
+<div class="hub-strip">
+  <a href="index.html" class="hub-strip-brand"><span class="hsb-icon">🎧</span>Service Desk Hub</a>
+  <a href="index.html" class="hub-strip-back">↩ Back to hub</a>
+</div>
+<div id="app-root" dir="rtl">
+  <div class="header-row">
+    <div>
+      <div class="eyebrow" data-i18n="eyebrow">AICC · گزارش عملکرد اپراتورها</div>
+      <h2 class="title" data-i18n="title">داشبورد عملکرد AICC Agents</h2>
+      <div class="subtitle" data-i18n="subtitle">دو فایل خروجی سامانه را اضافه کنید — داشبورد به‌صورت خودکار ساخته می‌شود</div>
+    </div>
+    <div class="header-side">
+      <div class="lang-toggle" id="lang-toggle">
+        <button type="button" data-lang="fa" class="active">فارسی</button>
+        <button type="button" data-lang="en">English</button>
+      </div>
+      <div class="date-badges">
+        <div class="date-badge"><span data-i18n="dateJalaliLabel">تاریخ شمسی:</span> <b id="today-jalali"></b></div>
+        <div class="date-badge"><span data-i18n="dateGregLabel">تاریخ میلادی:</span> <b id="today-gregorian"></b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="upload-row" id="upload-row">
+    <label class="dropzone" id="dz-perf" style="--dz-accent:#5B8DEF">
+      <input type="file" id="input-perf" accept=".xlsx,.xlsm,.xls" style="display:none">
+      <div class="dz-icon" id="dz-perf-icon">📄</div>
+      <div class="dz-text"><div class="dz-title" data-i18n="dzPerfTitle">فایل Performance</div><div class="dz-hint" id="dz-perf-hint" data-i18n="dzPerfHintDefault">فایل عملکرد روزانه اپراتورها را بکشید یا انتخاب کنید</div></div>
+    </label>
+    <label class="dropzone" id="dz-act" style="--dz-accent:#2DD4BF">
+      <input type="file" id="input-act" accept=".xlsx,.xlsm,.xls" style="display:none">
+      <div class="dz-icon" id="dz-act-icon">📄</div>
+      <div class="dz-text"><div class="dz-title" data-i18n="dzActTitle">فایل Activity</div><div class="dz-hint" id="dz-act-hint" data-i18n="dzActHintDefault">فایل فعالیت/اشغالی اپراتورها را بکشید یا انتخاب کنید</div></div>
+    </label>
+  </div>
+
+  <div class="folder-row">
+    <button class="btn" id="folder-pick-btn" type="button">📁 انتخاب پوشه اختصاصی این گزارش</button>
+    <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none">
+    <span class="folder-status" id="folder-status">پوشه‌ای انتخاب نشده (اختیاری، Chrome/Edge/Firefox) — فایل‌های Performance و Activity را در این پوشه قرار دهید</span>
+  </div>
+
+  <div class="error-banner" id="error-banner"></div>
+  <div class="empty-state" id="empty-state" data-i18n="emptyState">⬆️ هنوز فایلی اضافه نشده. با آپلود دو فایل بالا، داشبورد اینجا نمایش داده می‌شود.</div>
+
+  <div id="dashboard-body" style="display:none">
+    <div class="toolbar" id="toolbar-row" style="justify-content:flex-end;">
+      <div style="display:flex; gap:8px;">
+        <button class="btn" id="btn-reset" data-i18n="btnReset">↺ شروع دوباره</button>
+        <button class="btn primary" id="btn-generate" data-i18n="btnGenerate">🖼️ تولید عکس داشبورد</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title"><span class="dot"></span> <span data-i18n="panelHbarTitle">تماس دریافتی در مقابل پاسخ‌داده — به تفکیک اپراتور</span></div>
+        <div class="legend-row" style="margin-bottom:12px;">
+          <span><span class="legend-dot" style="background:var(--blue)"></span><span data-i18n="legendReceived">دریافتی</span></span>
+          <span><span class="legend-dot" style="background:var(--teal)"></span><span data-i18n="legendAnswered">پاسخ‌داده</span></span>
+        </div>
+        <div id="hbar-chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--amber)"></span> <span data-i18n="panelDonutTitle">سرانجام تماس‌ها</span></div>
+        <div class="donut-wrap">
+          <div class="donut" id="donut"></div>
+          <div class="legend-row" id="donut-legend"></div>
+          <div class="busy-stats" id="busy-stats"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot" style="background:var(--amber)"></span> <span data-i18n="panelBusyListTitle">لیست اپراتورهای Busy‌شده</span></div>
+      <div class="table-wrap">
+        <table class="agent-table">
+          <thead><tr><th data-i18n="th1">اپراتور</th><th data-i18n="busyCountLabel">تعداد Busy</th></tr></thead>
+          <tbody id="busy-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span> <span data-i18n="panelLeaderboardTitle">رتبه‌بندی اپراتورها بر اساس نرخ پاسخ‌گویی</span></div>
+      <div class="table-wrap">
+        <table class="agent-table">
+          <thead><tr>
+            <th data-i18n="th0">#</th><th data-i18n="th1">اپراتور</th><th data-i18n="th2">دریافتی</th><th data-i18n="th3">پاسخ‌داده</th><th data-i18n="th4">قطع اپراتور</th>
+            <th data-i18n="th5">نرخ پاسخ</th><th data-i18n="th6">میانگین مکالمه</th><th data-i18n="th7">مدت Leave</th><th data-i18n="th8">ترکیب تماس</th>
+          </tr></thead>
+          <tbody id="leaderboard-body"></tbody>
+        </table>
+      </div>
+      <div class="legend-row" style="margin-top:14px">
+        <span><span class="legend-dot" style="background:var(--teal)"></span><span data-i18n="legendTableAnswered">پاسخ داده شده</span></span>
+        <span><span class="legend-dot" style="background:var(--amber)"></span><span data-i18n="legendTableHangup">قطع توسط اپراتور</span></span>
+      </div>
+    </div>
+
+    <div class="footer-note" data-i18n="footerNote">
+      توضیح: نرخ پاسخ‌گویی و آمار تماس از فایل Performance محاسبه شده و اشغالی/مدت حضور از فایل Activity (ردیف «Incoming and Outgoing Call 247» هر اپراتور) استخراج شده است.
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" data-i18n="toastMsg">✅ تصویر داشبورد دانلود شد</div>
+
+<script>
+const PERSIAN_MONTHS = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+const COLORS = { teal:"#2DD4BF", amber:"#F5A524", red:"#F0506E", blue:"#5B8DEF" };
+let lang = "fa";
+let lastMerged = null;
+
+const I18N = {
+  fa: {
+    docTitle: "داشبورد عملکرد اپراتورها | AICC",
+    eyebrow: "AICC · گزارش عملکرد اپراتورها",
+    title: "داشبورد عملکرد سرویس دسک",
+    subtitle: "دو فایل خروجی سامانه را اضافه کنید — داشبورد به‌صورت خودکار ساخته می‌شود",
+    dateJalaliLabel: "تاریخ شمسی:",
+    dateGregLabel: "تاریخ میلادی:",
+    dzPerfTitle: "فایل Performance",
+    dzPerfHintDefault: "فایل عملکرد روزانه اپراتورها را بکشید یا انتخاب کنید",
+    dzActTitle: "فایل Activity",
+    dzActHintDefault: "فایل فعالیت/اشغالی اپراتورها را بکشید یا انتخاب کنید",
+    emptyState: "⬆️ هنوز فایلی اضافه نشده. با آپلود دو فایل بالا، داشبورد اینجا نمایش داده می‌شود.",
+    btnReset: "↺ شروع دوباره",
+    btnGenerate: "🖼️ تولید عکس داشبورد",
+    panelHbarTitle: "تماس دریافتی در مقابل پاسخ‌داده — به تفکیک اپراتور",
+    legendReceived: "دریافتی",
+    legendAnswered: "پاسخ‌داده",
+    panelDonutTitle: "سرانجام تماس‌ها",
+    donutCenterLabel: "نرخ پاسخ",
+    outcomeAnswered: "پاسخ داده شده",
+    outcomeHangup: "قطع توسط اپراتور",
+    busyCountLabel: "تعداد Busy",
+    busyAgentsLabel: "اپراتورهای Busy‌شده",
+    panelBusyListTitle: "لیست اپراتورهای Busy‌شده",
+    noBusyAgents: "هیچ اپراتوری Busy نداشته است",
+    panelLeaderboardTitle: "رتبه‌بندی اپراتورها بر اساس نرخ پاسخ‌گویی",
+    th: ["#","اپراتور","دریافتی","پاسخ‌داده","قطع اپراتور","نرخ پاسخ","میانگین مکالمه","مدت Leave","ترکیب تماس"],
+    legendTableAnswered: "پاسخ داده شده",
+    legendTableHangup: "قطع توسط اپراتور",
+    footerNote: "توضیح: نرخ پاسخ‌گویی و آمار تماس از فایل Performance محاسبه شده و اشغالی/مدت حضور از فایل Activity (ردیف «Incoming and Outgoing Call 247» هر اپراتور) استخراج شده است.",
+    toastMsg: "✅ تصویر داشبورد دانلود شد",
+    noData: "داده‌ای برای نمایش نیست",
+    errorReadFile: (name,msg)=>`خطا در خواندن فایل «${name}»: ${msg}`,
+    errorEmptySheet: "شیت انتخاب‌شده خالی است",
+    errorNotReadable: (name)=>`فایل «${name}» قابل خواندن نبود.`,
+    errorImageGen: (msg)=>`تولید عکس با خطا مواجه شد: ${msg}`,
+    kpiReceived: "تماس‌های دریافتی",
+    kpiAnswerRate: "نرخ پاسخ‌گویی",
+    kpiAnsweredSub: (n)=>`${n} پاسخ داده شده`,
+    kpiHangup: "قطع توسط اپراتور",
+    kpiAvgTalk: "میانگین مکالمه",
+    kpiActiveAgents: "تعداد اپراتور فعال",
+    kpiOccupancySub: (n)=>`میانگین اشغالی ${n}٪`,
+    pct: "٪",
+  },
+  en: {
+    docTitle: "AICC Agent Performance Dashboard",
+    eyebrow: "AICC · Agent Performance Report",
+    title: "Service Desk Agent Performance Dashboard",
+    subtitle: "Add the two system export files — the dashboard builds itself automatically",
+    dateJalaliLabel: "Jalali Date:",
+    dateGregLabel: "Gregorian Date:",
+    dzPerfTitle: "Performance File",
+    dzPerfHintDefault: "Drag or select the agents' daily performance file",
+    dzActTitle: "Activity File",
+    dzActHintDefault: "Drag or select the agents' activity/occupancy file",
+    emptyState: "⬆️ No file added yet. Upload the two files above to see the dashboard here.",
+    btnReset: "↺ Start Over",
+    btnGenerate: "🖼️ Export Dashboard Image",
+    panelHbarTitle: "Received vs. Answered Calls — by Agent",
+    legendReceived: "Received",
+    legendAnswered: "Answered",
+    panelDonutTitle: "Call Outcomes",
+    donutCenterLabel: "Answer Rate",
+    outcomeAnswered: "Answered",
+    outcomeHangup: "Hung Up by Agent",
+    busyCountLabel: "Busy Count",
+    busyAgentsLabel: "Agents With Busy",
+    panelBusyListTitle: "Agents With Busy Calls",
+    noBusyAgents: "No agent had a busy call",
+    panelLeaderboardTitle: "Agent Leaderboard by Answer Rate",
+    th: ["#","Agent","Received","Answered","Agent Hangup","Answer Rate","Avg Talk","Leave Time","Call Mix"],
+    legendTableAnswered: "Answered",
+    legendTableHangup: "Hung Up by Agent",
+    footerNote: 'Note: Answer rate and call stats are calculated from the Performance file; occupancy/attendance time is extracted from the Activity file (each agent\'s "Incoming and Outgoing Call 247" row).',
+    toastMsg: "✅ Dashboard image downloaded",
+    noData: "No data to display",
+    errorReadFile: (name,msg)=>`Error reading file "${name}": ${msg}`,
+    errorEmptySheet: "The selected sheet is empty",
+    errorNotReadable: (name)=>`File "${name}" could not be read.`,
+    errorImageGen: (msg)=>`Image generation failed: ${msg}`,
+    kpiReceived: "Calls Received",
+    kpiAnswerRate: "Answer Rate",
+    kpiAnsweredSub: (n)=>`${n} answered`,
+    kpiHangup: "Hung Up by Agent",
+    kpiAvgTalk: "Avg Talk Time",
+    kpiActiveAgents: "Active Agents",
+    kpiOccupancySub: (n)=>`Avg occupancy ${n}%`,
+    pct: "%",
+  }
+};
+
+function todayGregorianLabel(){
+  const now=new Date();
+  const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,"0"), d=String(now.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+
+function applyStaticI18n(){
+  const dict=I18N[lang];
+  document.title = dict.docTitle;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const key=el.getAttribute("data-i18n");
+    if (/^th\d$/.test(key)){
+      const idx=Number(key.slice(2));
+      el.textContent = dict.th[idx];
+    } else if (dict[key]!==undefined && typeof dict[key]==="string"){
+      el.textContent = dict[key];
+    }
+  });
+}
+
+function applyLanguage(newLang){
+  lang = newLang;
+  document.documentElement.lang = lang==="fa" ? "fa" : "en";
+  document.documentElement.dir = lang==="fa" ? "rtl" : "ltr";
+  document.getElementById("app-root").setAttribute("dir", lang==="fa" ? "rtl" : "ltr");
+  document.body.classList.toggle("lang-en", lang==="en");
+  document.querySelectorAll("#lang-toggle button").forEach(b=>b.classList.toggle("active", b.dataset.lang===lang));
+  applyStaticI18n();
+  if (!perfRows && !actRows){
+    document.getElementById("dz-perf-hint").textContent = I18N[lang].dzPerfHintDefault;
+    document.getElementById("dz-act-hint").textContent = I18N[lang].dzActHintDefault;
+  }
+  if (lastMerged){
+    renderFiltered(lastMerged);
+  }
+}
+
+function gregorianToJalali(gy, gm, gd) {
+  const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let jy = gy<=1600?0:979;
+  gy -= gy<=1600?621:1600;
+  const gy2 = gm>2?gy+1:gy;
+  let days = 365*gy + Math.floor((gy2+3)/4) - Math.floor((gy2+99)/100) + Math.floor((gy2+399)/400) - 80 + gd + g_d_m[gm-1];
+  jy += 33*Math.floor(days/12053); days %= 12053;
+  jy += 4*Math.floor(days/1461); days %= 1461;
+  if (days > 365) { jy += Math.floor((days-1)/365); days = (days-1)%365; }
+  let jm, jd;
+  if (days < 186) { jm = 1+Math.floor(days/31); jd = 1+(days%31); }
+  else { jm = 7+Math.floor((days-186)/30); jd = 1+((days-186)%30); }
+  return [jy, jm, jd];
+}
+function todayJalaliLabel(){
+  const now = new Date();
+  const [jy,jm,jd] = gregorianToJalali(now.getFullYear(), now.getMonth()+1, now.getDate());
+  return `${jd} ${PERSIAN_MONTHS[jm-1]} ${jy}`;
+}
+function toSeconds(val){
+  if (val===null||val===undefined||val==="") return 0;
+  if (typeof val==="number") return Math.round(val*86400);
+  const s=String(val).trim();
+  if (s.includes(":")){
+    const parts=s.split(":").map(Number);
+    if (parts.some(isNaN)) return 0;
+    if (parts.length===3) return parts[0]*3600+parts[1]*60+parts[2];
+    if (parts.length===2) return parts[0]*60+parts[1];
+  }
+  const f=parseFloat(s); return isNaN(f)?0:f;
+}
+function formatDuration(totalSeconds){
+  totalSeconds = Math.round(Math.max(0, totalSeconds||0));
+  const h=Math.floor(totalSeconds/3600), m=Math.floor((totalSeconds%3600)/60), s=totalSeconds%60;
+  return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+function toPercent(val){
+  if (val===null||val===undefined||val==="") return 0;
+  if (typeof val==="number") return val<=1.5?val*100:val;
+  const s=String(val).trim().replace("%","");
+  const f=parseFloat(s); return isNaN(f)?0:f;
+}
+function faNum(n, digits=0){
+  const num=Number(n)||0;
+  return num.toLocaleString(lang==="fa"?"fa-IR":"en-US",{maximumFractionDigits:digits,minimumFractionDigits:digits});
+}
+function buildKeyMap(row){
+  const map={};
+  Object.keys(row||{}).forEach(k=>{ map[k.trim().toLowerCase()]=k; });
+  return map;
+}
+function get(row, keyMap, alias){
+  const k=keyMap[alias.toLowerCase()];
+  return k?row[k]:undefined;
+}
+function parsePerformance(rows){
+  const agents={};
+  if (!rows||!rows.length) return agents;
+  const km=buildKeyMap(rows[0]);
+  rows.forEach(r=>{
+    const agentName=String(get(r,km,"Agent Name")??get(r,km,"Agent")??"").trim();
+    if (!agentName) return;
+    if (/^total$/i.test(agentName)) return; // skip the summary "total" row at the bottom of the report
+    const key=agentName.toLowerCase();
+    if (!agents[key]) agents[key]={agent:agentName, supervisor:String(get(r,km,"Supervisor Name")??"نامشخص").trim()||"نامشخص", received:0, answered:0, hangup:0, hold:0, talkSecs:[]};
+    const a=agents[key];
+    a.received += Number(get(r,km,"Calls Received"))||0;
+    a.answered += Number(get(r,km,"Calls Answered"))||0;
+    a.hangup += Number(get(r,km,"Agent Hang up Call"))||0;
+    a.hold += Number(get(r,km,"Number of Hold Call"))||0;
+    const talk=toSeconds(get(r,km,"Avg Talk Duration"));
+    if (talk>0) a.talkSecs.push(talk);
+  });
+  return agents;
+}
+function parseActivity(rows){
+  const agents={};
+  if (!rows||!rows.length) return agents;
+  const km=buildKeyMap(rows[0]);
+  const hasSkillGroup = "skill group name" in km;
+  const filtered = hasSkillGroup ? rows.filter(r=>/incoming and outgoing/i.test(String(get(r,km,"Skill Group Name")??""))) : rows;
+  filtered.forEach(r=>{
+    const agentName=String(get(r,km,"Agent Name")??get(r,km,"Agent")??"").trim();
+    if (!agentName) return;
+    const key=agentName.toLowerCase();
+    agents[key]={
+      agent:agentName,
+      staffed:toSeconds(get(r,km,"Staffed Duration")??get(r,km,"Staffed Duration 2")),
+      leave:toSeconds(get(r,km,"Leave Duration")),
+      occupancyRate:toPercent(get(r,km,"Occupancy Rate")),
+      busy:Number(get(r,km,"Number of Busy")??get(r,km,"Busy")??get(r,km,"Calls Busy")??get(r,km,"Busy Call")??get(r,km,"Number of Busy Call")??get(r,km,"Busy Calls"))||0,
+    };
+  });
+  return agents;
+}
+function mergeAgents(perf, act){
+  const keys=new Set([...Object.keys(perf), ...Object.keys(act)]);
+  const merged=[];
+  keys.forEach(key=>{
+    const p=perf[key], a=act[key];
+    const agentName=p?.agent||a?.agent||key;
+    if (/^unkown$|^unknown$/i.test(agentName.trim())) return; // hide unassigned/"unkown" rows
+    const received=p?.received??0, answered=p?.answered??0, hangup=p?.hangup??0, busy=a?.busy??0;
+    const avgTalk = p?.talkSecs?.length ? p.talkSecs.reduce((s,v)=>s+v,0)/p.talkSecs.length : 0;
+    merged.push({
+      agent:agentName, supervisor:p?.supervisor||"نامشخص",
+      received, answered, hangup, busy,
+      answerRate: received>0 ? (answered/received)*100 : 0,
+      avgTalkSecs: avgTalk,
+      occupancyRate: a?.occupancyRate??0,
+      leaveSecs: a?.leave??0,
+    });
+  });
+  return merged.sort((x,y)=>y.received-x.received);
+}
+
+// ---------- state ----------
+let perfRows=null, actRows=null, perfFileName="", actFileName="";
+
+function showError(msg){
+  const el=document.getElementById("error-banner");
+  el.textContent="⚠️ "+msg; el.style.display="flex";
+}
+function clearError(){ document.getElementById("error-banner").style.display="none"; }
+
+function findHeaderRowIndex(aoa){
+  const limit=Math.min(aoa.length,80);
+  for (let i=0;i<limit;i++){
+    const row=aoa[i]||[];
+    const norm=row.map(c=>String(c??"").trim().toLowerCase());
+    const hasAgentId=norm.includes("agent id");
+    const hasAgentName=norm.includes("agent name");
+    const hasCallsReceived=norm.includes("calls received");
+    const hasTime=norm.includes("time");
+    const hasSkillGroup=norm.includes("skill group name");
+    if ((hasAgentId||hasAgentName) && (hasCallsReceived||hasSkillGroup||hasTime)) return i;
+  }
+  return 0; // fallback: assume the first row is the header (e.g. for the bundled sample files)
+}
+function sheetToRowsSmart(ws){
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1, defval:null, raw:true});
+  const headerIdx=findHeaderRowIndex(aoa);
+  const headers=(aoa[headerIdx]||[]).map(h=>String(h??"").trim());
+  const rows=[];
+  for (let i=headerIdx+1;i<aoa.length;i++){
+    const r=aoa[i]||[];
+    const obj={};
+    let hasValue=false;
+    headers.forEach((h,idx)=>{
+      if (!h) return;
+      const v=r[idx]??null;
+      obj[h]=v;
+      if (v!==null && v!=="") hasValue=true;
+    });
+    if (hasValue) rows.push(obj);
+  }
+  return rows;
+}
+function handleFile(file, which){
+  clearError();
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      const data=new Uint8Array(e.target.result);
+      const wb=XLSX.read(data,{type:"array"});
+      const preferred = which==="performance" ? /perform/i : /activ/i;
+      const sheetName = wb.SheetNames.find(n=>preferred.test(n)) || wb.SheetNames[0];
+      const ws=wb.Sheets[sheetName];
+      const rows=sheetToRowsSmart(ws);
+      if (!rows.length) throw new Error(I18N[lang].errorEmptySheet);
+      if (which==="performance"){ perfRows=rows; perfFileName=file.name; document.getElementById("dz-perf-hint").textContent=file.name; document.getElementById("dz-perf-icon").textContent="✅"; document.getElementById("dz-perf").classList.add("filled"); }
+      else { actRows=rows; actFileName=file.name; document.getElementById("dz-act-hint").textContent=file.name; document.getElementById("dz-act-icon").textContent="✅"; document.getElementById("dz-act").classList.add("filled"); }
+      render();
+    }catch(err){ showError(I18N[lang].errorReadFile(file.name, err.message)); }
+  };
+  reader.onerror=()=>showError(I18N[lang].errorNotReadable(file.name));
+  reader.readAsArrayBuffer(file);
+}
+
+function setupDropzone(zoneId, inputId, which){
+  const zone=document.getElementById(zoneId);
+  const input=document.getElementById(inputId);
+  zone.addEventListener("click",()=>input.click());
+  input.addEventListener("change",()=>{ if(input.files[0]) handleFile(input.files[0], which); });
+  zone.addEventListener("dragover",(e)=>{ e.preventDefault(); zone.classList.add("dragging"); });
+  zone.addEventListener("dragleave",()=>zone.classList.remove("dragging"));
+  zone.addEventListener("drop",(e)=>{
+    e.preventDefault(); zone.classList.remove("dragging");
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0], which);
+  });
+}
+
+function render(){
+  if (!perfRows && !actRows) return;
+  const perf=parsePerformance(perfRows||[]);
+  const act=parseActivity(actRows||[]);
+  const merged=mergeAgents(perf, act);
+  if (!merged.length) return;
+  lastMerged=merged;
+
+  document.getElementById("empty-state").style.display="none";
+  document.getElementById("dashboard-body").style.display="block";
+
+  renderFiltered(merged);
+}
+
+function renderFiltered(merged){
+  const dict=I18N[lang];
+  const filtered = merged;
+
+  const totals=filtered.reduce((acc,a)=>{
+    acc.received+=a.received; acc.answered+=a.answered; acc.hangup+=a.hangup; acc.busy+=a.busy;
+    acc.occSum+=a.occupancyRate; acc.talkWeighted+=a.avgTalkSecs*a.received;
+    return acc;
+  }, {received:0,answered:0,hangup:0,busy:0,occSum:0,talkWeighted:0});
+  totals.answerRate = totals.received>0 ? (totals.answered/totals.received)*100 : 0;
+  try{
+    window.parent.postMessage({source:"sdhub", report:"aicc", answerRate: totals.answerRate, received: totals.received, updatedAt:Date.now()}, "*");
+  }catch(e){}
+  totals.avgOccupancy = filtered.length ? totals.occSum/filtered.length : 0;
+  totals.avgTalk = totals.received>0 ? totals.talkWeighted/totals.received : 0;
+  totals.busyAgents = filtered.filter(a=>a.busy>0).length;
+
+  // KPI cards
+  const kpis=[
+    {icon:"📞", label:dict.kpiReceived, value:faNum(totals.received)},
+    {icon:"📈", label:dict.kpiAnswerRate, value:faNum(totals.answerRate,1)+dict.pct, sub:dict.kpiAnsweredSub(faNum(totals.answered))},
+    {icon:"📵", label:dict.kpiHangup, value:faNum(totals.hangup)},
+    {icon:"⏱️", label:dict.kpiAvgTalk, value:formatDuration(totals.avgTalk)},
+    {icon:"👥", label:dict.kpiActiveAgents, value:faNum(filtered.length), sub:dict.kpiOccupancySub(faNum(totals.avgOccupancy,1))},
+  ];
+  document.getElementById("kpi-grid").innerHTML = kpis.map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-icon">${k.icon}</div>
+      <div>
+        <div class="kpi-value">${k.value}</div>
+        <div class="kpi-label">${k.label}</div>
+        ${k.sub?`<div class="kpi-sub">${k.sub}</div>`:""}
+      </div>
+    </div>`).join("");
+
+  // horizontal bar chart (top 12 by received)
+  const top = filtered.slice().sort((a,b)=>b.received-a.received).slice(0,12);
+  const maxVal = Math.max(1, ...top.map(a=>a.received));
+  document.getElementById("hbar-chart").innerHTML = top.map(a=>`
+    <div class="hbar-row">
+      <div class="hbar-name" title="${a.agent}">${a.agent}</div>
+      <div class="hbar-bars">
+        <div class="hbar-line">
+          <div class="hbar-track"><div class="hbar-fill" style="width:${(a.received/maxVal*100).toFixed(1)}%; background:${COLORS.blue};"></div></div>
+          <span class="hbar-num">${faNum(a.received)}</span>
+        </div>
+        <div class="hbar-line">
+          <div class="hbar-track"><div class="hbar-fill" style="width:${(a.answered/maxVal*100).toFixed(1)}%; background:${COLORS.teal};"></div></div>
+          <span class="hbar-num">${faNum(a.answered)}</span>
+        </div>
+      </div>
+    </div>`).join("") || `<div style="color:var(--muted); font-size:12px;">${dict.noData}</div>`;
+
+  // donut
+  const outcomeData=[
+    {name:dict.outcomeAnswered, value:totals.answered, color:COLORS.teal},
+    {name:dict.outcomeHangup, value:totals.hangup, color:COLORS.amber},
+  ].filter(d=>d.value>0);
+  const sumVal=outcomeData.reduce((s,d)=>s+d.value,0)||1;
+  let acc=0;
+  const stops=outcomeData.map(d=>{
+    const start=acc/sumVal*360;
+    acc+=d.value;
+    const end=acc/sumVal*360;
+    return `${d.color} ${start}deg ${end}deg`;
+  }).join(", ");
+  const donut=document.getElementById("donut");
+  donut.style.background = outcomeData.length ? `conic-gradient(${stops})` : "var(--panel-alt)";
+  donut.innerHTML = `<div class="donut-hole"><b>${faNum(totals.answerRate,1)}${dict.pct}</b><span>${dict.donutCenterLabel}</span></div>`;
+  document.getElementById("donut-legend").innerHTML = outcomeData.map(d=>
+    `<span><span class="legend-dot" style="background:${d.color}"></span>${d.name}: ${faNum(d.value)}</span>`
+  ).join("");
+
+  // busy stats (below call outcomes)
+  document.getElementById("busy-stats").innerHTML = `
+    <div class="busy-stat"><b>${faNum(totals.busy)}</b><span>${dict.busyCountLabel}</span></div>
+    <div class="busy-stat"><b>${faNum(totals.busyAgents)}</b><span>${dict.busyAgentsLabel}</span></div>
+  `;
+
+  // per-agent busy list
+  const busyList = filtered.slice().filter(a=>a.busy>0).sort((a,b)=>b.busy-a.busy);
+  document.getElementById("busy-list-body").innerHTML = busyList.length
+    ? busyList.map(a=>`<tr><td class="agent-name">${a.agent}</td><td>${faNum(a.busy)}</td></tr>`).join("")
+    : `<tr><td colspan="2" style="color:var(--muted); text-align:center;">${dict.noBusyAgents}</td></tr>`;
+
+  // leaderboard
+  const leaderboard = filtered.slice().sort((a,b)=>b.answerRate-a.answerRate);
+  document.getElementById("leaderboard-body").innerHTML = leaderboard.map((a,i)=>{
+    const total = Math.max(a.answered+a.hangup,1);
+    const wA=(a.answered/total*100), wH=(a.hangup/total*100);
+    const rateColor = a.answerRate>=70?COLORS.teal:a.answerRate>=40?COLORS.amber:COLORS.red;
+    const rankClass = i===0?"gold":i===1?"silver":i===2?"bronze":"";
+    const leaveColor = a.leaveSecs < 3600 ? COLORS.teal : "var(--text)";
+    return `<tr>
+      <td><span class="rank-badge ${rankClass}">${faNum(i+1)}</span></td>
+      <td class="agent-name">${a.agent}</td>
+      <td>${faNum(a.received)}</td>
+      <td>${faNum(a.answered)}</td>
+      <td class="hangup-text">${faNum(a.hangup)}</td>
+      <td class="rate-text" style="color:${rateColor}">${faNum(a.answerRate,1)}${dict.pct}</td>
+      <td>${formatDuration(a.avgTalkSecs)}</td>
+      <td style="color:${leaveColor}; font-weight:600;">${formatDuration(a.leaveSecs)}</td>
+      <td><div class="pulse-bar" title="${dict.legendTableAnswered}: ${a.answered} | ${dict.legendTableHangup}: ${a.hangup}">
+        <div class="pulse-seg" data-w="${wA}" style="background:${COLORS.teal}">${wA>=14?faNum(a.answered):""}</div>
+        <div class="pulse-seg" data-w="${wH}" style="background:${COLORS.amber}">${wH>=14?faNum(a.hangup):""}</div>
+      </div></td>
+    </tr>`;
+  }).join("");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll("#leaderboard-body .pulse-seg").forEach(el=>{ el.style.width=(el.dataset.w||0)+"%"; });
+  }));
+}
+
+document.getElementById("today-jalali").textContent = todayJalaliLabel();
+document.getElementById("today-gregorian").textContent = todayGregorianLabel();
+applyStaticI18n();
+setupDropzone("dz-perf","input-perf","performance");
+setupDropzone("dz-act","input-act","activity");
+
+function detectFileKind(aoa){
+  const limit = Math.min(aoa.length, 80);
+  for (let i=0;i<limit;i++){
+    const norm = (aoa[i]||[]).map(c=>String(c??"").trim().toLowerCase());
+    const hasAgent = norm.includes("agent id") || norm.includes("agent name");
+    if (hasAgent && norm.includes("calls received")) return "performance";
+    if (hasAgent && (norm.includes("occupancy rate") || norm.includes("staffed duration") || norm.includes("skill group name"))) return "activity";
+  }
+  return null;
+}
+const folderInput = document.getElementById("folder-input");
+document.getElementById("folder-pick-btn").addEventListener("click", ()=>folderInput.click());
+folderInput.addEventListener("change", async ()=>{
+  const files = [...folderInput.files].filter(f=>/\.(xlsx|xls|xlsm)$/i.test(f.name));
+  if (!files.length){ showError("فایل اکسلی در این پوشه پیدا نشد"); return; }
+  let anyMatched = false;
+  for (const file of files){
+    try{
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), {type:"array"});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+      const kind = detectFileKind(aoa);
+      if (kind){ handleFile(file, kind); anyMatched = true; }
+    }catch(e){ console.error(e); }
+  }
+  document.getElementById("folder-status").textContent = "📁 " + files.length + " فایل از پوشه بررسی شد";
+  if (!anyMatched){
+    const toast=document.getElementById("toast");
+    toast.textContent = "فایل شناخته‌شده‌ای (Performance/Activity) در این پوشه پیدا نشد";
+    toast.style.display="block";
+    setTimeout(()=>toast.style.display="none", 2500);
+  }
+});
+
+window.addEventListener("message", async (e)=>{
+  if (!e.data || e.data.type!=="sdhub:inject-file") return;
+  try{
+    const wb = XLSX.read(new Uint8Array(e.data.buffer), {type:"array"});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+    const kind = detectFileKind(aoa);
+    if (kind){
+      const blob = new Blob([e.data.buffer]);
+      const file = new File([blob], e.data.name || "api-file.xlsx");
+      handleFile(file, kind);
+    }
+  }catch(err){ showError("خطا در دریافت فایل از API: " + err.message); }
+});
+
+document.querySelectorAll("#lang-toggle button").forEach(btn=>{
+  btn.addEventListener("click", ()=>applyLanguage(btn.dataset.lang));
+});
+
+document.getElementById("btn-reset").addEventListener("click",()=>{
+  perfRows=null; actRows=null; perfFileName=""; actFileName=""; lastMerged=null;
+  document.getElementById("dz-perf-hint").textContent=I18N[lang].dzPerfHintDefault;
+  document.getElementById("dz-act-hint").textContent=I18N[lang].dzActHintDefault;
+  document.getElementById("dz-perf-icon").textContent="📄";
+  document.getElementById("dz-act-icon").textContent="📄";
+  document.getElementById("dz-perf").classList.remove("filled");
+  document.getElementById("dz-act").classList.remove("filled");
+  document.getElementById("dashboard-body").style.display="none";
+  document.getElementById("empty-state").style.display="block";
+  clearError();
+});
+
+document.getElementById("btn-generate").addEventListener("click", async ()=>{
+  const el=document.getElementById("app-root");
+  const uploadRow=document.getElementById("upload-row");
+  const toolbar=document.getElementById("toolbar-row");
+  uploadRow.style.display="none"; toolbar.style.display="none";
+  try{
+    const canvas = await html2canvas(el, { backgroundColor:"#FFFFFF", scale:2, useCORS:true });
+    const link=document.createElement("a");
+    link.download = "AICC-Dashboard-" + new Date().toISOString().slice(0,10) + ".png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    const toast=document.getElementById("toast");
+    toast.style.display="block";
+    setTimeout(()=>toast.style.display="none", 2500);
+  }catch(err){
+    showError(I18N[lang].errorImageGen(err.message));
+  }finally{
+    uploadRow.style.display="grid"; toolbar.style.display="flex";
+  }
+});
+</script>
+</body>
+</html>
