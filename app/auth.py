@@ -46,9 +46,11 @@ def require_auth(creds: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
 
 
+LEADERSHIP_ROLES = ("admin", "leadership", "supervisor")
+
 def require_role(*allowed_roles: str):
     """Use as a dependency after require_auth to restrict a route to specific roles:
-    def my_route(user: CurrentUser = Depends(require_auth), _=Depends(require_role("admin","leadership"))): ...
+    def my_route(user: CurrentUser = Depends(require_auth), _=Depends(require_role("admin","supervisor"))): ...
     """
     def checker(user: CurrentUser = Depends(require_auth)) -> CurrentUser:
         if user.role not in allowed_roles:

@@ -11,12 +11,50 @@ from ..db.models import RosterColumn, TeamMember, RosterEntry, RosterEntryMember
 from ..auth import require_auth, require_role, CurrentUser
 
 router = APIRouter(prefix="/api/roster", tags=["roster"])
-can_edit = require_role("admin", "leadership")
+can_edit = require_role("admin", "leadership", "supervisor")
 
 
 def log_action(db: Session, user_id: int, action: str, detail: dict):
     db.add(AuditLog(user_id=user_id, action=action, detail=detail))
 
+
+# ---------- State snapshot (used by the Roster UI; backend is the source of truth) ----------
+@router.get("/state")
+def get_state(
+    from_: date = Query(..., alias="from"),
+    to: date = Query(...),
+    db: Session = Depends(get_db),
+    _=Depends(require_auth),
+):
+    cols = db.query(RosterColumn).order_by(RosterColumn.sort_order).all()
+    members = db.query(TeamMember).filter(TeamMember.is_active.is_(True)).order_by(TeamMember.full_name).all()
+    holidays = db.query(Holiday).order_by(Holiday.holiday_date).all()
+    rows = (
+        db.query(RosterEntry)
+        .options(joinedload(RosterEntry.members).joinedload(RosterEntryMember.team_member))
+        .join(RosterColumn, RosterEntry.column_id == RosterColumn.id)
+        .filter(RosterEntry.entry_date.between(from_, to))
+        .order_by(RosterEntry.id)
+        .all()
+    )
+    days: dict[str, dict] = defaultdict(dict)
+    for entry in rows:
+        col = next((c for c in cols if c.id == entry.column_id), None)
+        if not col:
+            continue
+        names = [m.team_member.full_name for m in entry.members if m.team_member] or ([entry.free_text] if entry.free_text else [])
+        if not names:
+            continue
+        if col.is_multi:
+            days.setdefault(entry.entry_date.isoformat(), {}).setdefault(col.key, []).extend(names)
+        else:
+            days.setdefault(entry.entry_date.isoformat(), {})[col.key] = names[0]
+    return {
+        "columns": [{"id":c.id,"key":c.key,"label_en":c.label_en,"label_fa":c.label_fa,"color":c.color,"text_color":c.text_color,"is_multi":c.is_multi,"is_builtin":c.is_builtin,"sort_order":c.sort_order} for c in cols],
+        "team": [{"id":m.id,"full_name":m.full_name,"username":m.username} for m in members],
+        "holidays": [{"date":h.holiday_date.isoformat(),"label":h.label} for h in holidays],
+        "days": days,
+    }
 
 # ---------- Columns ----------
 class ColumnIn(BaseModel):

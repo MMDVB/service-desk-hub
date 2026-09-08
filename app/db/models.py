@@ -22,7 +22,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        CheckConstraint("role IN ('admin','leadership','agent')", name="users_role_check"),
+        CheckConstraint("role IN ('admin','leadership','supervisor','agent')", name="users_role_check"),
     )
 
 
