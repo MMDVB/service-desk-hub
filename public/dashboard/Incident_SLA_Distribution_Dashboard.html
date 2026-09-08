@@ -142,20 +142,51 @@
   .hub-strip-brand .hsb-icon{ width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#0D9488,#14B8A6); display:flex; align-items:center; justify-content:center; font-size:13px; }
   .hub-strip-back{ color:#CBD5E1; text-decoration:none; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px 12px; transition:.15s; }
   .hub-strip-back:hover{ background:rgba(255,255,255,0.15); color:#fff; }
+  /* ---- Save-to-database widget (Phase 3) ---- */
+  .sdhub-save-widget{ position:fixed; bottom:18px; left:18px; z-index:500; display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:8px 10px; box-shadow:0 6px 20px rgba(15,23,42,0.14); font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; }
+  html[dir="ltr"] .sdhub-save-widget{ left:auto; right:18px; }
+  .sdhub-save-widget .ssw-status{ font-size:10.5px; color:var(--muted); font-weight:700; white-space:nowrap; }
+  .sdhub-save-widget button{ font-family:inherit; border:none; border-radius:8px; padding:7px 12px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .sdhub-save-widget .ssw-connect{ background:var(--panel-alt,#F1F4F9); color:#334155; }
+  .sdhub-save-widget .ssw-save{ background:var(--accent,#0D9488); color:#fff; }
+  .sdhub-save-widget .ssw-save:disabled{ opacity:.5; cursor:not-allowed; }
+  .sdhub-login-overlay{ position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:600; display:none; align-items:center; justify-content:center; }
+  .sdhub-login-overlay.show{ display:flex; }
+  .sdhub-login-modal{ background:#fff; border-radius:16px; padding:22px; width:100%; max-width:320px; font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; }
+  .sdhub-login-modal h3{ font-size:14px; margin:0 0 12px; }
+  .sdhub-login-modal input{ width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-size:12.5px; margin-bottom:8px; }
+  .sdhub-login-modal .ssw-err{ color:#DC2626; font-size:11px; margin-bottom:8px; display:none; }
+  .sdhub-login-modal .ssw-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
+  .sdhub-login-modal .ssw-actions button{ border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+  .sdhub-login-modal .ssw-cancel{ background:var(--panel-alt,#F1F4F9); }
+  .sdhub-login-modal .ssw-submit{ background:var(--accent,#0D9488); color:#fff; }
+
+  /* ---- Phase 4: KPI summary cards (matches Roster's stat-card style) ---- */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+  @media (max-width:760px){ .kpi-grid{ grid-template-columns:1fr 1fr; } }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,0.04), 0 2px 8px rgba(15,23,42,0.05); }
+  .kpi-card-head{ display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800; color:var(--muted); margin-bottom:10px; }
+  .kpi-card-head .kc-icon{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+  .kpi-card .kc-value{ font-size:24px; font-weight:800; line-height:1; color:var(--text); }
+  .kpi-card .kc-value.good{ color:var(--good); }
+  .kpi-card .kc-value.bad{ color:var(--bad); }
+  .kpi-card .kc-sub{ font-size:10.5px; color:var(--muted); margin-top:4px; }
+
+/* Standalone feature: no HUB navigation/back controls */
+.hub-strip,.hub-strip-back,.back-to-hub,.back-button,[data-back-to-hub]{display:none!important}
+/* Feature page: HUB navigation/back controls are owned by the HUB only. */
+.hub-strip,.hub-strip-back,.back-to-hub,.back-button,[data-back-to-hub]{display:none!important}
 </style>
+
 
 </head>
 <body>
-<div class="hub-strip">
-  <a href="index.html" class="hub-strip-brand"><span class="hsb-icon">🎧</span>Service Desk Hub</a>
-  <a href="index.html" class="hub-strip-back">↩ Back to hub</a>
-</div>
 <div class="container">
-  <h1>📊 ابزار تولید خودکار جداول Incident SLA Distribution Dashboard</h1>
-  <div class="sub">فایل اکسل خروجی روزانه iCare را بارگذاری کنید تا دو جدول به‌صورت خودکار تولید شود.</div>
+  <h1 id="sla-title">📊 ابزار تولید خودکار جداول Incident SLA Distribution Dashboard</h1>
+  <div class="sub" id="sla-sub">فایل اکسل خروجی روزانه iCare را بارگذاری کنید تا دو جدول به‌صورت خودکار تولید شود.</div>
 
   <div class="card">
-    <div class="step-title"><span class="step-num">1</span> بارگذاری فایل اکسل روزانه</div>
+    <div class="step-title"><span class="step-num">1</span> <span id="sla-step1">بارگذاری فایل اکسل روزانه</span></div>
     <div class="upload-row">
       <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
       <button class="btn" id="processBtn" disabled>پردازش فایل و تولید جداول</button>
@@ -168,6 +199,8 @@
       <span class="folder-status" id="folder-status">پوشه‌ای انتخاب نشده (اختیاری، Chrome/Edge/Firefox) — خروجی روزانه iCare را در این پوشه قرار دهید تا جداول خودکار ساخته شوند</span>
     </div>
   </div>
+
+  <div class="kpi-grid" id="kpiRow" style="display:none;"></div>
 
   <div class="card table-block" id="block1">
     <div class="step-title"><span class="step-num">2</span> Incident Type Distribution</div>
@@ -323,7 +356,44 @@ function postSlaStats(rows){
     rows.forEach(r=>{ const sla=norm(r['SLA Status']); if(sla==='In Time'){inTime++;evaluated++;} else if(sla==='Breached'){evaluated++;} });
     const pct = evaluated? (inTime/evaluated*100):0;
     window.parent.postMessage({source:"sdhub", report:"sla", compliance:pct, total:rows.length, updatedAt:Date.now()}, "*");
+
+    const priorities = ['Critical','High','Medium','Low'];
+    const byPriority = {};
+    priorities.forEach(p => byPriority[p] = {total:0, inTime:0, breached:0});
+    rows.forEach(r => {
+      const p = norm(r['P']);
+      if (!byPriority[p]) return;
+      byPriority[p].total++;
+      const sla = norm(r['SLA Status']);
+      if (sla === 'In Time') byPriority[p].inTime++;
+      else if (sla === 'Breached') byPriority[p].breached++;
+    });
+    window.__sdhubLastSummary = {
+      date: new Date().toISOString().slice(0,10),
+      summary: { totalIncidents: rows.length, overallCompliance: pct, byPriority }
+    };
+    if (window.sdhubMarkSummaryReady) window.sdhubMarkSummaryReady();
+    renderKpiCards(rows.length, pct, byPriority);
   }catch(e){}
+}
+function renderKpiCards(total, pct, byPriority){
+  const breachedTotal = Object.values(byPriority).reduce((n,p)=>n+p.breached, 0);
+  const criticalHigh = byPriority['Critical'].total + byPriority['High'].total;
+  const criticalHighBreached = byPriority['Critical'].breached + byPriority['High'].breached;
+  const complianceCls = pct >= 90 ? 'good' : (pct < 70 ? 'bad' : '');
+  const cards = [
+    { icon:'📋', bg:'#EEF3FF', label:'Total Incidents', value: total, sub:'This upload' },
+    { icon:'✅', bg:'#ECFDF5', label:'Overall SLA Compliance', value: pct.toFixed(1)+'%', sub: breachedTotal+' breached', cls: complianceCls },
+    { icon:'🔴', bg:'#FEF2F2', label:'Critical + High', value: criticalHigh, sub: criticalHighBreached+' breached', cls: criticalHighBreached>0?'bad':'good' },
+    { icon:'🟡', bg:'#FFFBEB', label:'Minor (Low + Medium)', value: byPriority['Low'].total + byPriority['Medium'].total, sub: (byPriority['Low'].breached+byPriority['Medium'].breached)+' breached' },
+  ];
+  document.getElementById('kpiRow').style.display = 'grid';
+  document.getElementById('kpiRow').innerHTML = cards.map(c=>`
+    <div class="kpi-card">
+      <div class="kpi-card-head"><span class="kc-icon" style="background:${c.bg};">${c.icon}</span>${c.label}</div>
+      <div class="kc-value ${c.cls||''}">${c.value}</div>
+      <div class="kc-sub">${c.sub}</div>
+    </div>`).join('');
 }
 processBtn.addEventListener('click', () => {
   if(!workbookRows) return;
@@ -538,5 +608,55 @@ document.getElementById('dl2').addEventListener('click', () => {
   downloadCanvas('captureArea2', `Incident_SLA_Distribution_${d}.png`);
 });
 </script>
+
+<div class="sdhub-save-widget" id="sdhubSaveWidget">
+  <span class="ssw-status" id="sdhubStatus">Using HUB session</span>
+  <button class="ssw-save" id="sdhubSaveBtn" disabled>💾 Save to history</button>
+</div>
+<script>
+window.SDHUB_REPORT_TYPE = 'sla';
+window.sdhubGetSummary = function(){ return window.__sdhubLastSummary || null; };
+(function(){
+  const LS_TOKEN='sdhub_api_token', LS_BASE='sdhub_api_base';
+  function apiBase(){ return localStorage.getItem(LS_BASE) || window.location.origin; }
+  function getTokenObj(){ try{const raw=localStorage.getItem(LS_TOKEN); if(!raw)return null; const o=JSON.parse(raw); if(o.exp&&Date.now()>o.exp)return null; return o;}catch(e){return null;} }
+  const statusEl=document.getElementById('sdhubStatus'), saveBtn=document.getElementById('sdhubSaveBtn');
+  function refreshStatus(){ const t=getTokenObj(); const canSave=!!t&&['admin','leadership','supervisor'].includes(t.role); statusEl.textContent=t ? 'HUB session: '+(t.username||'connected') : 'Sign in from HUB'; saveBtn.disabled=!canSave||!window.__sdhubHasSummary; }
+  saveBtn.addEventListener('click',async()=>{
+    const t=getTokenObj(), payload=window.sdhubGetSummary(); if(!t||!payload)return;
+    saveBtn.disabled=true; saveBtn.textContent='Saving…';
+    try{ const res=await fetch(apiBase()+'/api/reports/'+window.SDHUB_REPORT_TYPE,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t.token},body:JSON.stringify(payload)}); const data=await res.json().catch(()=>({})); if(!res.ok)throw new Error(data.error||'Save failed'); saveBtn.textContent='✅ Saved'; setTimeout(()=>{saveBtn.textContent='💾 Save to history';refreshStatus();},1500); }catch(e){ alert('Error saving: '+e.message); saveBtn.textContent='💾 Save to history'; refreshStatus(); }
+  });
+  window.sdhubMarkSummaryReady=function(){window.__sdhubHasSummary=true;refreshStatus();};
+  refreshStatus();
+})();
+</script>
+
+<script>
+(function(){
+  const LS='sdhub_lang';
+  const I={
+    fa:{title:'📊 ابزار تولید خودکار جداول Incident SLA Distribution Dashboard',sub:'فایل اکسل خروجی روزانه iCare را بارگذاری کنید تا دو جدول به‌صورت خودکار تولید شوند.',step1:'بارگذاری فایل اکسل روزانه',process:'پردازش فایل و تولید جداول',none:'هنوز فایلی انتخاب نشده است.',pick:'📁 انتخاب پوشه اختصاصی این گزارش',folder:'پوشه‌ای انتخاب نشده (اختیاری، Chrome/Edge/Firefox) — خروجی روزانه iCare را در این پوشه قرار دهید تا جداول خودکار ساخته شوند',download:'⬇ دانلود تصویر این جدول',connected:'HUB session: connected',save:'💾 Save to history',saved:'✅ Saved'},
+    en:{title:'📊 Incident SLA Distribution Dashboard',sub:'Upload the daily iCare Excel export to automatically generate both tables.',step1:'Upload daily Excel file',process:'Process file and generate tables',none:'No file selected yet.',pick:'📁 Select this report\'s folder',folder:'No folder selected (optional, Chrome/Edge/Firefox) — place the daily iCare export in this folder for automatic processing',download:'⬇ Download table image',connected:'HUB session: connected',save:'💾 Save to history',saved:'✅ Saved'}
+  };
+  let lang=localStorage.getItem(LS)||'en';
+  function apply(){
+    const d=I[lang]||I.en;
+    document.documentElement.lang=lang; document.documentElement.dir=lang==='fa'?'rtl':'ltr';
+    document.getElementById('sla-title').textContent=d.title;
+    document.getElementById('sla-sub').textContent=d.sub;
+    document.getElementById('sla-step1').textContent=d.step1;
+    const p=document.getElementById('processBtn'); if(p && !p.disabled) p.textContent=d.process; else if(p) p.textContent=d.process;
+    const fs=document.getElementById('fileStatus'); if(fs && !fs.classList.contains('ok') && !fs.classList.contains('err')) fs.textContent=d.none;
+    const fp=document.getElementById('folder-pick-btn'); if(fp) fp.textContent=d.pick;
+    const f=document.getElementById('folder-status'); if(f && (!f.dataset.runtimeStatus || f.dataset.runtimeStatus==='none')) f.textContent=d.folder;
+    ['dl1','dl2'].forEach(id=>{const b=document.getElementById(id); if(b)b.textContent=d.download;});
+  }
+  window.addEventListener('message',e=>{ if(e.data?.type==='sdhub:language' && (e.data.lang==='en'||e.data.lang==='fa')){ lang=e.data.lang; localStorage.setItem(LS,lang); apply(); }});
+  window.addEventListener('storage',e=>{ if(e.key===LS && (e.newValue==='en'||e.newValue==='fa')){lang=e.newValue;apply();} });
+  apply();
+})();
+</script>
+
 </body>
 </html>

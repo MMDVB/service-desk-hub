@@ -66,6 +66,8 @@
   .kpi-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; gap:10px; align-items:flex-start; box-shadow:var(--shadow); }
   .kpi-icon { padding:7px 9px; border-radius:9px; background:var(--panel-alt); font-size:16px; }
   .kpi-value { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .kpi-value.good{ color:#1a8a3d; }
+  .kpi-value.bad{ color:#c62828; }
   .kpi-label { font-size:11.5px; color:var(--muted); margin-top:2px; }
   .kpi-sub { font-size:10.5px; color:var(--muted); opacity:.8; margin-top:3px; }
 
@@ -138,15 +140,35 @@
   .hub-strip-brand .hsb-icon{ width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#0D9488,#14B8A6); display:flex; align-items:center; justify-content:center; font-size:13px; }
   .hub-strip-back{ color:#CBD5E1; text-decoration:none; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px 12px; transition:.15s; }
   .hub-strip-back:hover{ background:rgba(255,255,255,0.15); color:#fff; }
+  /* ---- Save-to-database widget (Phase 3) ---- */
+  .sdhub-save-widget{ position:fixed; bottom:18px; left:18px; z-index:500; display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:8px 10px; box-shadow:0 6px 20px rgba(15,23,42,0.14); font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; }
+  html[dir="ltr"] .sdhub-save-widget{ left:auto; right:18px; }
+  .sdhub-save-widget .ssw-status{ font-size:10.5px; color:var(--muted); font-weight:700; white-space:nowrap; }
+  .sdhub-save-widget button{ font-family:inherit; border:none; border-radius:8px; padding:7px 12px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .sdhub-save-widget .ssw-connect{ background:var(--panel-alt,#F1F4F9); color:#334155; }
+  .sdhub-save-widget .ssw-save{ background:var(--accent,#0D9488); color:#fff; }
+  .sdhub-save-widget .ssw-save:disabled{ opacity:.5; cursor:not-allowed; }
+  .sdhub-login-overlay{ position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:600; display:none; align-items:center; justify-content:center; }
+  .sdhub-login-overlay.show{ display:flex; }
+  .sdhub-login-modal{ background:#fff; border-radius:16px; padding:22px; width:100%; max-width:320px; font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; }
+  .sdhub-login-modal h3{ font-size:14px; margin:0 0 12px; }
+  .sdhub-login-modal input{ width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-size:12.5px; margin-bottom:8px; }
+  .sdhub-login-modal .ssw-err{ color:#DC2626; font-size:11px; margin-bottom:8px; display:none; }
+  .sdhub-login-modal .ssw-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
+  .sdhub-login-modal .ssw-actions button{ border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+  .sdhub-login-modal .ssw-cancel{ background:var(--panel-alt,#F1F4F9); }
+  .sdhub-login-modal .ssw-submit{ background:var(--accent,#0D9488); color:#fff; }
+
+/* Standalone feature: no HUB navigation/back controls */
+.hub-strip,.hub-strip-back,.back-to-hub,.back-button,[data-back-to-hub]{display:none!important}
+/* Feature page: HUB navigation/back controls are owned by the HUB only. */
+.hub-strip,.hub-strip-back,.back-to-hub,.back-button,[data-back-to-hub]{display:none!important}
 </style>
+
 
 </head>
 <body>
 
-<div class="hub-strip">
-  <a href="index.html" class="hub-strip-brand"><span class="hsb-icon">🎧</span>Service Desk Hub</a>
-  <a href="index.html" class="hub-strip-back">↩ Back to hub</a>
-</div>
 <div id="app-root" dir="rtl">
   <div class="header-row">
     <div>
@@ -155,10 +177,6 @@
       <div class="subtitle" data-i18n="subtitle">دو فایل خروجی سامانه را اضافه کنید — داشبورد به‌صورت خودکار ساخته می‌شود</div>
     </div>
     <div class="header-side">
-      <div class="lang-toggle" id="lang-toggle">
-        <button type="button" data-lang="fa" class="active">فارسی</button>
-        <button type="button" data-lang="en">English</button>
-      </div>
       <div class="date-badges">
         <div class="date-badge"><span data-i18n="dateJalaliLabel">تاریخ شمسی:</span> <b id="today-jalali"></b></div>
         <div class="date-badge"><span data-i18n="dateGregLabel">تاریخ میلادی:</span> <b id="today-gregorian"></b></div>
@@ -255,7 +273,7 @@
 <script>
 const PERSIAN_MONTHS = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
 const COLORS = { teal:"#2DD4BF", amber:"#F5A524", red:"#F0506E", blue:"#5B8DEF" };
-let lang = "fa";
+let lang = localStorage.getItem("sdhub_lang") || "en";
 let lastMerged = null;
 
 const I18N = {
@@ -377,7 +395,6 @@ function applyLanguage(newLang){
   document.documentElement.dir = lang==="fa" ? "rtl" : "ltr";
   document.getElementById("app-root").setAttribute("dir", lang==="fa" ? "rtl" : "ltr");
   document.body.classList.toggle("lang-en", lang==="en");
-  document.querySelectorAll("#lang-toggle button").forEach(b=>b.classList.toggle("active", b.dataset.lang===lang));
   applyStaticI18n();
   if (!perfRows && !actRows){
     document.getElementById("dz-perf-hint").textContent = I18N[lang].dzPerfHintDefault;
@@ -604,26 +621,34 @@ function renderFiltered(merged){
     return acc;
   }, {received:0,answered:0,hangup:0,busy:0,occSum:0,talkWeighted:0});
   totals.answerRate = totals.received>0 ? (totals.answered/totals.received)*100 : 0;
-  try{
-    window.parent.postMessage({source:"sdhub", report:"aicc", answerRate: totals.answerRate, received: totals.received, updatedAt:Date.now()}, "*");
-  }catch(e){}
   totals.avgOccupancy = filtered.length ? totals.occSum/filtered.length : 0;
   totals.avgTalk = totals.received>0 ? totals.talkWeighted/totals.received : 0;
   totals.busyAgents = filtered.filter(a=>a.busy>0).length;
+  try{
+    window.parent.postMessage({source:"sdhub", report:"aicc", answerRate: totals.answerRate, received: totals.received, updatedAt:Date.now()}, "*");
+    const byAgent = filtered.map(a=>({ name:a.name, received:a.received, answered:a.answered, hangup:a.hangup, busy:a.busy, occupancyRate:a.occupancyRate, avgTalkSecs:a.avgTalkSecs }));
+    window.__sdhubLastSummary = {
+      date: new Date().toISOString().slice(0,10),
+      summary: { totalReceived: totals.received, totalAnswered: totals.answered, answerRate: totals.answerRate,
+                 avgOccupancy: totals.avgOccupancy, avgTalk: totals.avgTalk, busyAgents: totals.busyAgents, byAgent }
+    };
+    if (window.sdhubMarkSummaryReady) window.sdhubMarkSummaryReady();
+  }catch(e){}
 
   // KPI cards
+  const answerRateCls = totals.answerRate >= 80 ? 'good' : (totals.answerRate < 60 ? 'bad' : '');
   const kpis=[
-    {icon:"📞", label:dict.kpiReceived, value:faNum(totals.received)},
-    {icon:"📈", label:dict.kpiAnswerRate, value:faNum(totals.answerRate,1)+dict.pct, sub:dict.kpiAnsweredSub(faNum(totals.answered))},
-    {icon:"📵", label:dict.kpiHangup, value:faNum(totals.hangup)},
-    {icon:"⏱️", label:dict.kpiAvgTalk, value:formatDuration(totals.avgTalk)},
-    {icon:"👥", label:dict.kpiActiveAgents, value:faNum(filtered.length), sub:dict.kpiOccupancySub(faNum(totals.avgOccupancy,1))},
+    {icon:"📞", bg:"#EEF3FF", label:dict.kpiReceived, value:faNum(totals.received)},
+    {icon:"📈", bg:"#ECFDF5", label:dict.kpiAnswerRate, value:faNum(totals.answerRate,1)+dict.pct, sub:dict.kpiAnsweredSub(faNum(totals.answered)), cls:answerRateCls},
+    {icon:"📵", bg:"#FEF2F2", label:dict.kpiHangup, value:faNum(totals.hangup)},
+    {icon:"⏱️", bg:"#FFFBEB", label:dict.kpiAvgTalk, value:formatDuration(totals.avgTalk)},
+    {icon:"👥", bg:"#F0FDFA", label:dict.kpiActiveAgents, value:faNum(filtered.length), sub:dict.kpiOccupancySub(faNum(totals.avgOccupancy,1))},
   ];
   document.getElementById("kpi-grid").innerHTML = kpis.map(k=>`
     <div class="kpi-card">
-      <div class="kpi-icon">${k.icon}</div>
+      <div class="kpi-icon" style="background:${k.bg};">${k.icon}</div>
       <div>
-        <div class="kpi-value">${k.value}</div>
+        <div class="kpi-value ${k.cls||''}">${k.value}</div>
         <div class="kpi-label">${k.label}</div>
         ${k.sub?`<div class="kpi-sub">${k.sub}</div>`:""}
       </div>
@@ -748,7 +773,16 @@ folderInput.addEventListener("change", async ()=>{
   }
 });
 
+window.addEventListener("storage", e=>{
+  if(e.key === "sdhub_lang" && (e.newValue === "en" || e.newValue === "fa")) applyLanguage(e.newValue);
+});
+
 window.addEventListener("message", async (e)=>{
+  if(e.data?.type === "sdhub:language" && (e.data.lang === "en" || e.data.lang === "fa")){
+    applyLanguage(e.data.lang);
+    return;
+  }
+
   if (!e.data || e.data.type!=="sdhub:inject-file") return;
   try{
     const wb = XLSX.read(new Uint8Array(e.data.buffer), {type:"array"});
@@ -763,9 +797,6 @@ window.addEventListener("message", async (e)=>{
   }catch(err){ showError("خطا در دریافت فایل از API: " + err.message); }
 });
 
-document.querySelectorAll("#lang-toggle button").forEach(btn=>{
-  btn.addEventListener("click", ()=>applyLanguage(btn.dataset.lang));
-});
 
 document.getElementById("btn-reset").addEventListener("click",()=>{
   perfRows=null; actRows=null; perfFileName=""; actFileName=""; lastMerged=null;
@@ -800,6 +831,29 @@ document.getElementById("btn-generate").addEventListener("click", async ()=>{
     uploadRow.style.display="grid"; toolbar.style.display="flex";
   }
 });
+</script>
+
+<div class="sdhub-save-widget" id="sdhubSaveWidget">
+  <span class="ssw-status" id="sdhubStatus">Using HUB session</span>
+  <button class="ssw-save" id="sdhubSaveBtn" disabled>💾 Save to history</button>
+</div>
+<script>
+window.SDHUB_REPORT_TYPE = 'aicc';
+window.sdhubGetSummary = function(){ return window.__sdhubLastSummary || null; };
+(function(){
+  const LS_TOKEN='sdhub_api_token', LS_BASE='sdhub_api_base';
+  function apiBase(){ return localStorage.getItem(LS_BASE) || window.location.origin; }
+  function getTokenObj(){ try{const raw=localStorage.getItem(LS_TOKEN); if(!raw)return null; const o=JSON.parse(raw); if(o.exp&&Date.now()>o.exp)return null; return o;}catch(e){return null;} }
+  const statusEl=document.getElementById('sdhubStatus'), saveBtn=document.getElementById('sdhubSaveBtn');
+  function refreshStatus(){ const t=getTokenObj(); const canSave=!!t&&['admin','leadership','supervisor'].includes(t.role); statusEl.textContent=t ? 'HUB session: '+(t.username||'connected') : 'Sign in from HUB'; saveBtn.disabled=!canSave||!window.__sdhubHasSummary; }
+  saveBtn.addEventListener('click',async()=>{
+    const t=getTokenObj(), payload=window.sdhubGetSummary(); if(!t||!payload)return;
+    saveBtn.disabled=true; saveBtn.textContent='Saving…';
+    try{ const res=await fetch(apiBase()+'/api/reports/'+window.SDHUB_REPORT_TYPE,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t.token},body:JSON.stringify(payload)}); const data=await res.json().catch(()=>({})); if(!res.ok)throw new Error(data.error||'Save failed'); saveBtn.textContent='✅ Saved'; setTimeout(()=>{saveBtn.textContent='💾 Save to history';refreshStatus();},1500); }catch(e){ alert('Error saving: '+e.message); saveBtn.textContent='💾 Save to history'; refreshStatus(); }
+  });
+  window.sdhubMarkSummaryReady=function(){window.__sdhubHasSummary=true;refreshStatus();};
+  refreshStatus();
+})();
 </script>
 </body>
 </html>
