@@ -14,9 +14,13 @@ from slowapi.errors import RateLimitExceeded
 
 from app.routers.auth_router import router as auth_router, limiter
 from app.routers.roster_router import router as roster_router
+from app.routers.roster_versions_router import router as roster_versions_router
 from app.routers.reports_router import router as reports_router
 from app.routers.users_router import router as users_router
 from app.routers.admin_router import router as admin_router
+from app.routers.permissions_router import router as permissions_router
+from app.routers.teams_router import router as teams_router
+from app.routers.members_router import router as members_router
 
 app = FastAPI(title="Service Desk Hub API")
 
@@ -46,9 +50,13 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(roster_router)
+app.include_router(roster_versions_router)
 app.include_router(reports_router)
 app.include_router(users_router)
 app.include_router(admin_router)
+app.include_router(permissions_router)
+app.include_router(teams_router)
+app.include_router(members_router)
 
 
 @app.get("/api/health")

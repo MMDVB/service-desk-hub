@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Administration — Service Desk Hub</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --nav:#081426;--nav2:#10213c;--bg:#f4f7fb;--card:#fff;--line:#e7ecf3;
+  --txt:#172033;--muted:#718096;--accent:#16a394;--accent2:#0f8f82;
+  --blue:#3b82f6;--amber:#d99018;--red:#d94b55;
+  --shadow:0 8px 30px rgba(15,23,42,.055);--shadow-lg:0 18px 50px rgba(15,23,42,.11)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit}
+.app{display:flex;min-height:100vh}
+.side{width:246px;background:linear-gradient(180deg,var(--nav),#07101f);color:#cbd5e1;padding:22px 14px;position:fixed;inset:0 auto 0 0;box-shadow:8px 0 28px rgba(5,12,25,.08);z-index:20}
+.brand{display:flex;gap:11px;align-items:center;color:#fff;font-weight:800;font-size:15px;letter-spacing:-.02em;padding:3px 10px 27px}
+.brand i{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--accent),#39c7b7);font-style:normal;font-size:13px;box-shadow:0 7px 18px rgba(22,163,148,.25)}
+.label{font-size:9px;font-weight:700;letter-spacing:.16em;color:#6f819f;padding:13px 12px 8px}
+.nav a{display:flex;align-items:center;gap:10px;color:#aebbd0;text-decoration:none;padding:10px 12px;border-radius:10px;margin:3px 0;font-size:12px;font-weight:500;transition:.18s ease}
+.nav a:hover{background:rgba(255,255,255,.065);color:#fff;transform:translateX(1px)}
+.nav a.active{background:linear-gradient(90deg,rgba(22,163,148,.18),rgba(22,163,148,.06));color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+.bottom{position:absolute;bottom:17px;left:14px;right:14px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px}
+.user{display:flex;gap:10px;align-items:center;padding:2px 4px}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#244064,#31577f);color:#fff;font-weight:700;font-size:12px;box-shadow:0 5px 14px rgba(0,0,0,.18)}
+.user b{font-size:12px;color:#f5f8fc}.user small{display:block;color:#8090a8;margin-top:1px;font-size:10px}
+.logout{width:100%;margin-top:11px;background:rgba(255,255,255,.045);color:#aebbd0;border:1px solid rgba(255,255,255,.08);padding:8px 10px;border-radius:9px;font-size:11px;text-align:left;cursor:pointer;transition:.18s}
+.logout:hover{background:rgba(255,255,255,.09);color:#fff}
+.main{margin-left:246px;width:calc(100% - 246px)}
+.top{height:68px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:10}
+.crumb{color:#8290a4;font-size:11px;font-weight:500}
+.search{width:275px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#f9fbfd;color:var(--txt);outline:none;transition:.18s}
+.search:focus{border-color:rgba(22,163,148,.5);box-shadow:0 0 0 3px rgba(22,163,148,.09);background:#fff}
+.wrap{padding:30px 32px;max-width:1480px;margin:auto}
+.page{display:none;animation:fadeIn .22s ease}.page.active{display:block}
+@keyframes fadeIn{from{opacity:.2;transform:translateY(4px)}to{opacity:1;transform:none}}
+.head{display:flex;justify-content:space-between;align-items:end;margin-bottom:24px}
+.head h1{margin:0;font-size:26px;line-height:1.2;letter-spacing:-.035em;font-weight:800}.head p{margin:7px 0 0;color:var(--muted);font-size:12px}
+button,.btn{border:0;border-radius:9px;padding:9px 13px;font-weight:650;font-size:12px;cursor:pointer;transition:.16s ease}
+button:hover{transform:translateY(-1px)}button:active{transform:translateY(0)}
+.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 15px rgba(22,163,148,.18)}
+.light{background:#f0f3f7;color:#405067}.danger{background:#fff0f1;color:var(--red)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+.stat{display:flex;justify-content:space-between;align-items:start;min-height:112px}
+.stat .num{font-size:29px;font-weight:800;letter-spacing:-.04em;margin-top:6px}.icon{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:#eaf8f5;color:var(--accent);font-weight:700}
+.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}
+.card h2{font-size:14px;margin:0 0 15px;font-weight:750;letter-spacing:-.015em}
+.bar{display:flex;height:9px;border-radius:99px;overflow:hidden;background:#edf1f6;margin:12px 0}.bar span{display:block}
+.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.role{border:1px solid var(--line);border-radius:11px;padding:12px;background:#fbfcfe}.role b{font-size:20px;display:block;margin-top:4px}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:separate;border-spacing:0}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}th{font-size:9px;text-transform:uppercase;color:#8a97a9;letter-spacing:.08em;font-weight:750;background:#fafbfd}td{font-size:12px}
+tbody tr{transition:.15s}tbody tr:hover{background:#fafcfe}
+.badge{border-radius:99px;padding:4px 9px;font-size:9px;font-weight:750;display:inline-block}.admin{background:#fff0f1;color:#a62b36}.lead{background:#fff7e8;color:#a46300}.super{background:#eef4ff;color:#315fbd}.agent{background:#eaf8f5;color:#087b6e}.inactive{background:#eef1f5;color:#667085}
+.actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.btn-sm{padding:6px 9px;border:0;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer}
+.form{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.form input,.form select,.field{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;outline:none}.form input:focus,.form select:focus,.field:focus{border-color:rgba(22,163,148,.5);box-shadow:0 0 0 3px rgba(22,163,148,.08)}
+.activity{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:6px;flex:none}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px}.section-title h2{margin-bottom:0}
+.role-select{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}.perm-table td:first-child{min-width:280px}
+.perm-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:#53627a}.switch{width:38px;height:22px;border-radius:99px;background:#dfe5ec;border:0;padding:2px;position:relative}.switch:after{content:"";display:block;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}.switch.on{background:var(--accent)}.switch.on:after{transform:translateX(16px)}.switch:disabled{opacity:.5;cursor:not-allowed}
+.notice{padding:10px 12px;border-radius:9px;background:#f7f9fc;color:var(--muted);font-size:11px;margin-bottom:12px}
+.toast{position:fixed;right:24px;bottom:24px;background:#182235;color:#fff;padding:11px 14px;border-radius:9px;display:none;z-index:50;box-shadow:var(--shadow-lg)}
+.hidden{display:none!important}
+.team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.team-card{border:1px solid var(--line);border-radius:13px;padding:16px;background:#fff;transition:.18s;box-shadow:0 4px 15px rgba(15,23,42,.035)}.team-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.team-card h3{margin:0 0 6px;font-size:15px;letter-spacing:-.02em}.team-meta{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.team-actions{display:flex;justify-content:flex-end;gap:6px;border-top:1px solid var(--line);padding-top:11px}
+.role-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.role-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px;cursor:pointer;transition:.18s}.role-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}.role-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(22,163,148,.1)}.role-card .count{font-size:22px;font-weight:800;margin-top:7px}
+.module-hero{background:linear-gradient(135deg,#fff 0%,#f7fbfb 100%);border:1px solid var(--line);border-radius:17px;padding:27px;margin-bottom:18px;box-shadow:var(--shadow)}
+.module-hero h1{margin:0 0 7px;font-size:26px;letter-spacing:-.035em;font-weight:800}.module-hero p{margin:0;color:var(--muted);font-size:12px}
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.toolbar .grow{flex:1;min-width:220px}.toolbar input,.toolbar select{padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;outline:none}.toolbar input:focus,.toolbar select:focus{border-color:rgba(22,163,148,.5);box-shadow:0 0 0 3px rgba(22,163,148,.08)}
+.empty{padding:38px;text-align:center;color:var(--muted)}.modal{position:fixed;inset:0;background:rgba(7,16,31,.48);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}.modal.show{display:flex}.modal-box{width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:17px;padding:21px;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.7)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.modal-head h2{margin:0;font-size:17px;letter-spacing:-.02em}.member-list{display:grid;gap:7px;margin-top:12px}.member-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border:1px solid var(--line);border-radius:9px}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field-label{display:block;font-size:10px;color:var(--muted);margin-bottom:5px;font-weight:650}.gate{display:none;text-align:center;padding:55px}.feature-note{display:flex;gap:12px;align-items:flex-start}.feature-note .icon{flex:none}
+.kpi-label{font-size:10px;color:#7a8799;font-weight:650;letter-spacing:.02em}
+.user-toolbar{padding:13px 16px;border-bottom:1px solid var(--line);background:#fbfcfe}
+.hero-actions{display:flex;gap:8px;align-items:center}
+@media(max-width:1050px){.cards,.role-cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.side{width:220px}.main{margin-left:220px;width:calc(100% - 220px)}}
+@media(max-width:760px){.side{position:relative;width:100%;min-height:auto}.main{margin-left:0;width:100%}.app{display:block}.bottom{position:static;margin-top:20px}.top{padding:0 18px}.wrap{padding:20px 18px}.cards,.roles,.role-cards,.team-grid{grid-template-columns:1fr}.form{grid-template-columns:1fr 1fr}.search{width:190px}}
+
+#content{width:100%;min-width:0}
+.page{width:100%;min-width:0;box-sizing:border-box}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side"><div class="brand"><i>SD</i> Service Desk</div><div class="label">ADMINISTRATION</div><nav class="nav" id="nav"></nav><div class="bottom"><div class="user"><div class="avatar" id="meAvatar">A</div><div><b id="meName">—</b><small id="meRole">—</small></div></div><button class="logout" onclick="logout()">↪ Log out</button></div></aside>
+<main class="main"><header class="top"><span class="crumb" id="crumb">Service Desk Hub / Administration / Overview</span><input class="search" id="globalSearch" placeholder="Search users..." /></header>
+<div class="wrap">
+<div id="gate" class="card gate"><h2>Administration access required</h2><p class="muted"></p></div>
+<div id="content">
+<section class="page active" data-page="overview"><div class="head"><div><h1>Administration Dashboard</h1><p>Central administration and access control for Service Desk Operations.</p></div><button class="primary" onclick="refresh()">↻ Refresh</button></div><div class="cards" id="overview-cards"><div class="card stat" id="user-stat"><div><span class="muted">Total Users</span><div class="num" id="total">—</div><span class="muted" id="active">— active</span></div><div class="icon">♙</div></div><div class="card stat"><div><span class="muted">Active Team Members</span><div class="num" id="members">—</div><span class="muted">from roster team</span></div><div class="icon">◈</div></div><div class="card stat"><div><span class="muted">Today's Roster Entries</span><div class="num" id="entries">—</div><span class="muted">stored in backend</span></div><div class="icon">▤</div></div><div class="card stat"><div><span class="muted">Upcoming Holidays</span><div class="num" id="holidays">—</div><span class="muted">configured dates</span></div><div class="icon">□</div></div></div><div class="grid"><div class="card"><div class="section-title"><h2>Role distribution</h2><span class="muted">Current active accounts</span></div><div class="roles"><div class="role"><span class="muted">Admins</span><b id="admins">—</b></div><div class="role"><span class="muted">Team Leaders</span><b id="leaders">—</b></div><div class="role"><span class="muted">Supervisors</span><b id="supervisors">—</b></div><div class="role"><span class="muted">Agents</span><b id="agents">—</b></div></div><div class="bar"><span id="barA"></span><span id="barL"></span><span id="barS"></span><span id="barG"></span></div></div><div class="card"><div class="section-title"><h2>Quick access</h2></div><div id="quick-access"></div></div></div></section>
+
+<section class="page" data-page="users">
+<div class="module-hero"><div class="section-title"><div><div class="crumb" style="margin-bottom:6px">Administration / Identity</div><h1>User Management</h1><p>Manage Service Desk accounts, roles and account access from one workspace.</p></div><div class="hero-actions"><button class="light" onclick="loadUsers()">↻ Refresh</button><button class="primary" id="create-user-btn" onclick="openUserModal()">+ Create User</button></div></div></div>
+<div class="cards"><div class="card stat"><div><span class="kpi-label">Total Users</span><div class="num" id="u-total">—</div><span class="muted">all accounts</span></div><div class="icon">♙</div></div><div class="card stat"><div><span class="kpi-label">Active</span><div class="num" id="u-active">—</div><span class="muted">enabled accounts</span></div><div class="icon">✓</div></div><div class="card stat"><div><span class="kpi-label">Inactive</span><div class="num" id="u-inactive">—</div><span class="muted">disabled accounts</span></div><div class="icon">○</div></div><div class="card stat"><div><span class="kpi-label">Administrators</span><div class="num" id="u-admins">—</div><span class="muted">privileged accounts</span></div><div class="icon">◆</div></div></div>
+<div class="card" style="padding:0;overflow:hidden"><div class="user-toolbar"><div class="toolbar" style="margin:0"><input class="grow" id="userSearch" placeholder="Search by username or display name..."><select id="userRoleFilter"><option value="">All roles</option><option value="admin">Admin</option><option value="team_leader">Team Leader</option><option value="supervisor">Supervisor</option><option value="agent">Agent</option></select><select id="userStatusFilter"><option value="">All status</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div><div class="table-wrap"><table class="user-table"><thead><tr><th>User</th><th>Role</th><th>Roster Member</th><th>Status</th><th>Actions</th></tr></thead><tbody id="users-table"><tr><td colspan="5" class="empty">Loading users...</td></tr></tbody></table></div></div>
+</section>
+
+<section class="page" data-page="roles"><div class="module-hero"><h1>Roles & Permissions</h1><p>Review the access model for every Service Desk role. Changes are controlled by backend permissions.</p></div><div class="role-cards" id="role-cards"></div><div class="card"><div class="section-title"><div><h2 id="selected-role-title">Role Permissions</h2><span id="perm-notice" class="muted"></span></div><select id="role-select" class="role-select" onchange="selectRole(this.value)"></select></div><div class="table-wrap" style="margin-top:14px"><table class="perm-table"><thead><tr><th>Permission</th><th>Key</th><th>Status</th><th>Change</th></tr></thead><tbody id="permissions-table"></tbody></table></div></div></section>
+
+<section class="page" data-page="teams">
+<div class="module-hero">
+  <div class="section-title">
+    <div><h1>Team Management</h1><p>Organize Service Desk teams, supervisors and members.</p></div>
+    <div class="hero-actions"><button class="light" onclick="loadTeams()">↻ Refresh</button><button class="primary" id="team-create-btn" onclick="openTeamModal()">+ Create Team</button></div>
+  </div>
+</div>
+<div class="cards">
+  <div class="card stat"><div><span class="kpi-label">Total Teams</span><div class="num" id="t-total">—</div><span class="muted">configured teams</span></div><div class="icon">◈</div></div>
+  <div class="card stat"><div><span class="kpi-label">Active Teams</span><div class="num" id="t-active">—</div><span class="muted">currently active</span></div><div class="icon">✓</div></div>
+  <div class="card stat"><div><span class="kpi-label">Assigned Members</span><div class="num" id="t-members">—</div><span class="muted">across all teams</span></div><div class="icon">♙</div></div>
+  <div class="card stat"><div><span class="kpi-label">Unassigned</span><div class="num" id="t-unassigned">—</div><span class="muted">active roster members</span></div><div class="icon">○</div></div>
+</div>
+<div class="card">
+  <div class="toolbar">
+    <input class="grow" id="teamSearch" placeholder="Search teams...">
+    <select id="teamStatusFilter"><option value="">All status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+  </div>
+  <div id="teams-list"><div class="empty">Loading teams...</div></div>
+</div>
+</section>
+<section class="page" data-page="members">
+<div class="module-hero">
+  <div class="section-title">
+    <div>
+      <h1>Roster Members</h1>
+      <p>Manage users who are enabled for Roster, Teams and shift operations.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="light" onclick="loadMembers()">↻ Refresh</button>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card stat">
+    <div>
+      <span class="kpi-label">Total Members</span>
+      <div class="num" id="m-total">—</div>
+      <span class="muted">all roster members</span>
+    </div>
+    <div class="icon">♙</div>
+  </div>
+
+  <div class="card stat">
+    <div>
+      <span class="kpi-label">Active</span>
+      <div class="num" id="m-active">—</div>
+      <span class="muted">active members</span>
+    </div>
+    <div class="icon">✓</div>
+  </div>
+
+  <div class="card stat">
+    <div>
+      <span class="kpi-label">Inactive</span>
+      <div class="num" id="m-inactive">—</div>
+      <span class="muted">inactive members</span>
+    </div>
+    <div class="icon">○</div>
+  </div>
+
+  <div class="card stat">
+    <div>
+      <span class="kpi-label">Linked Users</span>
+      <div class="num" id="m-linked">—</div>
+      <span class="muted">members linked to accounts</span>
+    </div>
+    <div class="icon">◆</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <input class="grow" id="memberSearch" placeholder="Search members...">
+    <select id="memberStatusFilter">
+      <option value="">All status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Username</th>
+          <th>Linked User</th>
+          <th>Teams</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="members-table">
+        <tr><td colspan="6" class="empty">Loading members...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<section class="page" data-page="audit"><div class="module-hero"><div class="section-title"><div><h1>Audit Logs</h1><p>Trace administrative actions recorded by the Service Desk backend.</p></div><button class="light" onclick="loadAudit()">↻ Refresh</button></div></div><div class="card"><div class="toolbar"><input class="grow" id="auditSearch" placeholder="Search actions or users..."><select id="auditActionFilter"><option value="">All actions</option></select></div><div id="audit-list"><div class="empty">Loading...</div></div></div></section>
+
+<section class="page" data-page="roster">
+  <div class="module-hero">
+    <h1>Roster Management</h1>
+    <p>Manage the roster draft, shifts, members, holidays, columns and publishing workflow.</p>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <iframe
+      src="Shift_Roster.html?mode=manage"
+      title="Roster Management"
+      style="display:block;width:100%;height:calc(100vh - 220px);min-height:760px;border:0;background:#f8fafc">
+    </iframe>
+  </div>
+</section>
+<section class="page" data-page="shifts"><div class="module-hero"><h1>Shift Management</h1><p>Shift definitions and operational coverage management.</p></div><div class="card feature-note"><div class="icon">◷</div><div><h2>Shift workspace</h2><p class="muted">The management workspace is separated from Overview so its operational controls can be added without changing the existing HUB navigation.</p></div></div></section>
+<section class="page" data-page="holidays"><div class="module-hero"><h1>Holiday Management</h1><p>Manage configured operational holidays.</p></div><div class="card feature-note"><div class="icon">□</div><div><h2>Holiday workspace</h2><p class="muted">Only backend-backed holiday data will be displayed here. Management controls can be connected without introducing placeholder dates.</p></div></section>
+<section class="page" data-page="settings"><div class="module-hero"><h1>System Settings</h1><p>Administration-level configuration and system health.</p></div><div class="card feature-note"><div class="icon">⚙</div><div><h2>Restricted settings</h2><p class="muted">This area is intentionally restricted to roles with the corresponding settings permission.</p></div></section>
+</div></div></main></div>
+<div id="toast" class="toast"></div>
+<div id="userModal" class="modal"><div class="modal-box"><div class="modal-head"><h2 id="userModalTitle">Create User</h2><button class="btn-sm light" onclick="closeModal('userModal')">✕</button></div><div class="form"><div><label class="field-label">Username</label><input id="nu" class="field"></div><div><label class="field-label">Display name</label><input id="nd" class="field"></div><div><label class="field-label">Password <span class="muted" id="password-hint"></span></label><input id="np" class="field" type="password" placeholder="8+ characters"></div><div><label class="field-label">Role</label><select id="nr" class="field"><option value="agent">Agent</option><option value="team_leader">Team Leader</option><option value="supervisor">Supervisor</option><option value="admin">Admin</option></select></div></div>
+<div style="margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#f8fafc">
+  <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:12px;font-weight:650">
+    <input type="checkbox" id="addToMembers" style="width:15px;height:15px">
+    <span>Add to Members</span>
+  </label>
+  <div class="muted" style="margin-top:5px;margin-left:24px;font-size:10px">
+    Create a linked Member record for this user so they can be used in Roster and Teams.
+  </div>
+</div><div id="user-msg" class="notice" style="display:none;margin-top:14px"></div><div class="actions" style="justify-content:flex-end;margin-top:16px"><button class="light" onclick="closeModal('userModal')">Cancel</button><button class="primary" id="userSaveBtn" onclick="saveUser()">Create User</button></div></div></div>
+<div id="userDetailModal" class="modal"><div class="modal-box"><div class="modal-head"><h2>User Details</h2><button class="btn-sm light" onclick="closeModal('userDetailModal')">✕</button></div><div id="user-detail-body"></div></div></div>
+<div id="teamModal" class="modal"><div class="modal-box"><div class="modal-head"><h2 id="teamModalTitle">Create Team</h2><button class="btn-sm light" onclick="closeModal('teamModal')">✕</button></div><div class="split"><div><label class="field-label">Team name</label><input id="tn" class="field"></div><div><label class="field-label">Supervisor</label><select id="ts" class="field"><option value="">No supervisor</option></select></div></div><div style="margin-top:12px"><label class="field-label">Description</label><input id="td" class="field"></div><div class="actions" style="justify-content:flex-end;margin-top:16px"><button class="light" onclick="closeModal('teamModal')">Cancel</button><button class="primary" id="teamSaveBtn" onclick="saveTeam()">Create Team</button></div></div></div>
+<div id="memberDetailModal" class="modal"><div class="modal-box"><div class="modal-head"><h2 id="memberDetailTitle">Member Details</h2><button class="btn-sm light" onclick="closeModal('memberDetailModal')">✕</button></div><div id="memberDetail"></div></div></div>
+<div id="teamDetailModal" class="modal"><div class="modal-box"><div class="modal-head"><h2 id="teamDetailTitle">Team</h2><button class="btn-sm light" onclick="closeModal('teamDetailModal')">✕</button></div><div id="teamDetail"></div></div></div>
+<script>
+const roleNames={admin:'Admin',team_leader:'Team Leader',supervisor:'Supervisor',agent:'Agent'};
+const navItems=[['overview','▦','Overview','dashboard.view'],['users','♙','Users','users.view'],['roles','◆','Roles & Permissions','roles.view'],['teams','◈','Teams','teams.view'],['members','♙','Members','users.view'],['roster','▤','Roster Management','roster.view'],['shifts','◷','Shift Management','shifts.view'],['holidays','□','Holidays','holidays.view'],['audit','◉','Audit Logs','audit.view'],['settings','⚙','System Settings','settings.view']];
+let me=null,roleMap={},permissions=[],allUsers=[],allMembers=[],teams=[],supervisors=[],teamMembers=[],auditLogs=[],selectedRole='admin',editingTeamId=null;
+function token(){try{return JSON.parse(localStorage.getItem('sdhub_api_token')||'null')?.token||''}catch{return ''}}
+function logout(){if(!confirm('Log out of Service Desk Hub?'))return;localStorage.removeItem('sdhub_api_token');try{if(window.top!==window.self)window.top.location.href='/dashboard/index.html';else location.href='/dashboard/index.html'}catch{location.href='/dashboard/index.html'}}
+function base(){return localStorage.getItem('sdhub_api_base')||location.origin}
+async function api(path,opt={}){const t=token();const r=await fetch(base()+path,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{}),...(t?{Authorization:'Bearer '+t}:{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.detail||d.message||`HTTP ${r.status}`);return d}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function can(k){if(me?.role==='admin')return true;return !!(roleMap[me?.role]||[]).find(x=>x.key===k)?.allowed}
+function toast(s){const e=document.getElementById('toast');e.textContent=s;e.style.display='block';setTimeout(()=>e.style.display='none',2200)}
+function roleBadge(r){const c=r==='admin'?'admin':r==='team_leader'?'lead':r==='supervisor'?'super':'agent';return `<span class="badge ${c}">${esc(roleNames[r]||r)}</span>`}
+function buildNav(){document.getElementById('nav').innerHTML=navItems.filter(x=>x[0]==='overview'||can(x[3])).map(([id,ic,label])=>`<a href="#${id}" data-nav="${id}">${ic} ${label}</a>`).join('');document.querySelectorAll('[data-nav]').forEach(a=>a.onclick=e=>{e.preventDefault();showPage(a.dataset.nav)})}
+function showPage(id){if(!document.querySelector(`.page[data-page="${id}"]`))id='overview';const a=document.querySelector(`[data-nav="${id}"]`);if(!a){id='overview'}document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.dataset.page===id));document.querySelectorAll('[data-nav]').forEach(x=>x.classList.toggle('active',x.dataset.nav===id));document.getElementById('crumb').textContent='Service Desk Hub / Administration / '+(navItems.find(x=>x[0]===id)?.[2]||'Overview');if(id==='users')loadUsers();if(id==='roles')loadPermissions();if(id==='teams')loadTeams();if(id==='members')loadMembers();if(id==='audit')loadAudit();if(id==='overview')loadOverview();history.replaceState(null,'','#'+id)}
+function applyAccess(){document.getElementById('create-user-btn').classList.toggle('hidden',!can('users.create'));document.getElementById('team-create-btn').classList.toggle('hidden',!can('teams.create'));if(!can('settings.view'))document.querySelector('[data-page="settings"]').classList.remove('active');buildNav()}
+async function loadOverview(){try{const o=await api('/api/admin/overview'),r=o.roles||{};const isAdmin=me?.role==='admin';document.getElementById('user-stat').classList.toggle('hidden',!isAdmin);document.getElementById('total').textContent=o.users?.total??'—';document.getElementById('active').textContent=(o.users?.active??'—')+' active';document.getElementById('members').textContent=o.team?.activeMembers??'—';document.getElementById('entries').textContent=o.roster?.todayEntries??'—';document.getElementById('holidays').textContent=o.upcomingHolidays??'—';['admin','team_leader','supervisor','agent'].forEach(x=>document.getElementById({admin:'admins',team_leader:'leaders',supervisor:'supervisors',agent:'agents'}[x]).textContent=r[x]??0);const n=Math.max(1,o.users?.total||1);['A','L','S','G'].forEach((x,i)=>document.getElementById('bar'+x).style.width=(Object.values(r)[i]||0)/n*100+'%');document.getElementById('quick-access').innerHTML=navItems.filter(x=>x[0]!=='overview'&&(x[0]==='overview'||can(x[3]))).slice(0,5).map(x=>`<div class="activity" style="cursor:pointer" onclick="showPage('${x[0]}')"><div class="dot"></div><div><b>${x[2]}</b><br><span class="muted">Open workspace →</span></div></div>`).join('')||'<div class="empty">No additional modules available.</div>'}catch(e){toast(e.message)}}
+function userFiltered(){const q=(document.getElementById('userSearch').value||'').toLowerCase(),rf=document.getElementById('userRoleFilter').value,sf=document.getElementById('userStatusFilter').value;return allUsers.filter(u=>(!q||(u.username+' '+u.displayName).toLowerCase().includes(q))&&(!rf||u.role===rf)&&(!sf||(sf==='active')===!!u.isActive))}
+function initials(u){return (u.displayName||u.username||'?').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()}
+function renderUsers(){
+  const rows=userFiltered();
+
+  document.getElementById('users-table').innerHTML=rows.map(u=>{
+    const member=u.rosterMember;
+    const memberStatus=member
+      ? `<span class="badge ${member.isActive?'agent':'inactive'}">${member.isActive?'Yes':'Inactive'}</span>`
+      : '<span class="muted">Not a Member</span>';
+
+    return `<tr>
+      <td>
+        <div class="user-cell">
+          <div class="user-mini">${esc(initials(u))}</div>
+          <div>
+            <div class="user-main">${esc(u.displayName||u.username)}</div>
+            <div class="user-sub">${esc(u.username)}</div>
+          </div>
+        </div>
+      </td>
+      <td>${roleBadge(u.role)}</td>
+      <td>${memberStatus}</td>
+      <td><span class="badge ${u.isActive?'agent':'inactive'}">${u.isActive?'Active':'Inactive'}</span></td>
+      <td class="user-action">
+        <div class="actions">
+          <button class="btn-sm light" onclick="viewUser(${u.id})">View</button>
+          ${can('users.edit')&&u.id!==me?.id?`<button class="btn-sm light" onclick="editUser(${u.id})">Edit</button>`:''}
+          ${can('users.disable')&&u.id!==me?.id?`<button class="btn-sm ${u.isActive?'danger':'light'}" onclick="toggleUser(${u.id},${u.isActive})">${u.isActive?'Disable':'Activate'}</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="5" class="empty">No users match the selected filters.</td></tr>';
+
+  document.getElementById('u-total').textContent=allUsers.length;
+  document.getElementById('u-active').textContent=allUsers.filter(x=>x.isActive).length;
+  document.getElementById('u-inactive').textContent=allUsers.filter(x=>!x.isActive).length;
+  document.getElementById('u-admins').textContent=allUsers.filter(x=>x.role==='admin').length;
+}
+async function loadUsers(){
+  if(!can('users.view'))return;
+  try{
+    const [usersResult,membersResult]=await Promise.all([
+      api('/api/users'),
+      api('/api/members')
+    ]);
+
+    const membersByUserId={};
+
+    (membersResult||[]).forEach(member=>{
+      if(member.userId){
+        membersByUserId[member.userId]=member;
+      }
+    });
+
+    allUsers=(usersResult||[]).map(user=>({
+      ...user,
+      rosterMember:membersByUserId[user.id]||null
+    }));
+
+    renderUsers();
+  }catch(e){
+    toast(e.message);
+  }
+}
+function openUserModal(user=null){if(user&&!can('users.edit'))return;if(!user&&!can('users.create'))return;editingUserId=user?.id||null;document.getElementById('userModalTitle').textContent=user?'Edit User':'Create User';document.getElementById('userSaveBtn').textContent=user?'Save Changes':'Create User';document.getElementById('password-hint').textContent=user?'(leave blank to keep current)':'';nu.value=user?.username||'';nd.value=user?.displayName||'';np.value='';nr.value=user?.role||'agent';document.getElementById('user-msg').style.display='none';document.getElementById('userModal').classList.add('show')}
+async function viewUser(id){const u=allUsers.find(x=>x.id===id);if(!u)return;document.getElementById('user-detail-body').innerHTML=`<div class="profile-head"><div class="profile-avatar">${esc(initials(u))}</div><div><h3>${esc(u.displayName||u.username)}</h3><p>${esc(u.username)}</p></div></div><div class="detail-grid"><div class="detail-item"><div class="label">Role</div><div class="value">${roleBadge(u.role)}</div></div><div class="detail-item"><div class="label">Status</div><div class="value"><span class="badge ${u.isActive?'agent':'inactive'}">${u.isActive?'Active':'Inactive'}</span></div></div><div class="detail-item"><div class="label">User ID</div><div class="value">${u.id}</div></div><div class="detail-item"><div class="label">Created</div><div class="value">${u.createdAt?new Date(u.createdAt).toLocaleString():'—'}</div></div></div><div class="actions" style="justify-content:flex-end;margin-top:18px">${can('users.edit')&&u.id!==me?.id?`<button class="light" onclick="closeModal('userDetailModal');editUser(${u.id})">Edit User</button>`:''}${can('users.disable')&&u.id!==me?.id?`<button class="${u.isActive?'danger':'light'}" onclick="closeModal('userDetailModal');toggleUser(${u.id},${u.isActive})">${u.isActive?'Disable User':'Activate User'}</button>`:''}</div>`;document.getElementById('userDetailModal').classList.add('show')}
+function editUser(id){const u=allUsers.find(x=>x.id===id);if(u)openUserModal(u)}
+async function saveUser(){try{const username=nu.value.trim(),displayName=nd.value.trim(),role=nr.value,password=np.value;if(!username||!displayName)throw Error('Username and display name are required');if(editingUserId){const body={displayName,role};if(password)body.password=password;await api('/api/users/'+editingUserId,{method:'PATCH',body:JSON.stringify(body)});toast('User updated')}else{if(!password)throw Error('Password is required for a new user');await api('/api/users',{method:'POST',body:JSON.stringify({
+  username,
+  displayName,
+  password,
+  role,
+  addToMembers:document.getElementById('addToMembers').checked
+})});toast('User created')}closeModal('userModal');await loadUsers();await loadOverview()}catch(e){const m=document.getElementById('user-msg');m.textContent=e.message;m.style.display='block'}}
+async function changeRole(id,role){try{await api('/api/users/'+id,{method:'PATCH',body:JSON.stringify({role})});await loadUsers();await loadOverview();toast('Role updated')}catch(e){toast(e.message);await loadUsers()}}
+async function toggleUser(id,state){try{if(state)await api('/api/users/'+id,{method:'DELETE'});else await api('/api/users/'+id,{method:'PATCH',body:JSON.stringify({isActive:true})});await loadUsers();await loadOverview();toast(state?'User disabled':'User activated')}catch(e){toast(e.message)}}
+async function loadPermissions(){if(!can('roles.view'))return;try{permissions=await api('/api/permissions');roleMap=await api('/api/permissions/roles');const keys=Object.keys(roleNames);document.getElementById('role-select').innerHTML=keys.map(r=>`<option value="${r}">${roleNames[r]}</option>`).join('');selectedRole=selectedRole&&keys.includes(selectedRole)?selectedRole:me?.role||'admin';document.getElementById('role-select').value=selectedRole;renderRoleCards();renderPermissions()}catch(e){toast(e.message)}}
+function renderRoleCards(){document.getElementById('role-cards').innerHTML=Object.keys(roleNames).map(r=>{const list=roleMap[r]||[];const count=list.filter(x=>x.allowed).length;return `<div class="role-card ${r===selectedRole?'selected':''}" onclick="selectRole('${r}')"><div>${roleBadge(r)}</div><div class="count">${count}</div><span class="muted">allowed permissions</span></div>`}).join('')}
+function selectRole(r){selectedRole=r;document.getElementById('role-select').value=r;renderRoleCards();renderPermissions()}
+function renderPermissions(){const role=selectedRole,list=roleMap[role]||[],mayChange=me?.role==='admin'&&role!=='admin'||can('roles.manage')&&role!=='admin';document.getElementById('selected-role-title').textContent=roleNames[role]+' permissions';document.getElementById('perm-notice').textContent=role==='admin'?'Admin permissions are protected and always enabled.':mayChange?'You can change permissions for this role.':'Read-only: your account does not have permission to manage roles.';document.getElementById('permissions-table').innerHTML=list.map(p=>`<tr><td><b>${esc(p.name||p.key)}</b>${p.description?`<br><span class="muted">${esc(p.description)}</span>`:''}</td><td><span class="perm-key">${esc(p.key)}</span></td><td>${p.allowed?'<span class="badge agent">Allowed</span>':'<span class="badge inactive">Denied</span>'}</td><td><button class="switch ${p.allowed?'on':''}" ${mayChange?'':'disabled'} onclick="setRolePermission('${esc(role)}',${p.id},${!p.allowed})"></button></td></tr>`).join('')}
+async function setRolePermission(role,id,allowed){try{await api('/api/permissions/roles/'+encodeURIComponent(role),{method:'PUT',body:JSON.stringify({permissionId:id,allowed})});const item=(roleMap[role]||[]).find(x=>x.id===id);if(item)item.allowed=allowed;renderRoleCards();renderPermissions();toast('Permission updated')}catch(e){toast(e.message)}}
+async function loadMembers(){
+  if(!can('users.view'))return;
+  try{
+    allMembers=await api('/api/members');
+    renderMembers();
+  }catch(e){
+    toast(e.message);
+  }
+}
+
+function memberFiltered(){
+  const q=(document.getElementById('memberSearch')?.value||'').toLowerCase();
+  const sf=document.getElementById('memberStatusFilter')?.value||'';
+
+  return allMembers.filter(m=>
+    (!q||((m.fullName||'')+' '+(m.username||'')).toLowerCase().includes(q)) &&
+    (!sf||(sf==='active')===!!m.isActive)
+  );
+}
+
+function renderMembers(){
+  const rows=memberFiltered();
+
+  document.getElementById('members-table').innerHTML=rows.map(m=>{
+    const linked=m.linkedUser;
+    const teams=(m.teams||[]).map(t=>`<span class="badge inactive">${esc(t.name)}</span>`).join(' ')||'<span class="muted">—</span>';
+
+    return `<tr>
+      <td>
+        <div class="user-cell">
+          <div class="user-mini">${esc(initials({displayName:m.fullName||m.username||'M'}))}</div>
+          <div>
+            <div class="user-main">${esc(m.fullName||'—')}</div>
+            <div class="user-sub">Member ID: ${m.id}</div>
+          </div>
+        </div>
+      </td>
+      <td>${esc(m.username||'—')}</td>
+      <td>${linked?esc(linked.displayName||linked.username||'—'):'<span class="muted">Not linked</span>'}</td>
+      <td>${teams}</td>
+      <td><span class="badge ${m.isActive?'agent':'inactive'}">${m.isActive?'Active':'Inactive'}</span></td>
+      <td class="user-action">
+        <div class="actions">
+          <button class="btn-sm light" onclick="viewMember(${m.id})">View</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" class="empty">No members match the selected filters.</td></tr>';
+
+  document.getElementById('m-total').textContent=allMembers.length;
+  document.getElementById('m-active').textContent=allMembers.filter(x=>x.isActive).length;
+  document.getElementById('m-inactive').textContent=allMembers.filter(x=>!x.isActive).length;
+  document.getElementById('m-linked').textContent=allMembers.filter(x=>x.userId).length;
+}
+
+async function loadTeams(){if(!can('teams.view'))return;try{const results=await Promise.allSettled([api('/api/teams'),api('/api/teams/supervisors'),api('/api/teams/members')]);const [tr,sr,mr]=results;teams=tr.status==='fulfilled'?tr.value:[];supervisors=sr.status==='fulfilled'?sr.value:[];teamMembers=mr.status==='fulfilled'?mr.value:[];const sel=document.getElementById('ts');if(sel)sel.innerHTML='<option value="">No supervisor</option>'+supervisors.map(x=>`<option value="${x.id}">${esc(x.displayName||x.username)}</option>`).join('');renderTeams();if(tr.status!=='fulfilled')toast('Unable to load teams: '+(tr.reason?.message||'API error'))}catch(e){toast(e.message)}}
+function renderTeams(){const q=(document.getElementById('teamSearch').value||'').toLowerCase(),sf=document.getElementById('teamStatusFilter').value,rows=teams.filter(t=>(!q||t.name.toLowerCase().includes(q))&&(!sf||(sf==='active')===!!t.isActive));document.getElementById('t-total').textContent=teams.length;document.getElementById('t-active').textContent=teams.filter(x=>x.isActive).length;document.getElementById('t-members').textContent=teams.reduce((a,x)=>a+(x.memberCount||0),0);document.getElementById('t-unassigned').textContent=Math.max(0,teamMembers.length-teams.reduce((a,x)=>a+(x.memberCount||0),0));document.getElementById('teams-list').innerHTML=rows.length?'<div class="team-grid">'+rows.map(t=>`<div class="team-card"><div class="section-title"><h3>${esc(t.name)}</h3>${t.isActive?'<span class="badge agent">Active</span>':'<span class="badge inactive">Inactive</span>'}</div><div class="team-meta"><span class="badge super">${t.supervisor?esc(t.supervisor.displayName||t.supervisor.username):'No supervisor'}</span><span class="badge inactive">${t.memberCount??0} members</span></div><p class="muted">${esc(t.description||'No description')}</p><div class="team-actions"><button class="btn-sm light" onclick="viewTeam(${t.id})">View</button>${can('teams.edit')?`<button class="btn-sm light" onclick="editTeam(${t.id})">Edit</button>`:''}${can('teams.delete')?`<button class="btn-sm danger" onclick="deleteTeam(${t.id})">Delete</button>`:''}</div></div>`).join('')+'</div>':'<div class="empty">No teams configured.</div>'}
+function openTeamModal(id=null){if(id&&!can('teams.edit'))return;if(!id&&!can('teams.create'))return;editingTeamId=id;document.getElementById('teamModalTitle').textContent=id?'Edit Team':'Create Team';document.getElementById('teamSaveBtn').textContent=id?'Save Changes':'Create Team';if(!id){tn.value='';td.value='';ts.value=''}document.getElementById('teamModal').classList.add('show')}
+async function editTeam(id){try{const t=await api('/api/teams/'+id);tn.value=t.name;td.value=t.description||'';ts.value=t.supervisor?.id||'';openTeamModal(id)}catch(e){toast(e.message)}}
+async function saveTeam(){try{const body={name:tn.value.trim(),supervisorId:ts.value?Number(ts.value):null,description:td.value.trim(),isActive:true};if(!body.name)throw Error('Team name is required');if(editingTeamId)await api('/api/teams/'+editingTeamId,{method:'PATCH',body:JSON.stringify(body)});else await api('/api/teams',{method:'POST',body:JSON.stringify(body)});closeModal('teamModal');await loadTeams();await loadOverview();toast(editingTeamId?'Team updated':'Team created');editingTeamId=null}catch(e){toast(e.message)}}
+async function deleteTeam(id){if(!can('teams.delete'))return;const t=teams.find(x=>x.id===id);if(!confirm(`Delete team "${t?.name||id}"?`))return;try{await api('/api/teams/'+id,{method:'DELETE'});await loadTeams();await loadOverview();toast('Team deleted')}catch(e){toast(e.message)}}
+async function viewMember(id){
+  try{
+    const m=await api('/api/members/'+id);
+    const linked=m.linkedUser;
+
+    document.getElementById('memberDetailTitle').textContent=m.fullName||'Member Details';
+
+    const role=linked?.role||'';
+    const roleClass={
+      admin:'admin',
+      team_leader:'lead',
+      supervisor:'super',
+      agent:'agent'
+    }[role]||'inactive';
+
+    const roleLabel=roleNames[role]||role||'—';
+
+    const teams=(m.teams||[])
+      .map(t=>`<span class="badge inactive">${esc(t.name||t)}</span>`)
+      .join(' ')||'<span class="muted">No team assigned</span>';
+
+    document.getElementById('memberDetail').innerHTML=`
+      <div class="team-meta">
+        <span class="badge ${m.isActive?'agent':'inactive'}">
+          ${m.isActive?'Active':'Inactive'}
+        </span>
+
+        ${linked
+          ? `<span class="badge ${roleClass}">Role: ${esc(roleLabel)}</span>`
+          : ''}
+      </div>
+
+      <div class="split" style="margin-top:18px">
+        <div>
+          <label class="field-label">Member Name</label>
+          <div class="detail-value">${esc(m.fullName||'—')}</div>
+        </div>
+
+        <div>
+          <label class="field-label">Member ID</label>
+          <div class="detail-value">${esc(m.id)}</div>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top:14px">
+        <div>
+          <label class="field-label">Username</label>
+          <div class="detail-value">${esc(m.username||'—')}</div>
+        </div>
+
+        <div>
+          <label class="field-label">Teams</label>
+          <div class="detail-value">${teams}</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('memberDetailModal').classList.add('show');
+  }catch(e){
+    toast(e.message);
+  }
+}
+
+async function viewTeam(id){try{const t=await api('/api/teams/'+id);document.getElementById('teamDetailTitle').textContent=t.name;const members=t.members||[];document.getElementById('teamDetail').innerHTML=`<div class="team-meta"><span class="badge ${t.isActive?'agent':'inactive'}">${t.isActive?'Active':'Inactive'}</span><span class="badge super">Supervisor: ${esc(t.supervisor?.displayName||t.supervisor?.username||'None')}</span></div><p class="muted">${esc(t.description||'No description')}</p><div class="section-title" style="margin-top:18px"><h2>Members (${members.length})</h2>${can('teams.members.manage')?`<button class="btn-sm primary" onclick="openAddMember(${id})">+ Add Member</button>`:''}</div><div class="member-list">${members.length?members.map(m=>`<div class="member-row"><div><b>${esc(m.fullName)}</b><br><span class="muted">${esc(m.username||'No username')}</span></div>${can('teams.members.manage')?`<button class="btn-sm danger" onclick="removeMember(${id},${m.id})">Remove</button>`:''}</div>`).join(''):'<div class="empty">No members assigned.</div>'}</div><div id="add-member-area"></div>`;document.getElementById('teamDetailModal').classList.add('show')}catch(e){toast(e.message)}}
+function openAddMember(teamId){const available=teamMembers.filter(m=>m.isActive);document.getElementById('add-member-area').innerHTML=`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)"><label class="field-label">Active roster member</label><div class="actions"><select id="member-select" class="field" style="flex:1"><option value="">Select member</option>${available.map(m=>`<option value="${m.id}">${esc(m.fullName)}${m.userId?' · linked user':''}</option>`).join('')}</select><button class="primary" onclick="addMember(${teamId})">Add</button></div></div>`}
+async function addMember(teamId){const id=document.getElementById('member-select')?.value;if(!id)return;try{await api(`/api/teams/${teamId}/members/${id}`,{method:'POST'});await loadTeams();await viewTeam(teamId);toast('Member added')}catch(e){toast(e.message)}}
+async function removeMember(teamId,memberId){if(!confirm('Remove this member from the team?'))return;try{await api(`/api/teams/${teamId}/members/${memberId}`,{method:'DELETE'});await loadTeams();await viewTeam(teamId);toast('Member removed')}catch(e){toast(e.message)}}
+async function loadAudit(){if(!can('audit.view'))return;try{auditLogs=await api('/api/admin/audit');const sel=document.getElementById('auditActionFilter'),acts=[...new Set(auditLogs.map(x=>x.action))];sel.innerHTML='<option value="">All actions</option>'+acts.map(x=>`<option>${esc(x)}</option>`).join('');renderAudit()}catch(e){toast(e.message)}}
+function renderAudit(){const q=(document.getElementById('auditSearch').value||'').toLowerCase(),af=document.getElementById('auditActionFilter').value,rows=auditLogs.filter(x=>(!q||(x.action+' '+(x.user?.displayName||'')+' '+(x.user?.username||'')).toLowerCase().includes(q))&&(!af||x.action===af));document.getElementById('audit-list').innerHTML=rows.length?rows.map(x=>`<div class="activity"><div class="dot"></div><div><b>${esc(x.action)}</b><br><span class="muted">${esc(x.user?.displayName||x.user?.username||'System')} · ${x.createdAt?new Date(x.createdAt).toLocaleString():''}</span></div></div>`).join(''):'<div class="empty">No matching activity.</div>'}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+async function refresh(){await loadOverview();if(document.querySelector('.page.active')?.dataset.page==='users')await loadUsers();if(document.querySelector('.page.active')?.dataset.page==='teams')await loadTeams();if(document.querySelector('.page.active')?.dataset.page==='audit')await loadAudit();if(document.querySelector('.page.active')?.dataset.page==='roles')await loadPermissions()}
+async function load(){try{me=await api('/api/auth/me');if(!['admin','team_leader','supervisor'].includes(me.role))throw Error('denied');document.getElementById('meName').textContent=me.displayName||me.username;document.getElementById('meAvatar').textContent=(me.displayName||me.username||'?')[0].toUpperCase();document.getElementById('meRole').textContent=roleNames[me.role]||me.role;roleMap=await api('/api/permissions/roles');applyAccess();await loadOverview();const hash=location.hash.slice(1);showPage(hash&&document.querySelector(`.page[data-page="${hash}"]`)&&document.querySelector(`[data-nav="${hash}"]`)?hash:'overview')}catch(e){document.getElementById('content').style.display='none';document.getElementById('gate').style.display='block';document.querySelector('#gate p').textContent=e.message==='denied'?'Your account does not have access to this area.':'Unable to load administration data: '+e.message}}
+['userSearch','userRoleFilter','userStatusFilter'].forEach(id=>document.getElementById(id).addEventListener('input',renderUsers));['teamSearch','teamStatusFilter'].forEach(id=>document.getElementById(id).addEventListener('input',renderTeams));['auditSearch','auditActionFilter'].forEach(id=>document.getElementById(id).addEventListener('input',renderAudit));document.getElementById('globalSearch').addEventListener('input',e=>{if(e.target.value.trim()){showPage('users');document.getElementById('userSearch').value=e.target.value;renderUsers()}});window.addEventListener('hashchange',()=>showPage(location.hash.slice(1)||'overview'));load();
+</script></body></html>

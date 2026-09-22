@@ -11,7 +11,7 @@ from ..db.models import RosterColumn, TeamMember, RosterEntry, RosterEntryMember
 from ..auth import require_auth, require_role, CurrentUser
 
 router = APIRouter(prefix="/api/roster", tags=["roster"])
-can_edit = require_role("admin", "leadership", "supervisor")
+can_edit = require_role("admin", "team_leader", "supervisor")
 
 
 def log_action(db: Session, user_id: int, action: str, detail: dict):

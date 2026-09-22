@@ -13,7 +13,7 @@ from ..db.models import SdcmReport, AiccReport, SlaReport
 from ..auth import require_auth, require_role, CurrentUser
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
-can_save = require_role("admin", "leadership", "supervisor")
+can_save = require_role("admin", "team_leader", "supervisor")
 
 REPORT_MODELS = {
     "sdcm": SdcmReport,

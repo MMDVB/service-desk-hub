@@ -22,7 +22,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        CheckConstraint("role IN ('admin','leadership','supervisor','agent')", name="users_role_check"),
+        CheckConstraint("role IN ('admin','team_leader','supervisor','agent')", name="users_role_check"),
     )
 
 
@@ -33,6 +33,8 @@ class TeamMember(Base):
     username = Column(String(80))
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
+    user = relationship("User")
 
 
 class RosterColumn(Base):
@@ -111,3 +113,124 @@ class SlaReport(Base):
     uploaded_by = Column(Integer, ForeignKey("users.id"))
     summary = Column(JSONB, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Team(Base):
+    __tablename__ = "teams"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(120), unique=True, nullable=False)
+    supervisor_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
+    description = Column(Text)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    supervisor = relationship("User", foreign_keys=[supervisor_id])
+
+
+class TeamAssignment(Base):
+    __tablename__ = "team_assignments"
+
+    team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), primary_key=True)
+    team_member_id = Column(
+        Integer,
+        ForeignKey("team_members.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    assigned_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    team = relationship("Team")
+    team_member = relationship("TeamMember")
+
+
+class Permission(Base):
+    __tablename__ = "permissions"
+
+    id = Column(Integer, primary_key=True)
+    permission_key = Column(String(100), unique=True, nullable=False)
+    name = Column(String(120), nullable=False)
+    description = Column(Text)
+    category = Column(String(60), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+
+
+class RolePermission(Base):
+    __tablename__ = "role_permissions"
+
+    role = Column(String(20), primary_key=True)
+    permission_id = Column(
+        Integer,
+        ForeignKey("permissions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    allowed = Column(Boolean, nullable=False, default=True)
+
+    permission = relationship("Permission")
+
+
+class UserPermissionOverride(Base):
+    __tablename__ = "user_permission_overrides"
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    permission_id = Column(
+        Integer,
+        ForeignKey("permissions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    allowed = Column(Boolean, nullable=False)
+
+    permission = relationship("Permission")
+class RosterVersion(Base):
+    __tablename__ = "roster_versions"
+
+    id = Column(Integer, primary_key=True)
+    version_number = Column(Integer, nullable=False, unique=True)
+    status = Column(String(20), nullable=False)
+    snapshot = Column(JSONB, nullable=False)
+
+    created_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    published_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+    )
+
+    published_at = Column(DateTime(timezone=True))
+
+    updated_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+    )
+
+    creator = relationship(
+        "User",
+        foreign_keys=[created_by],
+    )
+
+    updater = relationship(
+        "User",
+        foreign_keys=[updated_by],
+    )
+
+    publisher = relationship(
+        "User",
+        foreign_keys=[published_by],
+    )

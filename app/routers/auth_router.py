@@ -33,11 +33,10 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid username or password")
 
-    api_role = "leadership" if user.role == "supervisor" else user.role
-    token = create_access_token(user.id, user.username, api_role)
+    token = create_access_token(user.id, user.username, user.role)
     return LoginResponse(
         token=token,
-        user={"id": user.id, "username": user.username, "displayName": user.display_name, "role": api_role},
+        user={"id": user.id, "username": user.username, "displayName": user.display_name, "role": user.role},
     )
 
 
@@ -46,5 +45,4 @@ def me(current: CurrentUser = Depends(require_auth), db: Session = Depends(get_d
     user = db.query(User).filter(User.id == current.id).first()
     if not user:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
-    api_role = "leadership" if user.role == "supervisor" else user.role
-    return {"id": user.id, "username": user.username, "displayName": user.display_name, "role": api_role}
+    return {"id": user.id, "username": user.username, "displayName": user.display_name, "role": user.role}
