@@ -1151,6 +1151,14 @@ async function loadRosterFromBackend(){
       rosterData.columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
     }
 
+    if(editable){
+      try{
+        await syncCentralMembersIntoRosterData();
+      }catch(e){
+        console.warn('Unable to sync central members:', e);
+      }
+    }
+
     rosterLoading=false;
     renderRoster();
     renderRosterVersionStatus();
@@ -1163,8 +1171,39 @@ async function loadRosterFromBackend(){
     return false;
   }
 }
+async function syncCentralMembersIntoRosterData(){
+  const members = await rosterApi('/api/members?active=true');
+
+  const normalized = (Array.isArray(members) ? members : []).map(m => ({
+    id: m.id,
+    user_id: m.userId ?? null,
+    full_name: m.fullName,
+    username: m.username ?? null,
+    is_active: m.isActive !== false
+  }));
+
+  const existingById = new Map(
+    (rosterData.teamMembers || []).map(m => [m.id, m])
+  );
+
+  normalized.forEach(member => {
+    existingById.set(member.id, {
+      ...existingById.get(member.id),
+      ...member
+    });
+  });
+
+  rosterData.teamMembers = Array.from(existingById.values());
+
+  rosterData.agents = rosterData.teamMembers
+    .filter(m => m.is_active !== false)
+    .map(m => m.full_name);
+}
+
 async function putRosterEntry(dateKey,colKey){
   if(!isLeadUnlocked()) throw new Error('Insufficient permissions');
+
+  await syncCentralMembersIntoRosterData();
 
   const snapshot={
     columns:rosterData.columns.map(c=>({
@@ -1264,6 +1303,7 @@ async function patchColumnApi(c){ return rosterApi('/api/roster/columns/'+encode
 async function deleteColumnApi(id){ return rosterApi('/api/roster/columns/'+encodeURIComponent(id),{method:'DELETE'}); }
 
 function getColumn(key){ return rosterData.columns.find(c=>c.key===key) || { key, label:{en:key,fa:key}, color:'#E2E8F0', text:'#64748B', multi:true, builtin:false }; }
+function getColumnFromSnapshot(columns, key){ return (columns || []).find(c=>c.key===key) || { key, label:{en:key,fa:key}, color:'#E2E8F0', text:'#64748B', multi:true, builtin:false }; }
 function colLabel(col){ return col.label[currentLang] || col.label.en; }
 function dayCell(dateKey){
   if (!rosterData.days[dateKey]) rosterData.days[dateKey] = {};
