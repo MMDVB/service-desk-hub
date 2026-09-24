@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+<link rel="stylesheet" href="shared/tokens.css">
 <style>
   :root{
     --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F1F4F9; --border:#E3E8F0;
@@ -320,7 +321,7 @@
   td.shift-td.editable:hover{ box-shadow:inset 0 0 0 1.5px var(--teal); border-radius:8px; }
   td.shift-td.droppable.drag-over{ background:#D1FAE5 !important; box-shadow:inset 0 0 0 2px var(--teal); border-radius:8px; }
 
-  .cell-chips{ display:flex; flex-wrap:wrap; gap:4px; min-height:26px; align-items:center; }
+  .cell-chips{ display:flex; flex-direction:column; gap:4px; min-height:26px; align-items:center; justify-content:center; }
   .cell-chip{ display:inline-flex; align-items:center; gap:4px; font-size:10.3px; font-weight:700; padding:3px 8px 3px 4px; border-radius:999px; white-space:nowrap; }
   html[dir="rtl"] .cell-chip{ padding:3px 4px 3px 8px; }
   .cell-chip .chip-avatar{ width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,0.65); font-size:7px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
@@ -360,7 +361,96 @@
   .std-body{ padding:24px; max-width:1500px; margin:0 auto; }
 
   /* ================= Roster v6 — "SD Workforce" style redesign ================= */
-  .roster-action-bar{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+
+.roster-version-status{
+  display:none;
+  margin:0 0 14px;
+  padding:10px 14px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:12px;
+  background:rgba(15,23,42,.72);
+  color:#cbd5e1;
+  font-size:12px;
+  line-height:1.45;
+}
+
+.roster-version-status.show{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.rvs-main{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.rvs-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  flex:0 0 auto;
+  background:#22c55e;
+  box-shadow:0 0 0 4px rgba(34,197,94,.10);
+}
+
+.rvs-dot.warning{
+  background:#f59e0b;
+  box-shadow:0 0 0 4px rgba(245,158,11,.10);
+}
+
+.rvs-title{
+  font-weight:700;
+  color:#f8fafc;
+}
+
+.rvs-meta{
+  color:#94a3b8;
+}
+
+.rvs-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+.rvs-btn{
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(30,41,59,.75);
+  color:#e2e8f0;
+  border-radius:8px;
+  padding:6px 10px;
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.rvs-btn:hover{
+  background:rgba(51,65,85,.9);
+}
+
+.rvs-btn.primary{
+  background:rgba(245,158,11,.12);
+  border-color:rgba(245,158,11,.35);
+  color:#fbbf24;
+}
+
+@media (max-width:700px){
+  .roster-version-status.show{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .rvs-actions{
+    width:100%;
+  }
+}
+
+.roster-action-bar{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
   .roster-action-btns{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .rab-btn{ display:inline-flex; align-items:center; gap:7px; background:#fff; border:1px solid var(--border); border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:700; color:var(--text); cursor:pointer; white-space:nowrap; }
   .rab-btn:hover{ border-color:var(--teal); background:#F8FFFE; }
@@ -378,8 +468,6 @@
   .icon-btn-square:hover{ border-color:var(--teal); color:var(--teal-dark); }
 
   /* Shift legend strip */
-  .shift-strip{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
-  .shift-strip-item{ display:flex; align-items:center; gap:9px; background:#fff; border:1px solid var(--border); border-radius:13px; padding:9px 14px; min-width:150px; }
   .ss-icon{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
   .ss-text b{ display:block; font-size:12px; font-weight:800; line-height:1.3; }
   .ss-text span{ font-size:10.5px; color:var(--muted); direction:ltr; display:block; }
@@ -448,13 +536,39 @@
   .cal-day.today{ background:var(--teal); color:#fff; font-weight:800; }
   .cal-day.other-month{ color:#CBD5E1; }
   .cal-day.has-holiday{ color:var(--rc-holiday); font-weight:800; }
+
+/* === Visual refresh: keep existing Roster controls/logic; HUB owns auth and language === */
+html,body{background:#f5f7fb!important;}
+.sidebar{background:#071b49!important;width:214px!important;}
+.brand{padding:16px!important;border-bottom:1px solid rgba(255,255,255,.08)!important;}
+.brand-icon{background:linear-gradient(135deg,#5b55ff,#765cff)!important;box-shadow:0 8px 20px rgba(92,86,255,.28)!important;}
+.nav{padding:12px 10px!important;gap:3px!important}.nav-group-label{color:#7186ae!important;letter-spacing:.1em!important}
+.nav-item{border-radius:10px!important;padding:9px 11px!important}.nav-item.active{background:linear-gradient(90deg,#5145e8,#4937d7)!important;box-shadow:0 6px 16px rgba(74,58,215,.22)!important}.nav-item.active::before{background:#fff!important;width:0!important}
+.main{background:#f5f7fb!important;}
+.topbar{height:72px!important;background:#fff!important;border-bottom:1px solid #e6ebf3!important;padding:0 24px!important;}
+.content{padding:22px!important;}
+.std-header{background:#fff!important;border-bottom:1px solid #e3e8f0!important;}
+.std-header .brand-title{font-size:21px!important;color:#16213b!important}.std-header .brand-sub{color:#73819a!important}
+.std-body{padding:20px 22px 32px!important;max-width:1600px!important;margin:auto!important}
+.roster-action-bar{display:flex!important;justify-content:flex-end!important;gap:8px!important;margin-bottom:12px!important}
+.roster-action-bar .tbtn,.roster-action-bar button{border-radius:10px!important}
+.roster-search-bar,.roster-wrap,.summary-panel{background:#fff!important;border:1px solid #dfe6ef!important;border-radius:14px!important;box-shadow:0 4px 14px rgba(15,23,42,.04)!important}
+.roster-table{font-size:11px!important}.roster-table th{background:#fbfcfe!important;color:#23345b!important;border-bottom:1px solid #e1e7ef!important}.roster-table td{border-bottom:1px solid #edf0f5!important}
+.roster-table tr:hover td{background:#fbfdff!important}
+@media(max-width:900px){.std-body{padding:14px!important}.std-header{padding:0 14px!important}}
+
+
+/* Standalone feature: no local language switch, login or HUB navigation. */
+.roster-feature-header{justify-content:flex-start!important;}
+.roster-feature-header .std-header-actions{display:none!important;}
+#leadOverlay{display:none!important;}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
-<header class="std-header">
+<header class="std-header roster-feature-header">
   <div class="brand">
     <div class="brand-icon">🗓️</div>
     <div>
@@ -462,23 +576,19 @@
       <div class="brand-sub" data-i18n="rosterDesc">Weekly shift plan for the service desk team.</div>
     </div>
   </div>
-  <div class="std-header-actions">
-    <div class="lang-switch">
-      <button id="langEnBtn" class="active">EN</button>
-      <button id="langFaBtn">فا</button>
-    </div>
-    <button class="lead-btn" id="leadBtn" style="width:auto; padding:9px 16px;">👑 <span data-i18n="leadBtnLocked">Leadership</span></button>
-    <a class="tbtn" href="index.html">↩ <span data-i18n="backToHub">Back to hub</span></a>
-  </div>
 </header>
 
 <div class="std-body">
   <div id="roster-lock-note" class="lead-note" style="display:none;">
-    🔒 <span data-i18n="rosterLocked">You're in view-only mode. Unlock Leadership to edit the roster.</span>
+    🔒 <span data-i18n="rosterLocked">You're in view-only mode. Sign in to the HUB with an Admin or Leadership account to edit the roster.</span>
   </div>
 
+
+
   <div class="roster-action-bar" id="roster-action-bar"></div>
-  <div class="shift-strip" id="shift-strip"></div>
+
+  <div class="roster-version-status" id="roster-version-status"></div>
+
   <div class="roster-search-bar" id="roster-search-bar"></div>
 
   <div class="roster-toolbar" id="roster-toolbar" style="display:none;"></div>
@@ -506,20 +616,6 @@
   <div class="roster-bottom-row" id="roster-bottom-row"></div>
 </div>
 
-<!-- ===================== LEADERSHIP GATE ===================== -->
-<div class="lead-overlay" id="leadOverlay">
-  <div class="lead-modal">
-    <h3 data-i18n="gateTitle">🔐 Leadership Access</h3>
-    <p data-i18n="gateText">This area lets you edit the roster. Please enter the passcode.</p>
-    <input type="password" id="leadPassInput" data-i18n-placeholder="gatePlaceholder" placeholder="Passcode">
-    <div class="err-msg" id="leadErr" data-i18n="gateErr">Incorrect passcode</div>
-    <div class="lead-actions">
-      <button class="tbtn" id="leadCancelBtn" type="button" data-i18n="cancel">Cancel</button>
-      <button class="tbtn" id="leadSubmitBtn" type="button" style="background:var(--teal); color:#fff; border-color:var(--teal);" data-i18n="submit">Enter</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const SHELL_I18N = {
   en: {
@@ -527,7 +623,7 @@ const SHELL_I18N = {
     navGroupReports:"Specialized reports", navSdcm:"SDCM Registration", navSdcmSub:"Inbound / outbound calls",
     navAicc:"AICC Performance", navAiccSub:"Answer & occupancy rate", navSla:"SLA Incident", navSlaSub:"Incident & OOSLA distribution",
     navGroupTeam:"Team", navRoster:"Shift Roster", navRosterSub:"Plan agent shifts",
-    leadBtnLocked:"Leadership", leadBtnUnlocked:"Leadership (unlocked)",
+    leadBtnLocked:"Sign in", leadBtnUnlocked:"Signed in",
     heroEyebrow:"Service Desk Reporting Platform",
     heroTitle:"Three independent reports, one control center — synced automatically from your own folders",
     heroText:"Each report is a fully independent, ready-to-use page. Leadership can point each report at a local folder once — from then on it refreshes on its own, no re-selecting a file or folder every time.",
@@ -558,7 +654,7 @@ const SHELL_I18N = {
     frameSlaDesc:"Connect this report to its data folder from the Leadership panel, or open it directly.",
     fullscreen:"Fullscreen", openNewTab:"Open in new tab",
     rosterDesc:"Weekly shift plan for the service desk team. Click a cell to cycle through AM / PM / Off. Only Leadership can edit.",
-    rosterLocked:"You're in view-only mode. Open the Leadership panel (bottom-left) to edit the roster.",
+    rosterLocked:"You're in view-only mode. Sign in to the HUB with an Admin or Leadership account to edit the roster.",
     rosterHint:"Tip: click any shift cell to cycle AM → PM → Off.",
     gateTitle:"🔐 Leadership Access", gateText:"This area lets you connect report folders and edit the roster. Please enter the passcode.",
     gatePlaceholder:"Passcode", gateErr:"Incorrect passcode", cancel:"Cancel", submit:"Enter",
@@ -605,7 +701,7 @@ const SHELL_I18N = {
     navGroupReports:"گزارش‌های تخصصی", navSdcm:"ثبت SDCM", navSdcmSub:"تماس‌های ورودی/خروجی",
     navAicc:"عملکرد AICC", navAiccSub:"نرخ پاسخ‌گویی و اشغالی", navSla:"SLA Incident", navSlaSub:"توزیع Incident و OOSLA",
     navGroupTeam:"تیم", navRoster:"راستر شیفت", navRosterSub:"چیدمان شیفت پرسنل",
-    leadBtnLocked:"لیدرشیپ", leadBtnUnlocked:"لیدرشیپ (باز)",
+    leadBtnLocked:"ورود", leadBtnUnlocked:"وارد شده",
     heroEyebrow:"پلتفرم گزارش‌گیری سرویس دسک",
     heroTitle:"سه گزارش مستقل، یک مرکز کنترل — با همگام‌سازی خودکار از پوشه‌های شما",
     heroText:"هر گزارش یک صفحه کاملاً مستقل و آماده است. لیدرشیپ فقط یک‌بار هر گزارش را به پوشه‌ی محلی متصل می‌کند و از آن پس بدون انتخاب دوباره‌ی فایل یا پوشه، خودش به‌روزرسانی می‌شود.",
@@ -683,67 +779,59 @@ let currentLang = localStorage.getItem('sdhub_lang') || 'en';
 
 function t(key){ return (SHELL_I18N[currentLang] && SHELL_I18N[currentLang][key]) || (SHELL_I18N.en[key]) || key; }
 
-const LEAD_PASSCODE = "leadership2026"; // ⚠️ same passcode as the hub — change it here AND in index.html
-const IS_EMBEDDED = (window.parent !== window);
-let embeddedUnlocked = false;
-function isLeadUnlocked(){ return IS_EMBEDDED ? embeddedUnlocked : sessionStorage.getItem('sdhub_lead_unlocked')==='1'; }
-function updateLeadButton(){
-  const btn=document.getElementById('leadBtn');
-  if (!btn) return;
-  btn.classList.toggle('unlocked', isLeadUnlocked());
-  btn.querySelector('span').textContent = isLeadUnlocked() ? t('leadBtnUnlocked') : t('leadBtnLocked');
+/* =========================================================================
+   SHARED AUTH — the HUB owns login. Roster never asks for credentials.
+   The same JWT is used by the backend to decide edit permissions.
+   ========================================================================= */
+const SDW_LS_TOKEN = 'sdhub_api_token';
+const SDW_LS_BASE = 'sdhub_api_base';
+let currentUser = null;
+let rosterLoading = false;
+let rosterApiError = '';
+function sdwApiBase(){ const saved=localStorage.getItem(SDW_LS_BASE); if(saved) return saved; const origin=window.location.origin; return (!origin || origin==='null' || origin==='file://') ? 'http://localhost:4000' : origin; }
+function sdwGetTokenObj(){
+  try{ const raw=localStorage.getItem(SDW_LS_TOKEN); if(!raw) return null; const obj=JSON.parse(raw); if(obj.exp && Date.now()>obj.exp){ localStorage.removeItem(SDW_LS_TOKEN); return null; } return obj; }catch(e){ return null; }
 }
-if (IS_EMBEDDED){
-  // A single Leadership button lives in the hub's sidebar — this page just mirrors that state.
-  document.getElementById('leadBtn').style.display = 'none';
-  window.addEventListener('message', (e)=>{
-    if (!e.data || e.data.type!=='sdhub:lead-state') return;
-    embeddedUnlocked = !!e.data.unlocked;
-    updateLeadButton();
-    renderRoster();
-  });
-  window.parent.postMessage({ type:'sdhub:request-lead-state' }, '*');
-} else {
-  document.getElementById('leadBtn').addEventListener('click', ()=>{
-    if (isLeadUnlocked()){
-      sessionStorage.removeItem('sdhub_lead_unlocked');
-      updateLeadButton();
-      renderRoster();
-    } else {
-      document.getElementById('leadPassInput').value='';
-      document.getElementById('leadErr').style.display='none';
-      document.getElementById('leadOverlay').classList.add('show');
-      setTimeout(()=>document.getElementById('leadPassInput').focus(), 50);
-    }
-  });
+function sdwHeaders(){ const tok=sdwGetTokenObj(); return tok ? {'Authorization':'Bearer '+tok.token} : {}; }
+async function rosterApi(path, opts={}){
+  const res=await fetch(sdwApiBase()+path,{...opts,headers:{...(opts.body?{'Content-Type':'application/json'}:{}),...sdwHeaders(),...(opts.headers||{})}});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||data.detail||('HTTP '+res.status));
+  return data;
 }
-document.getElementById('leadCancelBtn').addEventListener('click', ()=>document.getElementById('leadOverlay').classList.remove('show'));
-document.getElementById('leadOverlay').addEventListener('click', (e)=>{ if(e.target.id==='leadOverlay') document.getElementById('leadOverlay').classList.remove('show'); });
-document.getElementById('leadSubmitBtn').addEventListener('click', submitLeadPass);
-document.getElementById('leadPassInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitLeadPass(); });
-function submitLeadPass(){
-  const val=document.getElementById('leadPassInput').value;
-  if(val===LEAD_PASSCODE){
-    document.getElementById('leadOverlay').classList.remove('show');
-    sessionStorage.setItem('sdhub_lead_unlocked','1');
-    updateLeadButton();
-    renderRoster();
-  } else {
-    document.getElementById('leadErr').style.display='block';
-  }
+const rosterMode = new URLSearchParams(window.location.search).get('mode') || 'view';
+const rosterManageMode = rosterMode === 'manage';
+
+function isLeadUnlocked(){
+  return rosterManageMode && !!currentUser && ['admin','team_leader','supervisor'].includes(currentUser.role);
+}
+
+function currentRoleLabel(){
+  return currentUser?.role==='admin'
+    ? 'Admin'
+    : (['team_leader','supervisor'].includes(currentUser?.role) ? 'Leadership' : 'Agent');
 }
 
 function applyI18n(){
   document.documentElement.setAttribute('lang', currentLang);
+  document.documentElement.setAttribute('dir', currentLang==='fa' ? 'rtl' : 'ltr');
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder'))); });
-  document.getElementById('langEnBtn').classList.toggle('active', currentLang==='en');
-  document.getElementById('langFaBtn').classList.toggle('active', currentLang==='fa');
-  updateLeadButton();
   renderRoster();
 }
-document.getElementById('langEnBtn').addEventListener('click', ()=>{ currentLang='en'; localStorage.setItem('sdhub_lang','en'); applyI18n(); });
-document.getElementById('langFaBtn').addEventListener('click', ()=>{ currentLang='fa'; localStorage.setItem('sdhub_lang','fa'); applyI18n(); });
+window.addEventListener('message', e=>{
+  if(e.data?.type==='sdhub:language' && (e.data.lang==='en'||e.data.lang==='fa')){
+    currentLang=e.data.lang;
+    localStorage.setItem('sdhub_lang', currentLang);
+    applyI18n();
+  }
+});
+window.addEventListener('storage', e=>{
+  if(e.key==='sdhub_lang' && (e.newValue==='en'||e.newValue==='fa')){
+    currentLang=e.newValue;
+    applyI18n();
+  }
+});
 
 /* =========================================================================
    JALALI (SHAMSI) CALENDAR — pure JS conversion, no network/library needed
@@ -788,40 +876,434 @@ function jalaliStr(d, lang){
    ========================================================================= */
 const ROSTER_KEY = 'sdhub_roster_v4';
 const DEFAULT_COLUMNS = [
-  { key:'day1',     label:{en:'Day_1 (07:00-19:00)',      fa:'روز_۱ (۰۷:۰۰-۱۹:۰۰)'},        color:'#DBEAFE', text:'#1D4ED8', multi:true,  builtin:true },
-  { key:'day2',     label:{en:'Day_2 (07:00-19:00)',      fa:'روز_۲ (۰۷:۰۰-۱۹:۰۰)'},        color:'#DBEAFE', text:'#1D4ED8', multi:true,  builtin:true },
-  { key:'hq',       label:{en:'Day - HQ Office (08-17)',  fa:'حضور HQ (۰۸:۰۰-۱۷:۰۰)'},      color:'#FEF9C3', text:'#854D0E', multi:true,  builtin:true },
-  { key:'night1',   label:{en:'Night_1 (19:00-07:00)',    fa:'شب_۱ (۱۹:۰۰-۰۷:۰۰)'},         color:'#E0E7FF', text:'#3730A3', multi:true,  builtin:true },
-  { key:'night2',   label:{en:'Night_2 (19:00-07:00)',    fa:'شب_۲ (۱۹:۰۰-۰۷:۰۰)'},         color:'#E0E7FF', text:'#3730A3', multi:true,  builtin:true },
-  { key:'oncall',   label:{en:'Leadership On-Call',       fa:'آنکال لیدرشیپ'},              color:'#CCFBF1', text:'#0F766E', multi:false, builtin:true },
-  { key:'off',      label:{en:'Off',                      fa:'آف'},                         color:'#E9D5FF', text:'#6B21A8', multi:true,  builtin:true },
-  { key:'leaveRequest', label:{en:'Leave Request',        fa:'درخواست مرخصی'},              color:'#FBCFE8', text:'#9D174D', multi:true,  builtin:true },
-  { key:'cab',      label:{en:'CAB',                      fa:'CAB'},                         color:'#E2E8F0', text:'#334155', multi:true,  builtin:true },
+  { key:'day1', label:{en:'Day_1 (07:00-19:00)', fa:'روز_۱ (۰۷:۰۰-۱۹:۰۰)'}, color:'#DBEAFE', text:'#1D4ED8', multi:true, builtin:true },
+  { key:'day2', label:{en:'Day_2 (07:00-19:00)', fa:'روز_۲ (۰۷:۰۰-۱۹:۰۰)'}, color:'#DBEAFE', text:'#1D4ED8', multi:true, builtin:true },
+  { key:'hq', label:{en:'Day - HQ Office (08-17)', fa:'حضور HQ (۰۸:۰۰-۱۷:۰۰)'}, color:'#FEF9C3', text:'#854D0E', multi:true, builtin:true },
+  { key:'night1', label:{en:'Night_1 (19:00-07:00)', fa:'شب_۱ (۱۹:۰۰-۰۷:۰۰)'}, color:'#E0E7FF', text:'#3730A3', multi:true, builtin:true },
+  { key:'night2', label:{en:'Night_2 (19:00-07:00)', fa:'شب_۲ (۱۹:۰۰-۰۷:۰۰)'}, color:'#E0E7FF', text:'#3730A3', multi:true, builtin:true },
+  { key:'oncall', label:{en:'Leadership On-Call', fa:'آنکال لیدرشیپ'}, color:'#CCFBF1', text:'#0F766E', multi:false, builtin:true },
+  { key:'off', label:{en:'Off', fa:'آف'}, color:'#E9D5FF', text:'#6B21A8', multi:true, builtin:true },
+  { key:'leaveRequest', label:{en:'Leave Request', fa:'درخواست مرخصی'}, color:'#FBCFE8', text:'#9D174D', multi:true, builtin:true },
+  { key:'cab', label:{en:'CAB', fa:'CAB'}, color:'#E2E8F0', text:'#334155', multi:true, builtin:true },
 ];
-const DEFAULT_AGENTS = [
-  'mohammadali.ar','ali.dava','ali.behr','amirhossein.tagh','parisa.jaf','amirali.am',
-  'yasamin.a','milad.esf','afsaneh.az','hengameh.n','payam.n','arezou.g','anahita.sad',
-  'mohammadmehdi.rajab','kosar.ha','narin.b','mehdi.vali','fatemeh.salim','amirhossein.mohamm','maryam.fall'
-];
+const DEFAULT_AGENTS = [];
+let rosterData = { agents:[], days:{}, holidays:{}, columns:JSON.parse(JSON.stringify(DEFAULT_COLUMNS)), teamMembers:[] };
 
-function loadRoster(){
-  try{
-    const raw = localStorage.getItem(ROSTER_KEY);
-    if (raw){
-      const d = JSON.parse(raw);
-      d.agents = d.agents && d.agents.length ? d.agents : DEFAULT_AGENTS.slice();
-      d.days = d.days || {};
-      d.holidays = d.holidays || {};
-      d.columns = d.columns && d.columns.length ? d.columns : JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
-      return d;
-    }
-  }catch(e){}
-  return { agents: DEFAULT_AGENTS.slice(), days: {}, holidays: {}, columns: JSON.parse(JSON.stringify(DEFAULT_COLUMNS)) };
+let rosterVersionInfo = {
+  current: null,
+  published: null,
+  hasUnpublishedChanges: false
+};
+
+function rosterSnapshotsEqual(a, b){
+  const normalize = (snapshot)=>{
+    if(!snapshot) return null;
+
+    return {
+      columns: (snapshot.columns || []).map(c=>({
+        id:c.id,
+        key:c.key,
+        labelEn:c.labelEn,
+        labelFa:c.labelFa,
+        color:c.color,
+        textColor:c.textColor,
+        isMulti:!!c.isMulti,
+        isBuiltin:!!c.isBuiltin,
+        sortOrder:c.sortOrder ?? 0
+      })),
+      team: (snapshot.team || []).map(m=>({
+        id:m.id,
+        userId:m.userId ?? null,
+        fullName:m.fullName,
+        username:m.username ?? null,
+        isActive:m.isActive !== false
+      })),
+      holidays: (snapshot.holidays || []).map(h=>({
+        id:h.id ?? null,
+        date:h.date,
+        label:h.label
+      })),
+      entries: (snapshot.entries || []).map(e=>({
+        id:e.id,
+        date:e.date,
+        columnId:e.columnId,
+        columnKey:e.columnKey,
+        freeText:e.freeText ?? null,
+        memberIds:[...(e.memberIds || [])].sort((x,y)=>Number(x)-Number(y))
+      }))
+    };
+  };
+
+  return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
 }
-function saveRoster(data){ localStorage.setItem(ROSTER_KEY, JSON.stringify(data)); }
-let rosterData = loadRoster();
+
+function saveRoster(_data){ /* Backend is authoritative; kept as a compatibility shim for legacy call sites. */ }
+
+function renderRosterVersionStatus(){
+  const el = document.getElementById('roster-version-status');
+  if(!el) return;
+
+  const current = rosterVersionInfo.current;
+  const published = rosterVersionInfo.published;
+  const hasChanges = !!rosterVersionInfo.hasUnpublishedChanges;
+  const editable = isLeadUnlocked();
+
+  if(!current){
+    el.classList.remove('show');
+    el.innerHTML = '';
+    return;
+  }
+
+  const formatDateTime = (value) => {
+    if(!value) return '';
+    const date = new Date(value);
+    if(Number.isNaN(date.getTime())) return '';
+
+    return date.toLocaleString(undefined, {
+      day:'2-digit',
+      month:'2-digit',
+      hour:'2-digit',
+      minute:'2-digit'
+    });
+  };
+
+  const updatedBy =
+    current.updatedByUser?.displayName ||
+    current.createdByUser?.displayName ||
+    'Unknown user';
+
+  const updatedAt =
+    formatDateTime(current.updatedAt) ||
+    formatDateTime(current.createdAt);
+
+  if(editable && hasChanges){
+    el.innerHTML = `
+      <div class="rvs-main">
+        <span class="rvs-dot warning"></span>
+        <div>
+          <div class="rvs-title">UNPUBLISHED CHANGES</div>
+          <div class="rvs-meta">
+            Draft Version ${current.versionNumber}
+            · Last modified by ${updatedBy}${updatedAt ? ` · ${updatedAt}` : ''}
+            ${published ? ` · Published Version: ${published.versionNumber}` : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="rvs-actions">
+        <button class="rvs-btn primary" id="rvs-publish-btn">Publish</button>
+        <button class="rvs-btn" id="rvs-history-btn">History</button>
+      </div>
+    `;
+
+    el.classList.add('show');
+
+    document.getElementById('rvs-publish-btn')
+      ?.addEventListener('click', publishRoster);
+
+    document.getElementById('rvs-history-btn')
+      ?.addEventListener('click', openRosterHistory);
+
+    return;
+  }
+
+  const versionLabel = current.versionNumber
+    ? `Version ${current.versionNumber}`
+    : 'Published';
+
+  el.innerHTML = `
+    <div class="rvs-main">
+      <span class="rvs-dot"></span>
+      <div>
+        <div class="rvs-title">Published / No unpublished changes</div>
+        <div class="rvs-meta">
+          ${versionLabel}
+          ${updatedBy ? ` · Last modified by ${updatedBy}` : ''}
+          ${updatedAt ? ` · ${updatedAt}` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+
+  el.classList.add('show');
+}
+
+async function loadRosterFromBackend(){
+  const tok=sdwGetTokenObj();
+
+  if(!tok){
+    rosterData={
+      agents:[],
+      days:{},
+      holidays:{},
+      columns:JSON.parse(JSON.stringify(DEFAULT_COLUMNS)),
+      teamMembers:[]
+    };
+    rosterApiError='Please sign in from the HUB to load live roster data.';
+    return false;
+  }
+
+  rosterLoading=true;
+  rosterApiError='';
+
+  try{
+    const me=await rosterApi('/api/auth/me');
+    currentUser=me;
+
+    const editable=isLeadUnlocked();
+
+    const endpoint=editable
+      ? '/api/roster-versions/draft'
+      : '/api/roster-versions/published';
+
+    const result=await rosterApi(endpoint);
+
+    const version=editable ? result.draft : result;
+
+    if(editable){
+      rosterVersionInfo.current = result.draft || null;
+      rosterVersionInfo.published = result.published || null;
+
+      rosterVersionInfo.hasUnpublishedChanges =
+        !!result.draft &&
+        !!result.published &&
+        !rosterSnapshotsEqual(
+          result.draft.snapshot,
+          result.published.snapshot
+        );
+    }else{
+      rosterVersionInfo.current = result;
+      rosterVersionInfo.published = result;
+      rosterVersionInfo.hasUnpublishedChanges = false;
+    }
+
+    if(!version || !version.snapshot){
+      throw new Error(
+        editable
+          ? 'No roster draft is currently available.'
+          : 'No published roster is currently available.'
+      );
+    }
+
+    const snapshot=version.snapshot;
+
+    rosterData.columns=(snapshot.columns||[]).map(c=>({
+      id:c.id,
+      key:c.key,
+      label:{
+        en:c.labelEn,
+        fa:c.labelFa||c.labelEn
+      },
+      color:c.color,
+      text:c.textColor,
+      multi:!!c.isMulti,
+      builtin:!!c.isBuiltin,
+      sortOrder:c.sortOrder
+    }));
+
+    rosterData.teamMembers=(snapshot.team||[]).map(m=>({
+      id:m.id,
+      full_name:m.fullName,
+      username:m.username,
+      is_active:m.isActive,
+      user_id:m.userId
+    }));
+
+    rosterData.agents=rosterData.teamMembers
+      .filter(m=>m.is_active!==false)
+      .map(m=>m.full_name);
+
+    rosterData.holidays=Object.fromEntries(
+      (snapshot.holidays||[]).map(h=>[h.date,h.label])
+    );
+
+    rosterData.days={};
+
+    for(const entry of (snapshot.entries||[])){
+      if(!rosterData.days[entry.date]){
+        rosterData.days[entry.date]={};
+      }
+
+      const col=getColumnFromSnapshot(
+        rosterData.columns,
+        entry.columnKey
+      );
+
+      const memberNames=(entry.memberIds||[])
+        .map(id=>{
+          const member=rosterData.teamMembers.find(m=>m.id===id);
+          return member ? member.full_name : null;
+        })
+        .filter(Boolean);
+
+      if(entry.freeText){
+        memberNames.push(entry.freeText);
+      }
+
+      if(col.multi){
+        rosterData.days[entry.date][entry.columnKey]=memberNames;
+      }else{
+        rosterData.days[entry.date][entry.columnKey]=memberNames[0]||'';
+      }
+    }
+
+    if(!rosterData.columns.length){
+      rosterData.columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
+    }
+
+    if(editable){
+      try{
+        await syncCentralMembersIntoRosterData();
+      }catch(e){
+        console.warn('Unable to sync central members:', e);
+      }
+    }
+
+    rosterLoading=false;
+    renderRoster();
+    renderRosterVersionStatus();
+    return true;
+
+  }catch(e){
+    rosterLoading=false;
+    rosterApiError=e.message;
+    renderRoster();
+    return false;
+  }
+}
+async function syncCentralMembersIntoRosterData(){
+  const members = await rosterApi('/api/members?active=true');
+
+  const normalized = (Array.isArray(members) ? members : []).map(m => ({
+    id: m.id,
+    user_id: m.userId ?? null,
+    full_name: m.fullName,
+    username: m.username ?? null,
+    is_active: m.isActive !== false
+  }));
+
+  const existingById = new Map(
+    (rosterData.teamMembers || []).map(m => [m.id, m])
+  );
+
+  normalized.forEach(member => {
+    existingById.set(member.id, {
+      ...existingById.get(member.id),
+      ...member
+    });
+  });
+
+  rosterData.teamMembers = Array.from(existingById.values());
+
+  rosterData.agents = rosterData.teamMembers
+    .filter(m => m.is_active !== false)
+    .map(m => m.full_name);
+}
+
+async function putRosterEntry(dateKey,colKey){
+  if(!isLeadUnlocked()) throw new Error('Insufficient permissions');
+
+  await syncCentralMembersIntoRosterData();
+
+  const snapshot={
+    columns:rosterData.columns.map(c=>({
+      id:c.id,
+      key:c.key,
+      color:c.color,
+      isMulti:!!c.multi,
+      labelEn:c.label.en,
+      labelFa:c.label.fa||c.label.en,
+      isBuiltin:!!c.builtin,
+      sortOrder:c.sortOrder||0,
+      textColor:c.text
+    })),
+
+    team:rosterData.teamMembers.map(m=>({
+      id:m.id,
+      userId:m.user_id??null,
+      fullName:m.full_name,
+      isActive:m.is_active!==false,
+      username:m.username??null
+    })),
+
+    holidays:Object.entries(rosterData.holidays).map(([date,label])=>({
+      id:null,
+      date,
+      label
+    })),
+
+    entries:[]
+  };
+
+  let entryId=1;
+
+  for(const [date,cell] of Object.entries(rosterData.days)){
+    for(const col of rosterData.columns){
+      const raw=cell[col.key];
+
+      const names=col.multi
+        ? (Array.isArray(raw)?raw:[])
+        : (raw?[raw]:[]);
+
+      if(!names.length) continue;
+
+      const memberIds=[];
+      const freeTexts=[];
+
+      names.forEach(name=>{
+        const member=rosterData.teamMembers.find(
+          m=>m.full_name===name
+        );
+
+        if(member){
+          memberIds.push(member.id);
+        }else{
+          freeTexts.push(name);
+        }
+      });
+
+      if(memberIds.length || freeTexts.length){
+        snapshot.entries.push({
+          id:entryId++,
+          date,
+          columnId:col.id,
+          freeText:freeTexts.length ? freeTexts.join(', ') : null,
+          columnKey:col.key,
+          memberIds
+        });
+      }
+    }
+  }
+
+  await rosterApi('/api/roster-versions/draft',{
+    method:'PUT',
+    body:JSON.stringify({snapshot})
+  });
+
+  const versionResult = await rosterApi('/api/roster-versions/draft');
+
+  rosterVersionInfo.current = versionResult.draft || null;
+  rosterVersionInfo.published = versionResult.published || null;
+  rosterVersionInfo.hasUnpublishedChanges =
+    !!versionResult.draft &&
+    !!versionResult.published &&
+    !rosterSnapshotsEqual(
+      versionResult.draft.snapshot,
+      versionResult.published.snapshot
+    );
+
+  renderRosterVersionStatus();
+}
+async function addTeamMemberApi(name){ return rosterApi('/api/roster/team',{method:'POST',body:JSON.stringify({fullName:name})}); }
+async function deleteTeamMemberApi(id){ return rosterApi('/api/roster/team/'+encodeURIComponent(id),{method:'DELETE'}); }
+async function addHolidayApi(date,label){ return rosterApi('/api/roster/holidays',{method:'POST',body:JSON.stringify({date,label})}); }
+async function deleteHolidayApi(date){ return rosterApi('/api/roster/holidays/'+encodeURIComponent(date),{method:'DELETE'}); }
+async function addColumnApi(c){ return rosterApi('/api/roster/columns',{method:'POST',body:JSON.stringify({key:c.key,labelEn:c.label.en,labelFa:c.label.fa,color:c.color,textColor:c.text,isMulti:c.multi})}); }
+async function patchColumnApi(c){ return rosterApi('/api/roster/columns/'+encodeURIComponent(c.id),{method:'PATCH',body:JSON.stringify({labelEn:c.label.en,labelFa:c.label.fa,color:c.color,textColor:c.text})}); }
+async function deleteColumnApi(id){ return rosterApi('/api/roster/columns/'+encodeURIComponent(id),{method:'DELETE'}); }
 
 function getColumn(key){ return rosterData.columns.find(c=>c.key===key) || { key, label:{en:key,fa:key}, color:'#E2E8F0', text:'#64748B', multi:true, builtin:false }; }
+function getColumnFromSnapshot(columns, key){ return (columns || []).find(c=>c.key===key) || { key, label:{en:key,fa:key}, color:'#E2E8F0', text:'#64748B', multi:true, builtin:false }; }
 function colLabel(col){ return col.label[currentLang] || col.label.en; }
 function dayCell(dateKey){
   if (!rosterData.days[dateKey]) rosterData.days[dateKey] = {};
@@ -868,6 +1350,116 @@ function isOfficialHoliday(d){ return !!rosterData.holidays[ymd(d)]; }
 function isHoliday(d){ return isWeeklyOff(d) || isOfficialHoliday(d); }
 
 /* ---------- Toolbar ---------- */
+
+async function publishRoster(){
+  if(!isLeadUnlocked()) return;
+
+  if(!confirm('Publish the current roster draft?')) return;
+
+  try{
+    await rosterApi('/api/roster-versions/publish',{
+      method:'POST'
+    });
+
+    alert('Roster published successfully.');
+    await loadRosterFromBackend();
+
+  }catch(e){
+    alert(e.message || 'Unable to publish roster.');
+  }
+}
+
+async function openRosterHistory(){
+  try{
+    const history = await rosterApi('/api/roster-versions/history');
+
+    const rows = (history || []).length
+      ? history.map(v => `
+          <div class="shiftmgr-row">
+            <div style="flex:1;">
+              <div style="font-weight:700;">
+                Version ${v.versionNumber}
+              </div>
+
+              <div class="muted" style="font-size:11px;">
+                ${v.status}
+              </div>
+            </div>
+
+            <span class="badge ${
+              v.status === 'published' ? 'agent' : 'inactive'
+            }">
+              ${v.status}
+            </span>
+          </div>
+        `).join('')
+      : `
+          <div class="empty">
+            No roster history found.
+          </div>
+        `;
+
+    let overlay = document.getElementById('rosterHistoryOverlay');
+
+    if(!overlay){
+      overlay = document.createElement('div');
+      overlay.id = 'rosterHistoryOverlay';
+      overlay.className = 'lead-overlay';
+
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e)=>{
+        if(e.target === overlay){
+          overlay.classList.remove('show');
+        }
+      });
+    }
+
+    overlay.innerHTML = `
+      <div class="lead-modal" style="max-width:520px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <h3>📜 Roster History</h3>
+            <p>Published and archived roster versions.</p>
+          </div>
+
+          <button type="button" class="tbtn" id="roster-history-close">
+            ✕
+          </button>
+        </div>
+
+        <div style="max-height:360px;overflow-y:auto;margin-top:16px;">
+          ${rows}
+        </div>
+
+        <div class="lead-actions" style="margin-top:16px;">
+          <button type="button" class="tbtn" id="roster-history-done">
+            ${t('done')}
+          </button>
+        </div>
+      </div>
+    `;
+
+    overlay.classList.add('show');
+
+    const close = ()=>{
+      overlay.classList.remove('show');
+    };
+
+    document
+      .getElementById('roster-history-close')
+      .addEventListener('click', close);
+
+    document
+      .getElementById('roster-history-done')
+      .addEventListener('click', close);
+
+  }catch(e){
+    alert(e.message || 'Unable to load roster history.');
+  }
+}
+
+
 function renderRosterActionBar(){
   const editable = isLeadUnlocked();
   const end = nextJalaliMonth(currentJY, currentJM);
@@ -877,10 +1469,11 @@ function renderRosterActionBar(){
 
   document.getElementById('roster-action-bar').innerHTML = `
     <div class="roster-action-btns">
-      ${editable ? `<button class="rab-btn" id="roster-manage-team-btn"><span class="rab-icon">👥</span>${t('manageTeam')}</button>` : ''}
       ${editable ? `<button class="rab-btn" id="roster-manage-holidays-btn"><span class="rab-icon">📅</span>${t('manageHolidays')}</button>` : ''}
       ${editable ? `<button class="rab-btn" id="roster-manage-cols-btn"><span class="rab-icon">🎨</span>${t('manageShifts')}</button>` : ''}
       ${editable ? `<button class="rab-btn primary" id="roster-import-btn"><span class="rab-icon">📥</span>${t('importExcel')}</button>` : ''}
+      ${editable ? `<button class="rab-btn" id="roster-publish-btn"><span class="rab-icon">🚀</span>Publish</button>` : ''}
+      ${editable ? `<button class="rab-btn" id="roster-history-btn"><span class="rab-icon">📜</span>History</button>` : ''}
       <input type="file" id="roster-import-input" accept=".xlsx,.xls" style="display:none;">
     </div>
     <div class="period-pill-group">
@@ -902,28 +1495,19 @@ function renderRosterActionBar(){
     document.getElementById('roster-manage-cols-btn').addEventListener('click', openColumnManager);
     document.getElementById('roster-manage-cols-btn2').addEventListener('click', openColumnManager);
     document.getElementById('roster-manage-holidays-btn').addEventListener('click', openHolidayManager);
-    document.getElementById('roster-manage-team-btn').addEventListener('click', openTeamManager);
     document.getElementById('roster-import-btn').addEventListener('click', ()=>document.getElementById('roster-import-input').click());
     document.getElementById('roster-import-input').addEventListener('change', (e)=>{
       const file = e.target.files[0];
       if (file) importFromExcelFile(file);
       e.target.value = '';
     });
+
+    document.getElementById('roster-publish-btn').addEventListener('click', publishRoster);
+    document.getElementById('roster-history-btn').addEventListener('click', openRosterHistory);
   }
 }
 
 const SHIFT_ICONS = { day1:'☀️', day2:'🌤️', hq:'🏢', night1:'🌙', night2:'🌙', oncall:'🔔', off:'🚫', leaveRequest:'📩', cab:'📋' };
-function renderShiftStrip(){
-  document.getElementById('shift-strip').innerHTML = rosterData.columns.map(c=>{
-    const icon = SHIFT_ICONS[c.key] || '🏷️';
-    const timePart = colLabel(c).match(/\(([^)]+)\)/);
-    return `<div class="shift-strip-item">
-        <div class="ss-icon" style="background:${c.color}; color:${c.text};">${icon}</div>
-        <div class="ss-text"><b>${colLabel(c).replace(/\s*\([^)]*\)/,'')}</b>${timePart?`<span>${timePart[1]}</span>`:''}</div>
-      </div>`;
-  }).join('');
-}
-
 let rosterSearchTerm = '';
 let rosterFilters = { holidaysOnly:false, todayOnly:false };
 function renderSearchBar(){
@@ -950,13 +1534,130 @@ function renderSearchBar(){
     </div>
   `;
   document.getElementById('roster-search-input').addEventListener('input', (e)=>{ rosterSearchTerm = e.target.value; renderRosterTable(); });
-  document.getElementById('team-view-all-btn').addEventListener('click', openTeamManager);
+  document.getElementById('team-view-all-btn').addEventListener('click', openMemberViewer);
   const toggleBtn = document.getElementById('filters-toggle-btn');
   const panel = document.getElementById('filters-panel');
   toggleBtn.addEventListener('click', (e)=>{ e.stopPropagation(); panel.classList.toggle('show'); });
   document.addEventListener('click', ()=> panel.classList.remove('show'), { once:true });
   document.getElementById('filter-holidays').addEventListener('change', (e)=>{ rosterFilters.holidaysOnly = e.target.checked; renderRosterTable(); });
   document.getElementById('filter-today').addEventListener('change', (e)=>{ rosterFilters.todayOnly = e.target.checked; renderRosterTable(); });
+}
+
+async function openMemberViewer(){
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[ch]));
+  let overlay = document.getElementById('memberViewerOverlay');
+
+  if (!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'memberViewerOverlay';
+    overlay.className = 'lead-overlay';
+
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e)=>{
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  }
+
+  overlay.innerHTML = `
+    <div class="lead-modal" style="max-width:520px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <h3>👥 ${t('viewAll')}</h3>
+          <p>Roster members available for shift assignment.</p>
+        </div>
+
+        <button type="button" class="tbtn" id="member-viewer-close">✕</button>
+      </div>
+
+      <div
+        id="member-viewer-rows"
+        style="max-height:360px;overflow-y:auto;margin-top:16px;"
+      >
+        <div class="empty">Loading members...</div>
+      </div>
+
+      <div class="lead-actions" style="margin-top:16px;">
+        <button type="button" class="tbtn" id="member-viewer-done">
+          ${t('done')}
+        </button>
+      </div>
+    </div>
+  `;
+
+  overlay.classList.add('show');
+
+  const close = ()=>{
+    overlay.classList.remove('show');
+  };
+
+  document
+    .getElementById('member-viewer-close')
+    .addEventListener('click', close);
+
+  document
+    .getElementById('member-viewer-done')
+    .addEventListener('click', close);
+
+  try{
+    const members = await rosterApi('/api/members?active=true');
+
+    const rows = (members || []).length
+      ? members
+          .sort((a,b)=>
+            String(a.fullName || '').localeCompare(
+              String(b.fullName || ''),
+              undefined,
+              { sensitivity:'base' }
+            )
+          )
+          .map(m => `
+            <div class="shiftmgr-row">
+              <div style="display:flex;align-items:center;gap:10px;flex:1;">
+                <span class="tp-avatar">
+                  ${initials(m.fullName || '')}
+                </span>
+
+                <div>
+                  <div style="font-weight:700;color:var(--text);">
+                    ${escapeHtml(m.fullName || '—')}
+                  </div>
+
+                  ${m.username
+                    ? `<div class="muted" style="font-size:11px;">
+                         ${escapeHtml(m.username)}
+                       </div>`
+                    : ''}
+                </div>
+              </div>
+
+              <span class="badge agent">
+                Active
+              </span>
+            </div>
+          `)
+          .join('')
+      : `
+          <div class="empty">
+            No active roster members found.
+          </div>
+        `;
+
+    document.getElementById('member-viewer-rows').innerHTML = rows;
+
+  }catch(e){
+    document.getElementById('member-viewer-rows').innerHTML = `
+      <div class="empty">
+        ${escapeHtml(e.message || 'Unable to load roster members.')}
+      </div>
+    `;
+  }
 }
 
 function exportRosterCsv(){
@@ -1018,7 +1719,8 @@ function initials(name){
 
 function renderRoster(){
   renderRosterActionBar();
-  renderShiftStrip();
+  renderRosterVersionStatus();
+
   renderSearchBar();
   renderRosterTable();
   renderDragPool();
@@ -1114,7 +1816,13 @@ function renderMiniCalendar(){
 
 function renderRosterTable(){
   const editable = isLeadUnlocked();
-  document.getElementById('roster-lock-note').style.display = editable ? 'none' : 'block';
+  const lockNote=document.getElementById('roster-lock-note');
+  lockNote.style.display = editable ? 'none' : 'block';
+  if(!editable){
+    lockNote.innerHTML = rosterApiError
+      ? `🔒 ${rosterApiError}`
+      : '🔒 Sign in to the HUB with an Admin or Leadership account to edit the roster.';
+  }
 
   let dates = currentMonthDates();
   const today = new Date();
@@ -1162,7 +1870,7 @@ function renderRosterTable(){
 
     tbody += `<tr class="${rowCls}">
       <td class="date-col">${md}</td>
-      <td class="date-col greg-sub">${jal}</td>
+      <td class="date-col"><span class="greg-sub">${jal}</span></td>
       <td class="date-col">${wd}${badges}</td>`;
 
     rosterData.columns.forEach(c=>{
@@ -1232,7 +1940,7 @@ function openDayDetails(dateKey){
 }
 
 /* ---------- Shared assign/remove helpers (used by drag-drop, chip ✕, and the cell editor modal) ---------- */
-function assignName(dateKey, colKey, name){
+async function assignName(dateKey, colKey, name){
   const col = getColumn(colKey);
   const cell = dayCell(dateKey);
   if (col.multi){
@@ -1242,15 +1950,15 @@ function assignName(dateKey, colKey, name){
   } else {
     cell[colKey] = name;
   }
-  saveRoster(rosterData);
+  try{ await putRosterEntry(dateKey,colKey); }catch(e){ alert(e.message); return; }
   renderRoster();
 }
-function removeName(dateKey, colKey, name){
+async function removeName(dateKey, colKey, name){
   const col = getColumn(colKey);
   const cell = dayCell(dateKey);
   if (col.multi){ cell[colKey] = (cell[colKey]||[]).filter(n=>n!==name); }
   else { cell[colKey] = ''; }
-  saveRoster(rosterData);
+  try{ await putRosterEntry(dateKey,colKey); }catch(e){ alert(e.message); return; }
   renderRoster();
 }
 
@@ -1339,6 +2047,21 @@ function splitNames(raw){
     .filter(s=>s && !IMPORT_PLACEHOLDER_TOKENS.has(s.toLowerCase()));
 }
 
+async function syncImportedRosterToBackend(){
+  if(!isLeadUnlocked()) throw new Error('Sign in to the HUB with an Admin or Leadership account to import roster data.');
+  const existingByName=new Map(rosterData.teamMembers.map(m=>[m.full_name,m]));
+  for(const name of rosterData.agents){ if(!existingByName.has(name)){ const m=await addTeamMemberApi(name); rosterData.teamMembers.push(m); existingByName.set(name,m); } }
+  for(const c of rosterData.columns){
+    if(!c.id){ const saved=await addColumnApi(c); c.id=saved.id; }
+  }
+  for(const [dateKey,cell] of Object.entries(rosterData.days)){
+    for(const col of rosterData.columns){
+      if(cell[col.key]===undefined) continue;
+      await putRosterEntry(dateKey,col.key);
+    }
+  }
+}
+
 async function importFromExcelFile(file){
   if (typeof XLSX === 'undefined'){ alert(t('importLibFail')); return; }
   const buf = await file.arrayBuffer();
@@ -1414,9 +2137,7 @@ async function importFromExcelFile(file){
   }
 
   rosterData.agents = Array.from(newAgents).filter(Boolean);
-  saveRoster(rosterData);
-  renderRoster();
-  alert(t('importDone').replace('{n}', importedDays));
+  try{ await syncImportedRosterToBackend(); renderRoster(); alert(t('importDone').replace('{n}', importedDays)); }catch(e){ alert(e.message); }
 }
 
 /* ---------- Cell editor (works for both multi-name and single-name columns) ---------- */
@@ -1458,7 +2179,7 @@ function renderCellEditor(overlay, dateKey, col){
     </div>
   </div>`;
 
-  function addName(name){
+  async function addName(name){
     if (!name) return;
     if (col.multi){
       const list = Array.isArray(cell[col.key]) ? cell[col.key] : [];
@@ -1467,15 +2188,15 @@ function renderCellEditor(overlay, dateKey, col){
     } else {
       cell[col.key] = name;
     }
-    saveRoster(rosterData);
+    try{ await putRosterEntry(dateKey,col.key); }catch(e){ alert(e.message); return; }
     renderCellEditor(overlay, dateKey, col);
     renderRoster();
   }
-  overlay.querySelectorAll('[data-rm-name]').forEach(btn=>btn.addEventListener('click', ()=>{
+  overlay.querySelectorAll('[data-rm-name]').forEach(btn=>btn.addEventListener('click', async ()=>{
     const name = btn.dataset.rmName;
     if (col.multi){ cell[col.key] = (cell[col.key]||[]).filter(n=>n!==name); }
     else { cell[col.key] = ''; }
-    saveRoster(rosterData);
+    try{ await putRosterEntry(dateKey,col.key); }catch(e){ alert(e.message); return; }
     renderCellEditor(overlay, dateKey, col);
     renderRoster();
   }));
@@ -1506,11 +2227,79 @@ function openTeamManager(){
   renderTeamManager(overlay);
   overlay.classList.add('show');
 }
+async function putRosterDraft(){
+  if(!isLeadUnlocked()){
+    throw new Error('Insufficient permissions');
+  }
+
+  const snapshot={
+    columns:rosterData.columns.map(c=>({
+      id:c.id,key:c.key,color:c.color,isMulti:!!c.multi,
+      labelEn:c.label.en,labelFa:c.label.fa||c.label.en,
+      isBuiltin:!!c.builtin,sortOrder:c.sortOrder||0,textColor:c.text
+    })),
+    team:rosterData.teamMembers.map(m=>({
+      id:m.id,userId:m.user_id??null,fullName:m.full_name,
+      isActive:m.is_active!==false,username:m.username??null
+    })),
+    holidays:Object.entries(rosterData.holidays).map(([date,label])=>({
+      id:null,date,label
+    })),
+    entries:[]
+  };
+
+  let entryId=1;
+  for(const [date,cell] of Object.entries(rosterData.days)){
+    for(const col of rosterData.columns){
+      const raw=cell[col.key];
+      const names=col.multi ? (Array.isArray(raw)?raw:[]) : (raw?[raw]:[]);
+      if(!names.length) continue;
+
+      const memberIds=[];
+      const freeTexts=[];
+
+      names.forEach(name=>{
+        const member=rosterData.teamMembers.find(m=>m.full_name===name);
+        if(member && Number(member.id)>0) memberIds.push(member.id);
+        else freeTexts.push(name);
+      });
+
+      if(memberIds.length || freeTexts.length){
+        snapshot.entries.push({
+          id:entryId++,date,columnId:col.id,
+          freeText:freeTexts.length ? freeTexts.join(', ') : null,
+          columnKey:col.key,memberIds
+        });
+      }
+    }
+  }
+
+  await rosterApi('/api/roster-versions/draft',{
+    method:'PUT',
+    body:JSON.stringify({snapshot})
+  });
+
+  const versionResult = await rosterApi('/api/roster-versions/draft');
+
+  rosterVersionInfo.current = versionResult.draft || null;
+  rosterVersionInfo.published = versionResult.published || null;
+  rosterVersionInfo.hasUnpublishedChanges =
+    !!versionResult.draft &&
+    !!versionResult.published &&
+    !rosterSnapshotsEqual(
+      versionResult.draft.snapshot,
+      versionResult.published.snapshot
+    );
+
+  renderRosterVersionStatus();
+}
+
 function renderTeamManager(overlay){
   const rows = rosterData.agents.map(a=>`<div class="shiftmgr-row">
       <span class="shiftmgr-label" style="flex:1; border:none; padding:6px 2px;">${a}</span>
       <button class="agent-rm" data-remove-agent="${a}" title="${t('remove')}">✕</button>
     </div>`).join('') || `<div class="leave-req-empty" style="padding:8px 0;">—</div>`;
+
   overlay.innerHTML = `<div class="lead-modal" style="max-width:420px;">
     <h3>👥 ${t('manageTeam')}</h3>
     <p>${t('manageTeamDesc')}</p>
@@ -1523,21 +2312,67 @@ function renderTeamManager(overlay){
       <button class="tbtn" id="teammgr-close">${t('done')}</button>
     </div>
   </div>`;
-  overlay.querySelectorAll('[data-remove-agent]').forEach(btn=>btn.addEventListener('click', ()=>{
-    rosterData.agents = rosterData.agents.filter(a=>a!==btn.dataset.removeAgent);
-    saveRoster(rosterData);
-    renderTeamManager(overlay);
-  }));
-  document.getElementById('teammgr-add-btn').addEventListener('click', ()=>{
-    const inp = document.getElementById('teammgr-new-name');
-    const name = inp.value.trim();
-    if (!name) return;
-    if (rosterData.agents.includes(name)){ alert(t('alreadyInRoster')); return; }
-    rosterData.agents.push(name);
-    saveRoster(rosterData);
+
+  overlay.querySelectorAll('[data-remove-agent]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const name=btn.dataset.removeAgent;
+      rosterData.agents=rosterData.agents.filter(a=>a!==name);
+
+      const member=rosterData.teamMembers.find(m=>m.full_name===name);
+      if(member){
+        rosterData.teamMembers=rosterData.teamMembers.filter(m=>m.id!==member.id);
+      }
+
+      rosterData.agents=rosterData.teamMembers
+        .filter(m=>m.is_active!==false)
+        .map(m=>m.full_name);
+
+      try{
+        await putRosterDraft();
+      }catch(e){
+        alert(e.message);
+        return;
+      }
+
+      renderTeamManager(overlay);
+      renderRoster();
+    });
+  });
+
+  document.getElementById('teammgr-add-btn').addEventListener('click', async ()=>{
+    const inp=document.getElementById('teammgr-new-name');
+    const name=inp.value.trim();
+    if(!name) return;
+
+    if(rosterData.teamMembers.some(m=>m.full_name===name)){
+      alert(t('alreadyInRoster'));
+      return;
+    }
+
+    const ids=rosterData.teamMembers.map(m=>Number(m.id)).filter(Number.isFinite);
+    const negativeIds=ids.filter(id=>id<0);
+    const nextId=negativeIds.length ? Math.min(...negativeIds)-1 : -1;
+
+    rosterData.teamMembers.push({
+      id:nextId,user_id:null,username:null,full_name:name,is_active:true
+    });
+
+    rosterData.agents=rosterData.teamMembers
+      .filter(m=>m.is_active!==false)
+      .map(m=>m.full_name);
+
+    try{
+      await putRosterDraft();
+    }catch(e){
+      alert(e.message);
+      return;
+    }
+
     inp.value='';
     renderTeamManager(overlay);
+    renderRoster();
   });
+
   document.getElementById('teammgr-close').addEventListener('click', ()=>{
     overlay.classList.remove('show');
   });
@@ -1584,13 +2419,13 @@ function renderHolidayManager(overlay){
       <button class="tbtn" id="holidaymgr-close">${t('done')}</button>
     </div>
   </div>`;
-  overlay.querySelectorAll('[data-remove-holiday]').forEach(btn=>btn.addEventListener('click', ()=>{
+  overlay.querySelectorAll('[data-remove-holiday]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    try{ await deleteHolidayApi(btn.dataset.removeHoliday); }catch(e){ alert(e.message); return; }
     delete rosterData.holidays[btn.dataset.removeHoliday];
-    saveRoster(rosterData);
     renderHolidayManager(overlay);
     renderRoster();
   }));
-  document.getElementById('holidaymgr-add-btn').addEventListener('click', ()=>{
+  document.getElementById('holidaymgr-add-btn').addEventListener('click', async ()=>{
     const jy = Number(document.getElementById('holidaymgr-jy').value);
     const jm = Number(document.getElementById('holidaymgr-jm').value);
     const jd = Number(document.getElementById('holidaymgr-jd').value);
@@ -1598,8 +2433,8 @@ function renderHolidayManager(overlay){
     if (!jy || !jm || !jd) return;
     const [gy,gm,gd] = jalaliToGregorian(jy, jm, jd);
     const date = `${gy}-${String(gm).padStart(2,'0')}-${String(gd).padStart(2,'0')}`;
+    try{ await addHolidayApi(date,label); }catch(e){ alert(e.message); return; }
     rosterData.holidays[date] = label;
-    saveRoster(rosterData);
     renderHolidayManager(overlay);
     renderRoster();
   });
@@ -1642,32 +2477,33 @@ function renderColumnManager(overlay){
       <button class="tbtn" id="colmgr-close">${t('done')}</button>
     </div>
   </div>`;
-  overlay.querySelectorAll('[data-color]').forEach(inp=>inp.addEventListener('input', ()=>{
-    getColumn(inp.dataset.color).color = inp.value;
-    saveRoster(rosterData);
+  overlay.querySelectorAll('[data-color]').forEach(inp=>inp.addEventListener('change', async ()=>{
+    const c=getColumn(inp.dataset.color); c.color=inp.value;
+    try{ await patchColumnApi(c); }catch(e){ alert(e.message); return; }
   }));
-  overlay.querySelectorAll('[data-label]').forEach(inp=>inp.addEventListener('change', ()=>{
+  overlay.querySelectorAll('[data-label]').forEach(inp=>inp.addEventListener('change', async ()=>{
     const col = getColumn(inp.dataset.label);
     col.label[currentLang] = inp.value;
-    saveRoster(rosterData);
+    try{ await patchColumnApi(col); }catch(e){ alert(e.message); return; }
   }));
-  overlay.querySelectorAll('[data-remove-col]').forEach(btn=>btn.addEventListener('click', ()=>{
+  overlay.querySelectorAll('[data-remove-col]').forEach(btn=>btn.addEventListener('click', async ()=>{
     if (!confirm(t('confirmRemoveShift'))) return;
     const key = btn.dataset.removeCol;
+    const col=getColumn(key);
+    try{ await deleteColumnApi(col.id); }catch(e){ alert(e.message); return; }
     rosterData.columns = rosterData.columns.filter(c=>c.key!==key);
     Object.values(rosterData.days).forEach(cell=>{ delete cell[key]; });
-    saveRoster(rosterData);
     renderColumnManager(overlay);
     renderRoster();
   }));
-  document.getElementById('colmgr-add-btn').addEventListener('click', ()=>{
+  document.getElementById('colmgr-add-btn').addEventListener('click', async ()=>{
     const label = document.getElementById('colmgr-new-label').value.trim();
     const color = document.getElementById('colmgr-new-color').value;
     const type = document.getElementById('colmgr-new-type').value;
     if (!label) return;
     const key = 'custom_' + Date.now();
-    rosterData.columns.push({ key, label:{en:label, fa:label}, color, text:'#1E293B', multi: type==='multi', builtin:false });
-    saveRoster(rosterData);
+    const c={ key, label:{en:label, fa:label}, color, text:'#1E293B', multi: type==='multi', builtin:false };
+    try{ const saved=await addColumnApi(c); c.id=saved.id; rosterData.columns.push(c); }catch(e){ alert(e.message); return; }
     renderColumnManager(overlay);
     renderRoster();
   });
@@ -1678,6 +2514,7 @@ function renderColumnManager(overlay){
 }
 
 applyI18n();
+loadRosterFromBackend();
 </script>
 </body>
 </html>

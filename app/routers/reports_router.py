@@ -10,9 +10,10 @@ from sqlalchemy.orm import Session
 
 from ..db.session import get_db
 from ..db.models import SdcmReport, AiccReport, SlaReport
-from ..auth import require_auth, CurrentUser
+from ..auth import require_auth, require_role, CurrentUser
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
+can_save = require_role("admin", "team_leader", "supervisor")
 
 REPORT_MODELS = {
     "sdcm": SdcmReport,
@@ -38,7 +39,7 @@ def save_snapshot(
     report_type: str,
     body: ReportSnapshotIn,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(require_auth),
+    user: CurrentUser = Depends(can_save),
 ):
     """Upserts one day's summary — re-uploading the same date's report
     just replaces that day's snapshot instead of creating a duplicate."""
