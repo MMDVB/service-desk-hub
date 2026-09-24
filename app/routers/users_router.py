@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..db.session import get_db
-from ..db.models import User, TeamMember
+from ..db.models import User, TeamMember, TeamAssignment
 from ..auth import require_auth, require_role, hash_password, CurrentUser
 from ..audit import write_audit
 
@@ -94,6 +94,7 @@ class UserPatch(BaseModel):
     role: Optional[str] = Field(default=None, pattern="^(admin|team_leader|supervisor|agent)$")
     isActive: Optional[bool] = None
     password: Optional[str] = Field(default=None, min_length=8)
+    addToMembers: Optional[bool] = None
 
 
 @router.patch("/{user_id}")
@@ -122,6 +123,37 @@ def update_user(user_id: int, body: UserPatch, db: Session = Depends(get_db), cu
         user.password_hash = hash_password(body.password)
 
     member = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()
+
+    if body.addToMembers is True:
+        if member:
+            member.is_active = True
+            member.full_name = user.display_name
+            member.username = user.username
+        else:
+            member = TeamMember(
+                full_name=user.display_name,
+                username=user.username,
+                is_active=True,
+                user_id=user.id,
+            )
+            db.add(member)
+            db.flush()
+
+    elif body.addToMembers is False and member:
+        assignment = (
+            db.query(TeamAssignment)
+            .filter(TeamAssignment.team_member_id == member.id)
+            .first()
+        )
+
+        if assignment:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Remove this member from the team before disabling the Member status",
+            )
+
+        member.is_active = False
+
     if member:
         if body.displayName is not None:
             member.full_name = user.display_name

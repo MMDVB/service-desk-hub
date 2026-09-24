@@ -65,3 +65,5 @@ reports/
 backups/
 *.bak
 *.backup
+
+sql/003_teams_permissions.before-user-link.sql

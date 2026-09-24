@@ -193,6 +193,58 @@ def list_supervisors(
     ]
 
 
+@router.get("/agents")
+def list_team_agents(
+    db: Session = Depends(get_db),
+    current: CurrentUser = Depends(require_permission("teams.view")),
+):
+    members = (
+        db.query(TeamMember)
+        .join(User, User.id == TeamMember.user_id)
+        .filter(
+            TeamMember.is_active.is_(True),
+            User.is_active.is_(True),
+            User.role == "agent",
+        )
+        .order_by(User.display_name.asc())
+        .all()
+    )
+
+    result = []
+
+    for member in members:
+        assignment = (
+            db.query(TeamAssignment)
+            .filter(TeamAssignment.team_member_id == member.id)
+            .first()
+        )
+
+        assigned_team = None
+
+        if assignment:
+            team = db.query(Team).filter(Team.id == assignment.team_id).first()
+
+            if team:
+                assigned_team = {
+                    "id": team.id,
+                    "name": team.name,
+                    "isActive": team.is_active,
+                }
+
+        result.append(
+            {
+                "id": member.id,
+                "fullName": member.full_name,
+                "username": member.username,
+                "userId": member.user_id,
+                "isActive": member.is_active,
+                "assignedTeam": assigned_team,
+            }
+        )
+
+    return result
+
+
 @router.get("/{team_id}")
 def get_team(
     team_id: int,
@@ -426,19 +478,34 @@ def add_member(
             detail="Team member not found",
         )
 
+    if not member.user or not member.user.is_active:
+        raise HTTPException(
+            status_code=400,
+            detail="Team member must be linked to an active user",
+        )
+
+    if member.user.role != "agent":
+        raise HTTPException(
+            status_code=400,
+            detail="Only agent users can be assigned to a team",
+        )
+
     existing = (
         db.query(TeamAssignment)
-        .filter(
-            TeamAssignment.team_id == team.id,
-            TeamAssignment.team_member_id == member.id,
-        )
+        .filter(TeamAssignment.team_member_id == member.id)
         .first()
     )
 
     if existing:
+        if existing.team_id == team.id:
+            raise HTTPException(
+                status_code=409,
+                detail="Member already assigned to this team",
+            )
+
         raise HTTPException(
             status_code=409,
-            detail="Member already assigned to this team",
+            detail="Member is already assigned to another team",
         )
 
     db.add(

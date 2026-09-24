@@ -53,7 +53,7 @@ CREATE TABLE team_assignments (
   PRIMARY KEY (team_id, team_member_id)
 );
 
-CREATE INDEX idx_team_assignments_member
+CREATE UNIQUE INDEX uq_team_assignments_member
   ON team_assignments(team_member_id);
 
 
