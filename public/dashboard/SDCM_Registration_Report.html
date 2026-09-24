@@ -115,7 +115,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   .legend-row .legend-item { display:flex; align-items:center; gap:6px; }
 
   .bar-row { display:grid; grid-template-columns:150px 1fr 44px; align-items:center; gap:10px; margin-bottom:11px; font-size:12px; }
-  .bar-row .bar-label { color:var(--text); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-row .bar-label { color:var(--text); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:break-spaces; }
   .bar-track { position:relative; height:14px; background:var(--panel-alt); border-radius:999px; overflow:hidden; box-shadow: inset 0 0 0 1px var(--border); }
   .bar-fill { position:absolute; top:0; right:0; height:100%; width:0%; border-radius:999px; background:var(--teal); transition:width .9s cubic-bezier(.22,1,.36,1); }
   .bar-val { text-align:left; font-variant-numeric:tabular-nums; font-weight:700; color:var(--text); }
@@ -137,12 +137,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; opacity:0; pointer-events:none; transition:.25s; z-index:50; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(-6px); }
   body.lang-en [dir] { direction:ltr; }
-  /* ---- Shared hub strip (Phase 2 unification) ---- */
-  .hub-strip{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:linear-gradient(90deg,#0F172A,#0B2A27); padding:10px 22px; margin:-24px -24px 20px; font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; }
-  .hub-strip-brand{ display:flex; align-items:center; gap:8px; color:#fff; text-decoration:none; font-size:13px; font-weight:800; }
-  .hub-strip-brand .hsb-icon{ width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#0D9488,#14B8A6); display:flex; align-items:center; justify-content:center; font-size:13px; }
-  .hub-strip-back{ color:#CBD5E1; text-decoration:none; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px 12px; transition:.15s; }
-  .hub-strip-back:hover{ background:rgba(255,255,255,0.15); color:#fff; }
+
 
   /* ---- Save-to-database widget (Phase 3) ---- */
   .sdhub-save-widget{ position:fixed; bottom:18px; left:18px; z-index:500; display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:8px 10px; box-shadow:0 6px 20px rgba(15,23,42,0.14); font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; }
@@ -188,6 +183,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>
     </div>
     <div class="toolbar">
+      <button class="btn" id="lang-toggle">EN</button>
       <button class="btn primary" id="snapshot-btn" data-i18n="snapshotBtn">📸 گرفتن عکس از گزارش</button>
     </div>
   </header>
@@ -283,7 +279,7 @@ const I18N = {
     sheetsFound:"sheets detected",
   }
 };
-let lang=localStorage.getItem("sdhub_lang") || "en", dict=I18N[lang];
+let lang="fa", dict=I18N.fa;
 const COLORS = { teal:"#0D9488", red:"#DC2626", blue:"#2563EB", amber:"#D97706" };
 
 // global accumulators
@@ -583,21 +579,12 @@ function applyI18n(){
   document.documentElement.lang=lang;
   document.documentElement.dir = lang==="fa"?"rtl":"ltr";
   document.body.classList.toggle("lang-en", lang==="en");
+  document.getElementById("lang-toggle").textContent = lang==="fa"?"EN":"فا";
   renderFileList();
   if (lastData) renderReport();
   updateSnapshotDate();
 }
-
-window.addEventListener("message", e=>{
-  if(e.data?.type === "sdhub:language" && (e.data.lang === "en" || e.data.lang === "fa")){
-    lang=e.data.lang; dict=I18N[lang]; applyI18n();
-  }
-});
-window.addEventListener("storage", e=>{
-  if(e.key === "sdhub_lang" && (e.newValue === "en" || e.newValue === "fa")){
-    lang=e.newValue; dict=I18N[lang]; applyI18n();
-  }
-});
+document.getElementById("lang-toggle").addEventListener("click", ()=>{ lang = lang==="fa"?"en":"fa"; applyI18n(); });
 
 document.getElementById("snapshot-btn").addEventListener("click", async ()=>{
   if (!lastData){ showError(dict.errParse); return; }
@@ -618,6 +605,7 @@ applyI18n();
   <span class="ssw-status" id="sdhubStatus">Using HUB session</span>
   <button class="ssw-save" id="sdhubSaveBtn" disabled>💾 Save to history</button>
 </div>
+
 <script>
 window.SDHUB_REPORT_TYPE = 'sdcm';
 window.sdhubGetSummary = function(){ return window.__sdhubLastSummary || null; };
