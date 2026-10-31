@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=9" />
+<meta charset="utf-8" />
+<title>OOSLA / PIT Daily Report Master</title>
+<HTA:APPLICATION
+    ID="OOSLA_PIT_MASTER"
+    APPLICATIONNAME="OOSLA / PIT Daily Report Master"
+    BORDER="thin"
+    BORDERSTYLE="normal"
+    CAPTION="yes"
+    ICON=""
+    MAXIMIZEBUTTON="no"
+    MINIMIZEBUTTON="yes"
+    SHOWINTASKBAR="yes"
+    SINGLEINSTANCE="yes"
+    SYSMENU="yes"
+    WINDOWSTATE="normal"
+/>
+<style>
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; width:100%; height:100%; }
+body {
+    font-family: Segoe UI, Arial, sans-serif;
+    background:#f4f6f8;
+    color:#1f2937;
+    font-size:13px;
+}
+.wrap { width:760px; margin:0 auto; padding:22px; }
+.header { margin-bottom:18px; }
+h1 { margin:0; font-size:23px; color:#111827; }
+.sub { margin:6px 0 0; color:#6b7280; line-height:1.45; }
+.card {
+    background:#fff;
+    border:1px solid #d9dee5;
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:14px;
+}
+.row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.title { font-size:14px; font-weight:600; margin-bottom:10px; color:#111827; }
+.path {
+    background:#f8fafc;
+    border:1px solid #e5e7eb;
+    border-radius:7px;
+    padding:8px 10px;
+    color:#4b5563;
+    word-break:break-all;
+}
+.fileRow {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 0;
+    border-top:1px solid #eef0f2;
+}
+.fileRow:first-child { border-top:0; }
+.fileName { font-weight:600; color:#1f2937; }
+.fileMeta { color:#6b7280; font-size:11px; margin-top:3px; }
+.badge {
+    display:inline-block;
+    min-width:64px;
+    padding:4px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:700;
+    text-align:center;
+}
+.ok { background:#e8f7ee; color:#167647; }
+.warn { background:#fff6df; color:#8a6500; }
+.err { background:#fdecec; color:#a72d2d; }
+.actions { display:flex; gap:10px; margin-top:14px; }
+button {
+    border:0;
+    border-radius:7px;
+    padding:10px 16px;
+    font-family:inherit;
+    font-size:13px;
+    cursor:pointer;
+}
+.primary { background:#2563eb; color:#fff; }
+.secondary { background:#e5e7eb; color:#1f2937; }
+button:disabled { opacity:.48; cursor:default; }
+#log {
+    height:215px;
+    overflow:auto;
+    white-space:pre-wrap;
+    background:#111827;
+    color:#d1d5db;
+    border-radius:7px;
+    padding:11px;
+    font-family:Consolas, 'Courier New', monospace;
+    font-size:11px;
+    line-height:1.45;
+}
+.note { color:#6b7280; font-size:11px; line-height:1.5; }
+</style>
+<script language="javascript">
+var fso = null;
+var shell = null;
+var xl = null;
+var masterPath = '';
+var masterFolder = '';
+var pitMacroPath = '';
+var ooslaMacroPath = '';
+var pitSourcePath = '';
+var ooslaSourcePath = '';
+var finalReportPath = '';
+
+// Stable dependency names. The current versions are supplied with the package
+// using these names. Replacing the .bas file with a newer file using the same
+// name automatically makes the master use the new version.
+var PIT_MACRO_NAME = 'PIT_OOSLA_Macro_V2.bas';
+var OOSLA_MACRO_NAME = 'OOSLA_Daily_Report_v9.bas';
+
+function init() {
+    try {
+        fso = new ActiveXObject('Scripting.FileSystemObject');
+        shell = new ActiveXObject('Shell.Application');
+        masterPath = getCurrentHTAPath();
+        masterFolder = fso.GetParentFolderName(masterPath);
+        document.getElementById('folderPath').innerText = masterFolder;
+        scanFolder();
+        log('Master started from: ' + masterFolder);
+    } catch (e) {
+        log('STARTUP ERROR: ' + e.message);
+        alert('Unable to determine the HTA folder.\n\n' + e.message);
+    }
+}
+
+function getCurrentHTAPath() {
+    var url = document.location.href;
+    var p = url.replace(/^file:\/\//i, '');
+    try { p = decodeURIComponent(p); } catch (e) {}
+    p = p.replace(/^\/+([A-Za-z]:)/, '$1');
+    p = p.replace(/\//g, '\\');
+    return p;
+}
+
+function log(msg) {
+    var box = document.getElementById('log');
+    var now = new Date();
+    var t = ('0' + now.getHours()).slice(-2) + ':' +
+            ('0' + now.getMinutes()).slice(-2) + ':' +
+            ('0' + now.getSeconds()).slice(-2);
+    box.innerText += '[' + t + '] ' + msg + '\n';
+    box.scrollTop = box.scrollHeight;
+}
+
+function fileName(path) {
+    return path.substring(path.lastIndexOf('\\') + 1);
+}
+
+function formatDate(d) {
+    return d.getFullYear() + '-' + ('0' + (d.getMonth()+1)).slice(-2) + '-' +
+           ('0' + d.getDate()).slice(-2) + ' ' +
+           ('0' + d.getHours()).slice(-2) + ':' +
+           ('0' + d.getMinutes()).slice(-2);
+}
+
+function fileModified(path) {
+    return new Date(fso.GetFile(path).DateLastModified);
+}
+
+function setBadge(id, text, cls) {
+    var el = document.getElementById(id);
+    el.innerText = text;
+    el.className = 'badge ' + cls;
+}
+
+function setFileCard(id, kind, path, extra) {
+    var el = document.getElementById(id);
+    if (!path) {
+        el.innerHTML = '<span><span class="badge warn">MISSING</span></span><span class="note">Not found</span>';
+        return;
+    }
+    var d = fileModified(path);
+    el.innerHTML =
+        '<div><div class="fileName">' + kind + ': ' + escapeHtml(fileName(path)) + '</div>' +
+        '<div class="fileMeta">Modified ' + formatDate(d) + (extra ? ' · ' + escapeHtml(extra) : '') + '</div></div>' +
+        '<span class="badge ok">READY</span>';
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function startsWithIgnoreCase(value, prefix) {
+    return value.substring(0, prefix.length).toLowerCase() === prefix.toLowerCase();
+}
+
+function isExcel(name) {
+    return /\.(xlsx|xlsm|xls)$/i.test(name);
+}
+
+function classifyExcel(name) {
+    if (!isExcel(name)) return null;
+    if (/^OOSLA\s*PIT\s*\([^)]*\).*\.(xlsx|xlsm|xls)$/i.test(name)) return 'PIT';
+    if (/^rich-filter-results-.*\.(xlsx|xlsm|xls)$/i.test(name)) return 'OOSLA';
+    return null;
+}
+
+function findNewestMatchingFile(folderPath, type) {
+    var files = fso.GetFolder(folderPath).Files;
+    var best = null;
+    var count = 0;
+    for (var e = new Enumerator(files); !e.atEnd(); e.moveNext()) {
+        var file = e.item();
+        var name = file.Name;
+        var matched = false;
+        if (type === 'PIT') matched = /^OOSLA\s*PIT\s*\([^)]*\).*\.(xlsx|xlsm|xls)$/i.test(name);
+        if (type === 'OOSLA') matched = /^rich-filter-results-.*\.(xlsx|xlsm|xls)$/i.test(name);
+        if (!matched) continue;
+        count++;
+        if (best === null || new Date(file.DateLastModified) > new Date(best.DateLastModified)) best = file;
+    }
+    return { file: best ? best.Path : '', count: count };
+}
+
+function findMacro(folderPath, preferredName, prefix) {
+    var exact = fso.BuildPath(folderPath, preferredName);
+    if (fso.FileExists(exact)) return { path: exact, mode: 'exact' };
+
+    var candidates = [];
+    var files = fso.GetFolder(folderPath).Files;
+    for (var e = new Enumerator(files); !e.atEnd(); e.moveNext()) {
+        var file = e.item();
+        var name = file.Name;
+        if (/\.bas$/i.test(name) && startsWithIgnoreCase(name, prefix)) candidates.push(file);
+    }
+
+    if (candidates.length === 0) return { path: '', mode: 'missing' };
+
+    var best = candidates[0];
+    for (var i = 1; i < candidates.length; i++) {
+        if (new Date(candidates[i].DateLastModified) > new Date(best.DateLastModified)) best = candidates[i];
+    }
+    return { path: best.Path, mode: 'fallback' };
+}
+
+function scanFolder() {
+    if (!masterFolder) return;
+
+    var pitMacro = findMacro(masterFolder, PIT_MACRO_NAME, 'PIT_OOSLA_Macro');
+    var ooslaMacro = findMacro(masterFolder, OOSLA_MACRO_NAME, 'OOSLA_Daily_Report');
+    pitMacroPath = pitMacro.path;
+    ooslaMacroPath = ooslaMacro.path;
+
+    var pit = findNewestMatchingFile(masterFolder, 'PIT');
+    var oos = findNewestMatchingFile(masterFolder, 'OOSLA');
+    pitSourcePath = pit.file;
+    ooslaSourcePath = oos.file;
+
+    document.getElementById('macroPIT').innerText = pitMacroPath ? fileName(pitMacroPath) : 'Not found';
+    document.getElementById('macroOOSLA').innerText = ooslaMacroPath ? fileName(ooslaMacroPath) : 'Not found';
+    document.getElementById('sourcePIT').innerText = pitSourcePath ? fileName(pitSourcePath) : 'Not found';
+    document.getElementById('sourceOOSLA').innerText = ooslaSourcePath ? fileName(ooslaSourcePath) : 'Not found';
+
+    setBadge('macroPITBadge', pitMacroPath ? 'READY' : 'MISSING', pitMacroPath ? 'ok' : 'err');
+    setBadge('macroOOSLABadge', ooslaMacroPath ? 'READY' : 'MISSING', ooslaMacroPath ? 'ok' : 'err');
+    setBadge('sourcePITBadge', pitSourcePath ? 'READY' : 'MISSING', pitSourcePath ? 'ok' : 'err');
+    setBadge('sourceOOSLABadge', ooslaSourcePath ? 'READY' : 'MISSING', ooslaSourcePath ? 'ok' : 'err');
+
+    document.getElementById('sourceMetaPIT').innerText = pitSourcePath ?
+        ('Newest matching file · ' + formatDate(fileModified(pitSourcePath)) + (pit.count > 1 ? ' · ' + pit.count + ' candidates' : '')) : '';
+    document.getElementById('sourceMetaOOSLA').innerText = ooslaSourcePath ?
+        ('Newest matching file · ' + formatDate(fileModified(ooslaSourcePath)) + (oos.count > 1 ? ' · ' + oos.count + ' candidates' : '')) : '';
+
+    var macroInfo = '';
+    if (pitMacro.mode === 'fallback') macroInfo += 'PIT macro loaded by prefix fallback. ';
+    if (ooslaMacro.mode === 'fallback') macroInfo += 'OOSLA macro loaded by prefix fallback. ';
+    if (macroInfo) log(macroInfo.trim());
+    log('Folder scan complete.');
+    updateGenerateButton();
+}
+
+function updateGenerateButton() {
+    var ready = !!(pitMacroPath && ooslaMacroPath && pitSourcePath && ooslaSourcePath);
+    document.getElementById('generate').disabled = !ready;
+}
+
+function openFolder() {
+    try { shell.Explore(masterFolder); }
+    catch (e) { log('OPEN FOLDER ERROR: ' + e.message); }
+}
+
+function sameFileName(pathA, pathB) {
+    return String(pathA).toLowerCase() === String(pathB).toLowerCase();
+}
+
+function openWorkbook(path) {
+    // Sources are opened normally because the verified macros modify the workbook
+    // in memory. The master NEVER saves these source workbooks.
+    return xl.Workbooks.Open(path, 0, false);
+}
+
+function importExternalMacro(wb, basPath) {
+    // The .bas file is used DIRECTLY from the master folder.
+    // It is never embedded in this HTA, rewritten, or otherwise modified.
+    wb.VBProject.VBComponents.Import(basPath);
+}
+
+function runMacroForWorkbook(wb, moduleName, macroName) {
+    wb.Activate();
+    wb.Worksheets(1).Activate();
+    xl.Run("'" + wb.Name + "'!" + moduleName + "." + macroName);
+}
+
+function sheetExists(wb, sheetName) {
+    try { var s = wb.Worksheets(sheetName); return !!s; }
+    catch (e) { return false; }
+}
+
+function copyGeneratedSheet(srcWb, sheetName, dstWb) {
+    if (!sheetExists(srcWb, sheetName)) {
+        throw new Error('Expected generated sheet not found: ' + sheetName);
+    }
+    srcWb.Worksheets(sheetName).Copy(null, dstWb.Sheets(dstWb.Sheets.Count));
+}
+
+function getDefaultSheetNames(wb) {
+    var result = [];
+    for (var i = 1; i <= wb.Sheets.Count; i++) result.push(wb.Sheets(i).Name);
+    return result;
+}
+
+function deleteSheetsByName(wb, names) {
+    xl.DisplayAlerts = false;
+    for (var i = 0; i < names.length; i++) {
+        try { wb.Sheets(names[i]).Delete(); } catch (e) {}
+    }
+    xl.DisplayAlerts = true;
+}
+
+function closeWithoutSaving(wb) {
+    if (!wb) return;
+    try { wb.Close(false); } catch (e) { log('Close warning: ' + e.message); }
+}
+
+function makeOutputPath() {
+    var d = new Date();
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var day = d.getDate();
+    var dayText = day < 10 ? '0' + day : '' + day;
+    var name = 'OOSLA Tickets ' + dayText + '-' + months[d.getMonth()] + ' ' + d.getFullYear() + '.xlsx';
+    return fso.BuildPath(masterFolder, name);
+}
+
+function generate() {
+    var pitWb = null;
+    var oosWb = null;
+    var finalWb = null;
+    var oldAlerts = true;
+
+    try {
+        document.getElementById('generate').disabled = true;
+        scanFolder();
+        if (!(pitMacroPath && ooslaMacroPath && pitSourcePath && ooslaSourcePath)) {
+            throw new Error('Required files were not detected in the HTA folder. Click Refresh Folder and verify the four required files.');
+        }
+
+        log('Starting daily report generation.');
+        log('PIT macro: ' + fileName(pitMacroPath));
+        log('OOSLA macro: ' + fileName(ooslaMacroPath));
+        log('PIT source: ' + fileName(pitSourcePath));
+        log('OOSLA source: ' + fileName(ooslaSourcePath));
+        log('The VBA modules are external, immutable files. They are not edited or embedded.');
+
+        xl = new ActiveXObject('Excel.Application');
+        xl.Visible = true;
+        oldAlerts = xl.DisplayAlerts;
+        xl.DisplayAlerts = false;
+
+        // ======================================================
+        // PIT - exact external VBA module
+        // ======================================================
+        log('Opening PIT source workbook ...');
+        pitWb = openWorkbook(pitSourcePath);
+        importExternalMacro(pitWb, pitMacroPath);
+        log('Running PIT_OOSLA_Macro.GenerateDailyReport ...');
+        runMacroForWorkbook(pitWb, 'PIT_OOSLA_Macro', 'GenerateDailyReport');
+        if (!sheetExists(pitWb, 'PIT OOSLA INCs')) {
+            throw new Error('PIT macro finished without creating "PIT OOSLA INCs".');
+        }
+        log('PIT macro completed successfully.');
+
+        // ======================================================
+        // OOSLA - exact external VBA module
+        // ======================================================
+        log('Opening OOSLA source workbook ...');
+        oosWb = openWorkbook(ooslaSourcePath);
+        importExternalMacro(oosWb, ooslaMacroPath);
+        log('Running OOSLA_Daily_Report.GenerateDailyOOSLAReport ...');
+        runMacroForWorkbook(oosWb, 'OOSLA_Daily_Report', 'GenerateDailyOOSLAReport');
+
+        var oosSheets = ['ITS OOSLA INCs', 'NWG & CT INCs', 'Other Group Assignees'];
+        for (var i = 0; i < oosSheets.length; i++) {
+            if (!sheetExists(oosWb, oosSheets[i])) throw new Error('OOSLA macro finished without creating "' + oosSheets[i] + '".');
+        }
+        log('OOSLA macro completed successfully.');
+
+        // ======================================================
+        // Consolidate into one XLSX
+        // ======================================================
+        log('Creating final consolidated workbook ...');
+        finalWb = xl.Workbooks.Add();
+        var defaults = getDefaultSheetNames(finalWb);
+
+        copyGeneratedSheet(pitWb, 'PIT OOSLA INCs', finalWb);
+        copyGeneratedSheet(oosWb, 'ITS OOSLA INCs', finalWb);
+        copyGeneratedSheet(oosWb, 'NWG & CT INCs', finalWb);
+        copyGeneratedSheet(oosWb, 'Other Group Assignees', finalWb);
+        deleteSheetsByName(finalWb, defaults);
+
+        // Important: never save either source workbook.
+        closeWithoutSaving(pitWb); pitWb = null;
+        closeWithoutSaving(oosWb); oosWb = null;
+
+        finalReportPath = makeOutputPath();
+        log('Saving final report: ' + finalReportPath);
+        finalWb.SaveAs(finalReportPath, 51); // xlOpenXMLWorkbook (.xlsx)
+        finalWb.Activate();
+        log('SUCCESS - final report created.');
+        alert('Daily report generated successfully.\n\n' + finalReportPath);
+
+    } catch (e) {
+        log('ERROR: ' + e.message);
+        var msg = String(e.message || e.description || e);
+        var low = msg.toLowerCase();
+        if (low.indexOf('programmatic access') >= 0 || low.indexOf('vbproject') >= 0 || low.indexOf('access vbproject') >= 0) {
+            alert('Excel blocked programmatic access to the VBA project.\n\nEnable:\nExcel Options → Trust Center → Trust Center Settings → Macro Settings → Trust access to the VBA project object model.\n\nThen close and reopen this HTA.');
+        } else {
+            alert('Generation failed.\n\n' + msg);
+        }
+    } finally {
+        try { closeWithoutSaving(pitWb); } catch (e1) {}
+        try { closeWithoutSaving(oosWb); } catch (e2) {}
+        try { if (xl) xl.DisplayAlerts = oldAlerts; } catch (e3) {}
+        try { if (xl) xl.Quit(); } catch (e4) {}
+        xl = null;
+        updateGenerateButton();
+    }
+}
+</script>
+</head>
+<body onload="init();">
+<div class="wrap">
+    <div class="header">
+        <h1>OOSLA / PIT Daily Report Master</h1>
+        <div class="sub">Automatic same-folder detection. The master executes the external verified VBA modules exactly as supplied and never saves the source workbooks.</div>
+    </div>
+
+    <div class="card">
+        <div class="title">Master folder</div>
+        <div id="folderPath" class="path">Detecting...</div>
+        <div class="actions">
+            <button class="secondary" onclick="scanFolder();">Refresh Folder</button>
+            <button class="secondary" onclick="openFolder();">Open Folder</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="title">External VBA modules</div>
+        <div class="fileRow">
+            <div><div id="macroPIT" class="fileName">Scanning...</div><div class="fileMeta">PIT module</div></div>
+            <span id="macroPITBadge" class="badge warn">...</span>
+        </div>
+        <div class="fileRow">
+            <div><div id="macroOOSLA" class="fileName">Scanning...</div><div class="fileMeta">OOSLA module</div></div>
+            <span id="macroOOSLABadge" class="badge warn">...</span>
+        </div>
+        <div class="note">The master reads the .bas files directly from this folder. To update a macro, replace its .bas file with the newer version using the same filename. The master does not rewrite or embed macro source code.</div>
+    </div>
+
+    <div class="card">
+        <div class="title">Detected daily Excel inputs</div>
+        <div class="fileRow">
+            <div><div id="sourcePIT" class="fileName">Scanning...</div><div id="sourceMetaPIT" class="fileMeta"></div></div>
+            <span id="sourcePITBadge" class="badge warn">...</span>
+        </div>
+        <div class="fileRow">
+            <div><div id="sourceOOSLA" class="fileName">Scanning...</div><div id="sourceMetaOOSLA" class="fileMeta"></div></div>
+            <span id="sourceOOSLABadge" class="badge warn">...</span>
+        </div>
+        <div class="note">PIT is detected from <b>OOSLA PIT (X)</b>. OOSLA is detected from <b>rich-filter-results-X-Y</b>. When multiple matching files exist, the newest modified file is selected.</div>
+        <div class="actions">
+            <button id="generate" class="primary" disabled onclick="generate();">Generate Daily Report</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="title">Activity log</div>
+        <div id="log"></div>
+    </div>
+
+    <div class="note">Requirements: Windows + desktop Microsoft Excel. Excel must allow programmatic access to the VBA project object model. Source workbooks are opened, processed in memory by the supplied macros, copied into the final workbook, and then closed without saving.</div>
+</div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+from app.routers.oosla_pit_router import router as oosla_pit_router
 from dotenv import load_dotenv
 load_dotenv()  # must run before any module reads os.environ (db session, auth)
 
@@ -52,6 +52,7 @@ app.include_router(auth_router)
 app.include_router(roster_router)
 app.include_router(roster_versions_router)
 app.include_router(reports_router)
+app.include_router(oosla_pit_router)
 app.include_router(users_router)
 app.include_router(admin_router)
 app.include_router(permissions_router)

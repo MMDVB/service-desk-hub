@@ -287,6 +287,26 @@ html,body{background:var(--hub-bg)!important;}
 .frame-head{background:transparent!important}
 @media(max-width:900px){.sidebar{transform:translateX(-100%)!important}.sidebar.open{transform:translateX(0)!important}.main{margin-left:0!important}.content{padding:16px!important}}
 
+
+  /* OOSLA / PIT report */
+  .rc-icon.violet{background:#F5F3FF;color:#6D28D9}
+  .opit-panel{background:#fff;border:1px solid #e3e8f0;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(15,23,42,.04)}
+  .opit-intro{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px}
+  .opit-upload-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .opit-upload-card{min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:20px;border:1.5px dashed #cbd5e1;border-radius:14px;background:#f8fafc;text-align:center;cursor:pointer;transition:border-color .18s,background .18s}
+  .opit-upload-card:hover{border-color:#7c3aed;background:#faf8ff}
+  .opit-upload-icon{font-size:28px}
+  .opit-upload-card strong{font-size:13px;color:var(--text)}
+  .opit-upload-card>span:not(.opit-upload-icon){font-size:12px;color:#6d28d9;font-weight:700}
+  .opit-upload-card small{max-width:100%;overflow-wrap:anywhere;font-size:11px;color:var(--muted)}
+  .opit-upload-card input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+  .opit-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:20px}
+  .opit-generate{background:#6d28d9!important;color:#fff!important;border-color:#6d28d9!important}
+  .opit-generate:hover{background:#5b21b6!important}
+  .opit-generate:disabled{opacity:.55;cursor:not-allowed}
+  .opit-status{font-size:12px;color:var(--muted);line-height:1.7}
+  @media(max-width:650px){.opit-upload-grid{grid-template-columns:1fr}.opit-panel{padding:16px}}
+
 </style>
 </head>
 <body>
@@ -335,6 +355,12 @@ html,body{background:var(--hub-bg)!important;}
         <span class="nav-label"><b data-i18n="navSla">SLA Incident</b><small data-i18n="navSlaSub">Incident & OOSLA distribution</small></span>
         <span class="nav-dot" id="nav-dot-sla"></span>
       </button>
+
+      <button class="nav-item" data-tab="oosla-pit">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label"><b data-i18n="navOoslaPit">OOSLA / PIT Report</b><small data-i18n="navOoslaPitSub">Upload Excel files & generate</small></span>
+      </button>
+
     </nav>
 
     <div class="sidebar-footer">
@@ -405,6 +431,19 @@ html,body{background:var(--hub-bg)!important;}
             <div class="rc-meta"><span class="rc-chip" data-i18n="chipIcare">Daily iCare export</span></div>
             <div class="rc-cta"><span data-i18n="ctaView">View report</span><span>←</span></div>
           </div>
+
+          <div class="report-card" data-tab="oosla-pit">
+            <div class="rc-badge pending" data-i18n="badgeManual">📤 Manual upload</div>
+            <div class="rc-icon violet">📊</div>
+            <div class="rc-title" data-i18n="navOoslaPit">OOSLA / PIT Report</div>
+            <div class="rc-desc" data-i18n="rcOoslaPitDesc">Generate the combined OOSLA and PIT report using two Excel files.</div>
+            <div class="rc-meta">
+              <span class="rc-chip" data-i18n="chipPit">PIT Excel</span>
+              <span class="rc-chip" data-i18n="chipOosla">OOSLA Excel</span>
+            </div>
+            <div class="rc-cta"><span data-i18n="ctaView">Open report</span><span>←</span></div>
+          </div>
+
         </div>
 
         <div class="info-callout">
@@ -487,7 +526,48 @@ html,body{background:var(--hub-bg)!important;}
         </div>
       </div>
 
-      <!-- ===================== ROSTER (standalone file — consistent with the other 3 reports) ===================== -->
+      <!-- ===================== OOSLA / PIT REPORT ===================== -->
+      <div class="tab-panel" id="tab-oosla-pit">
+        <div class="frame-head">
+          <div class="frame-head-text">
+            <h2>📊 <span data-i18n="navOoslaPit">OOSLA / PIT Report</span></h2>
+            <p data-i18n="opitDescription">Upload the PIT and OOSLA Excel files to generate the combined report.</p>
+          </div>
+        </div>
+
+        <div class="opit-panel">
+          <div class="opit-intro" data-i18n="opitInstructions">
+            Select both Excel files. Each file must be no larger than 25 MB.
+          </div>
+
+          <div class="opit-upload-grid">
+            <label class="opit-upload-card" for="opit-pit-file">
+              <span class="opit-upload-icon">📄</span>
+              <strong data-i18n="opitPitLabel">PIT Excel file</strong>
+              <span data-i18n="opitChooseFile">Choose an Excel file</span>
+              <small id="opit-pit-name" data-i18n="opitNoFile">No file selected</small>
+              <input id="opit-pit-file" type="file" accept=".xlsx,.xlsm">
+            </label>
+
+            <label class="opit-upload-card" for="opit-oosla-file">
+              <span class="opit-upload-icon">📑</span>
+              <strong data-i18n="opitOoslaLabel">OOSLA Excel file</strong>
+              <span data-i18n="opitChooseFile">Choose an Excel file</span>
+              <small id="opit-oosla-name" data-i18n="opitNoFile">No file selected</small>
+              <input id="opit-oosla-file" type="file" accept=".xlsx,.xlsm">
+            </label>
+          </div>
+
+          <div class="opit-actions">
+            <button class="tbtn opit-generate" id="opit-generate" type="button" data-i18n="opitGenerate">
+              ⚙️ Generate Report
+            </button>
+            <span class="opit-status" id="opit-status" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== ROSTER (standalone file — consistent with the other reports) ===================== -->
       <div class="tab-panel" id="tab-roster">
         <div class="frame-head">
           <div class="frame-head-text">
@@ -532,11 +612,25 @@ const SHELL_I18N = {
     brandSub:"Analytics & Reporting Center", navOverview:"Overview", navOverviewSub:"Summary & guide",
     navGroupWorkforce:"Workforce", navGroupReports:"Reports", navSdcm:"SDCM Registration", navSdcmSub:"Inbound / outbound calls",
     navAicc:"AICC Performance", navAiccSub:"Answer & occupancy rate", navSla:"SLA Incident", navSlaSub:"Incident & OOSLA distribution",
+    navOoslaPit:"OOSLA / PIT Report", navOoslaPitSub:"Upload Excel files & generate", badgeManual:"📤 Manual upload",
+    opitDescription:"Upload the PIT and OOSLA Excel files to generate the combined report.",
+    opitInstructions:"Select both Excel files. Each file must be no larger than 25 MB.",
+    opitPitLabel:"PIT Excel file", opitOoslaLabel:"OOSLA Excel file",
+    opitChooseFile:"Choose an Excel file", opitNoFile:"No file selected",
+    opitGenerate:"⚙️ Generate Report",
+    opitSelectFile:"Please select a file.", opitInvalidFormat:"Only .xlsx and .xlsm files are supported.",
+    opitFileTooLarge:"File size must not exceed 25 MB.",
+    opitLoginRequired:"Please sign in to Service Desk Hub before generating the report.",
+    opitProcessing:"Processing files and generating the report...",
+    opitAuthError:"Your session is invalid or expired. Please sign in again.",
+    opitEmptyResponse:"The server returned an empty report.",
+    opitSuccess:"Report generated successfully. Your download should start shortly.",
+    opitGenericError:"An error occurred while generating the report.",
     navGroupTeam:"Team", navRoster:"Shift Roster", navRosterSub:"Plan agent shifts",
     leadBtnLocked:"Leadership", leadBtnUnlocked:"Leadership (unlocked)",
     heroEyebrow:"Service Desk Reporting Platform",
-    heroTitle:"Three independent reports, one control center — synced automatically from your own folders",
-    heroText:"Each report is a fully independent, ready-to-use page. Leadership can point each report at a local folder once — from then on it refreshes on its own, no re-selecting a file or folder every time.",
+    heroTitle:"Four reports, one Service Desk control center",
+    heroText:"Access four independent reports from one place. SDCM, AICC and SLA support folder-based synchronization through Leadership. OOSLA / PIT is generated by uploading two Excel files directly to the reporting API.",
     statSdcm:"SDCM registration rate", statAicc:"AICC answer rate", statSla:"SLA compliance", statUpdated:"Last updated",
     sectionReports:"Reports", badgePending:"⏳ Awaiting data", badgeReady:"✅ Ready",
     rcSdcmDesc:"Compares inbound and outbound calls by SDCM registration status, per agent.",
@@ -545,17 +639,18 @@ const SHELL_I18N = {
     chipPerf:"Performance file", chipActivity:"Activity file",
     rcSlaDesc:"Incident distribution table by priority, plus the OOSLA breakdown by assignee group.",
     chipIcare:"Daily iCare export",
+    rcOoslaPitDesc:"Generate the combined OOSLA and PIT report using two Excel files.", chipPit:"PIT Excel", chipOosla:"OOSLA Excel",
     calloutTitle:"Folder sync now lives in the Leadership panel",
-    calloutText:"To keep this control in one trusted place, connecting a report to a local folder — and re-syncing it — is done from the Leadership panel (bottom-left), not inside each report page. Open Leadership once, pick a folder for each report, and every future visit reads the latest files automatically.",
+    calloutText:"Folder synchronization is available for SDCM, AICC and SLA through the Leadership panel (bottom-left). OOSLA / PIT does not use folder synchronization; upload its PIT and OOSLA Excel files directly from its report page.",
     sectionGuide:"Quick start guide",
-    guide1Title:"Open a report", guide1Text:"Use the sidebar menu or the cards above to enter one of the three reports.",
+    guide1Title:"Open a report", guide1Text:"Use the sidebar menu or the cards above to open any of the four reports.",
     guide2Title:"Connect a folder once", guide2Text:"In the Leadership panel, point each report at the folder where its daily files are saved.",
     guide3Title:"Sync anytime", guide3Text:"One click on \"Sync now\" reads the newest files and rebuilds the report — no re-browsing.",
     guide4Title:"Export as image", guide4Text:"Grab a ready-to-share snapshot of any report with a single click.",
     sectionStandards:"Platform standards",
     std1:"Every report is an independent page with a unified design language (color, Vazirmatn/Inter font, spacing)",
     std2:"Persistent per-report folder access with one-click re-sync — no repeated file picking",
-    std3:"Fully client-side processing — files are never uploaded to a server",
+    std3:"Processing method depends on the report: folder-based reports use browser access, while OOSLA / PIT files are securely uploaded to the authenticated reporting API.",
     std4:"Bilingual interface (English / Persian) with full RTL support",
     std5:"Accessible color contrast and visible keyboard focus",
     std6:"Standard PNG export for fast reporting to management",
@@ -593,11 +688,25 @@ const SHELL_I18N = {
     brandSub:"مرکز گزارش و آنالیز", navOverview:"نمای کلی", navOverviewSub:"خلاصه و راهنما",
     navGroupWorkforce:"نیروی کار", navGroupReports:"گزارش‌های تخصصی", navSdcm:"ثبت SDCM", navSdcmSub:"تماس‌های ورودی/خروجی",
     navAicc:"عملکرد AICC", navAiccSub:"نرخ پاسخ‌گویی و اشغالی", navSla:"SLA Incident", navSlaSub:"توزیع Incident و OOSLA",
+    navOoslaPit:"گزارش OOSLA / PIT", navOoslaPitSub:"آپلود فایل‌های اکسل و تولید گزارش", badgeManual:"📤 آپلود دستی",
+    opitDescription:"برای تولید گزارش ترکیبی، فایل‌های اکسل PIT و OOSLA را آپلود کنید.",
+    opitInstructions:"هر دو فایل اکسل را انتخاب کنید. حجم هر فایل نباید بیشتر از ۲۵ مگابایت باشد.",
+    opitPitLabel:"فایل اکسل PIT", opitOoslaLabel:"فایل اکسل OOSLA",
+    opitChooseFile:"انتخاب فایل اکسل", opitNoFile:"فایلی انتخاب نشده است",
+    opitGenerate:"⚙️ تولید گزارش",
+    opitSelectFile:"لطفاً فایل را انتخاب کنید.", opitInvalidFormat:"فقط فایل‌های با فرمت xlsx و xlsm مجاز هستند.",
+    opitFileTooLarge:"حجم فایل نباید بیشتر از ۲۵ مگابایت باشد.",
+    opitLoginRequired:"برای تولید گزارش ابتدا وارد Service Desk Hub شوید.",
+    opitProcessing:"فایل‌ها در حال پردازش و گزارش در حال تولید است...",
+    opitAuthError:"نشست ورود شما معتبر نیست یا منقضی شده است. لطفاً دوباره وارد شوید.",
+    opitEmptyResponse:"سرور فایل گزارش خالی برگردانده است.",
+    opitSuccess:"گزارش با موفقیت تولید شد. دانلود فایل به‌زودی آغاز می‌شود.",
+    opitGenericError:"هنگام تولید گزارش خطایی رخ داد.",
     navGroupTeam:"تیم", navRoster:"راستر شیفت", navRosterSub:"چیدمان شیفت پرسنل",
     leadBtnLocked:"لیدرشیپ", leadBtnUnlocked:"لیدرشیپ (باز)",
     heroEyebrow:"پلتفرم گزارش‌گیری سرویس دسک",
-    heroTitle:"سه گزارش مستقل، یک مرکز کنترل — با همگام‌سازی خودکار از پوشه‌های شما",
-    heroText:"هر گزارش یک صفحه کاملاً مستقل و آماده است. لیدرشیپ فقط یک‌بار هر گزارش را به پوشه‌ی محلی متصل می‌کند و از آن پس بدون انتخاب دوباره‌ی فایل یا پوشه، خودش به‌روزرسانی می‌شود.",
+    heroTitle:"چهار گزارش مستقل، یک مرکز کنترل سرویس دسک",
+    heroText:"از طریق یک مرکز واحد به چهار گزارش مستقل دسترسی دارید. گزارش‌های SDCM، AICC و SLA از همگام‌سازی پوشه‌ای در پنل لیدرشیپ پشتیبانی می‌کنند. گزارش OOSLA / PIT با آپلود مستقیم دو فایل اکسل در API تولید می‌شود.",
     statSdcm:"نرخ ثبت SDCM", statAicc:"نرخ پاسخ‌گویی AICC", statSla:"رعایت SLA", statUpdated:"آخرین به‌روزرسانی",
     sectionReports:"گزارش‌ها", badgePending:"⏳ در انتظار داده", badgeReady:"✅ آماده",
     rcSdcmDesc:"مقایسه تماس‌های ورودی و خروجی از نظر ثبت‌شدن در سیستم SDCM، به تفکیک اپراتور.",
@@ -606,17 +715,18 @@ const SHELL_I18N = {
     chipPerf:"فایل Performance", chipActivity:"فایل Activity",
     rcSlaDesc:"جدول توزیع Incident بر اساس اولویت و جدول OOSLA به تفکیک گروه اساینی.",
     chipIcare:"خروجی روزانه iCare",
+    rcOoslaPitDesc:"تولید گزارش ترکیبی OOSLA و PIT با استفاده از دو فایل اکسل.", chipPit:"فایل اکسل PIT", chipOosla:"فایل اکسل OOSLA",
     calloutTitle:"همگام‌سازی پوشه اکنون در پنل لیدرشیپ است",
-    calloutText:"برای اینکه این کنترل فقط در یک جای امن باشد، اتصال هر گزارش به پوشه محلی و همگام‌سازی مجدد آن از پنل لیدرشیپ (پایین سمت چپ منو) انجام می‌شود، نه داخل هر گزارش. یک‌بار لیدرشیپ را باز کنید، برای هر گزارش پوشه انتخاب کنید و از آن پس هر بار جدیدترین فایل‌ها خودکار خوانده می‌شود.",
+    calloutText:"همگام‌سازی پوشه‌ای برای گزارش‌های SDCM، AICC و SLA از طریق پنل لیدرشیپ (پایین سمت چپ) انجام می‌شود. گزارش OOSLA / PIT از همگام‌سازی پوشه‌ای استفاده نمی‌کند؛ فایل‌های اکسل PIT و OOSLA را مستقیماً از صفحه همین گزارش آپلود کنید.",
     sectionGuide:"راهنمای شروع سریع",
-    guide1Title:"گزارش موردنظر را باز کنید", guide1Text:"از منوی سمت راست یا کارت‌های بالا وارد یکی از سه گزارش شوید.",
+    guide1Title:"گزارش موردنظر را باز کنید", guide1Text:"از منوی سمت راست یا کارت‌های بالا یکی از چهار گزارش را باز کنید.",
     guide2Title:"یک‌بار پوشه را متصل کنید", guide2Text:"در پنل لیدرشیپ، هر گزارش را به پوشه‌ای که فایل‌های روزانه در آن ذخیره می‌شود معرفی کنید.",
     guide3Title:"هر زمان همگام‌سازی کنید", guide3Text:"با یک کلیک روی «همگام‌سازی الان»، جدیدترین فایل‌ها خوانده و گزارش دوباره ساخته می‌شود.",
     guide4Title:"خروجی تصویر بگیرید", guide4Text:"تصویر آماده هر گزارش را با یک کلیک برای مدیریت دانلود کنید.",
     sectionStandards:"استانداردهای این پلتفرم",
     std1:"هر گزارش یک صفحه مستقل با طراحی یکپارچه (رنگ، فونت Vazirmatn/Inter و فاصله‌گذاری یکسان)",
     std2:"دسترسی مانا به پوشه هر گزارش با همگام‌سازی یک‌کلیکی — بدون انتخاب مکرر فایل",
-    std3:"پردازش کاملاً سمت کاربر — فایل‌ها هیچ‌گاه به سروری ارسال نمی‌شوند",
+    std3:"روش پردازش به نوع گزارش بستگی دارد: گزارش‌های پوشه‌ای از دسترسی مرورگر استفاده می‌کنند و فایل‌های OOSLA / PIT به API احراز هویت‌شده ارسال می‌شوند.",
     std4:"رابط دو زبانه (انگلیسی/فارسی) با پشتیبانی کامل راست‌به‌چپ",
     std5:"کنتراست رنگی مناسب و فوکوس قابل مشاهده با کیبورد",
     std6:"خروجی تصویری استاندارد (PNG) برای گزارش‌دهی سریع به مدیریت",
@@ -685,7 +795,7 @@ const navItems=document.querySelectorAll('.nav-item');
 const cards=document.querySelectorAll('.report-card');
 const panels=document.querySelectorAll('.tab-panel');
 const crumbTitle=document.getElementById('crumb-title');
-const TAB_I18N_KEY={ overview:'navOverview', sdcm:'navSdcm', aicc:'navAicc', sla:'navSla', roster:'navRoster' };
+const TAB_I18N_KEY={ overview:'navOverview', sdcm:'navSdcm', aicc:'navAicc', sla:'navSla', 'oosla-pit':'navOoslaPit', roster:'navRoster' };
 let currentTab='overview';
 
 function ensureIframeLoaded(tab){
@@ -1027,6 +1137,119 @@ function sdwOpenLogin(){
   overlay.classList.add('show');
 }
 renderUserProfile();
+
+
+/* =========================================================================
+   OOSLA / PIT REPORT — authenticated Excel upload and download
+   ========================================================================= */
+(function initOoslaPitReport(){
+  const pitInput = document.getElementById('opit-pit-file');
+  const ooslaInput = document.getElementById('opit-oosla-file');
+  const generateBtn = document.getElementById('opit-generate');
+  const statusEl = document.getElementById('opit-status');
+
+  if (!pitInput || !ooslaInput || !generateBtn || !statusEl) return;
+
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
+  const ALLOWED_EXTENSIONS = /\.(xlsx|xlsm)$/i;
+
+  function setStatus(message, type){
+    statusEl.textContent = message;
+    statusEl.style.color = type === 'error' ? '#DC2626' :
+      type === 'success' ? '#15803D' : 'var(--muted)';
+  }
+
+  function validateFile(file, label){
+    if (!file) return `${label}: ${t('opitSelectFile')}`;
+    if (!ALLOWED_EXTENSIONS.test(file.name))
+      return `${label}: ${t('opitInvalidFormat')}`;
+    if (file.size > MAX_FILE_SIZE)
+      return `${label}: ${t('opitFileTooLarge')}`;
+    return null;
+  }
+
+  function updateFileName(input, nameId){
+    const file = input.files && input.files[0];
+    document.getElementById(nameId).textContent =
+      file ? file.name : t('opitNoFile');
+    setStatus('', 'info');
+  }
+
+  pitInput.addEventListener('change', () =>
+    updateFileName(pitInput, 'opit-pit-name'));
+  ooslaInput.addEventListener('change', () =>
+    updateFileName(ooslaInput, 'opit-oosla-name'));
+
+  generateBtn.addEventListener('click', async ()=>{
+    const pitFile = pitInput.files && pitInput.files[0];
+    const ooslaFile = ooslaInput.files && ooslaInput.files[0];
+
+    const pitError = validateFile(pitFile, 'PIT');
+    const ooslaError = validateFile(ooslaFile, 'OOSLA');
+    if (pitError || ooslaError){
+      setStatus(pitError || ooslaError, 'error');
+      return;
+    }
+
+    const tokenObj = sdwGetTokenObj();
+    if (!tokenObj || !tokenObj.token){
+      setStatus(t('opitLoginRequired'), 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('pit_file', pitFile);
+    formData.append('oosla_file', ooslaFile);
+
+    generateBtn.disabled = true;
+    setStatus(t('opitProcessing'), 'info');
+
+    try{
+      const base = sdwApiBase().replace(/\/+$/, '');
+      const response = await fetch(base + '/api/oosla-pit/generate', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${tokenObj.token}` },
+        body: formData
+      });
+
+      if (!response.ok){
+        let message = `HTTP ${response.status}`;
+        try{
+          const data = await response.json();
+          message = data.detail || data.error || message;
+        }catch(e){}
+
+        if (response.status === 401 || response.status === 403)
+          throw new Error(t('opitAuthError'));
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      if (!blob.size) throw new Error(t('opitEmptyResponse'));
+
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
+      const filename = match
+        ? decodeURIComponent(match[1].replace(/"/g, '').trim())
+        : 'OOSLA Tickets Report.xlsx';
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+
+      setStatus(t('opitSuccess'), 'success');
+    }catch(error){
+      setStatus(error.message || t('opitGenericError'), 'error');
+    }finally{
+      generateBtn.disabled = false;
+    }
+  });
+})();
 
 /* =========================================================================
    INIT
