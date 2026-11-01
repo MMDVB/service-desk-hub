@@ -204,7 +204,7 @@ def list_team_agents(
         .filter(
             TeamMember.is_active.is_(True),
             User.is_active.is_(True),
-            User.role == "agent",
+            User.role == "engineer",
         )
         .order_by(User.display_name.asc())
         .all()
@@ -484,10 +484,10 @@ def add_member(
             detail="Team member must be linked to an active user",
         )
 
-    if member.user.role != "agent":
+    if member.user.role != "engineer":
         raise HTTPException(
             status_code=400,
-            detail="Only agent users can be assigned to a team",
+            detail="Only engineer users can be assigned to a team",
         )
 
     existing = (

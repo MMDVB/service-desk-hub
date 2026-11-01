@@ -17,12 +17,12 @@ class User(Base):
     display_name = Column(String(120), nullable=False)
     password_hash = Column(Text)
     ad_username = Column(String(120), unique=True)
-    role = Column(String(20), nullable=False, default="agent")
+    role = Column(String(20), nullable=False, default="engineer")
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        CheckConstraint("role IN ('admin','team_leader','supervisor','agent')", name="users_role_check"),
+        CheckConstraint("role IN ('admin','team_leader','supervisor','engineer')", name="users_role_check"),
     )
 
 

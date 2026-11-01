@@ -18,7 +18,7 @@ from ..audit import write_audit
 
 router = APIRouter(prefix="/api/permissions", tags=["permissions"])
 
-ROLES = ("admin", "team_leader", "supervisor", "agent")
+ROLES = ("admin", "team_leader", "supervisor", "engineer")
 
 
 @router.get("")

@@ -32,7 +32,7 @@ class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=80)
     displayName: str = Field(min_length=1, max_length=120)
     password: str = Field(min_length=8)
-    role: str = Field(pattern="^(admin|team_leader|supervisor|agent)$")
+    role: str = Field(pattern="^(admin|team_leader|supervisor|engineer)$")
     addToMembers: bool = False
 
 
@@ -91,7 +91,7 @@ def create_user(body: UserCreate, db: Session = Depends(get_db), current: Curren
 
 class UserPatch(BaseModel):
     displayName: Optional[str] = None
-    role: Optional[str] = Field(default=None, pattern="^(admin|team_leader|supervisor|agent)$")
+    role: Optional[str] = Field(default=None, pattern="^(admin|team_leader|supervisor|engineer)$")
     isActive: Optional[bool] = None
     password: Optional[str] = Field(default=None, min_length=8)
     addToMembers: Optional[bool] = None

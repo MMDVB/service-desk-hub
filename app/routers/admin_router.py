@@ -30,7 +30,7 @@ def overview(
         "admin": 0,
         "team_leader": 0,
         "supervisor": 0,
-        "agent": 0,
+        "engineer": 0,
     }
 
     if current.role == "admin":
