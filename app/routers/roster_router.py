@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from ..db.session import get_db
 from ..db.models import RosterColumn, TeamMember, RosterEntry, RosterEntryMember, Holiday, AuditLog
 from ..auth import require_auth, require_role, CurrentUser
+from ..roster_snapshot_sync import deactivate_member_in_snapshots
 
 router = APIRouter(prefix="/api/roster", tags=["roster"])
 can_edit = require_role("admin", "team_leader", "supervisor")
@@ -159,6 +160,7 @@ def remove_member(member_id: int, db: Session = Depends(get_db), _=Depends(can_e
     member = db.query(TeamMember).filter(TeamMember.id == member_id).first()
     if member:
         member.is_active = False
+        deactivate_member_in_snapshots(db, member.id)
         db.commit()
 
 

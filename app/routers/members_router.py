@@ -8,6 +8,7 @@ from ..db.session import get_db
 from ..db.models import TeamMember, User, TeamAssignment, Team
 from ..auth import require_role, CurrentUser
 from ..audit import write_audit
+from ..roster_snapshot_sync import deactivate_member_in_snapshots
 
 
 router = APIRouter(prefix="/api/members", tags=["members"])
@@ -287,6 +288,7 @@ def deactivate_member(
         )
 
     member.is_active = False
+    deactivate_member_in_snapshots(db, member.id)
 
     write_audit(
         db,
