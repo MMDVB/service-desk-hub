@@ -7,9 +7,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..db.session import get_db
-from ..db.models import User, TeamMember, TeamAssignment
+from ..db.models import User, TeamMember, TeamAssignment, RosterVersion, AuditLog, SdcmReport, AiccReport, SlaReport, RosterEntryMember
 from ..auth import require_auth, require_role, hash_password, CurrentUser
 from ..audit import write_audit
+from ..roster_snapshot_sync import deactivate_member_in_snapshots
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 admin_only = require_role("admin")
@@ -211,3 +212,68 @@ def deactivate_user(user_id: int, db: Session = Depends(get_db), current: Curren
         )
 
         db.commit()
+
+
+@router.delete("/{user_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+def permanently_delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current: CurrentUser = Depends(admin_only),
+):
+    if user_id == current.id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can't delete your own account")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+    member = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()
+
+    if db.query(RosterVersion).filter(RosterVersion.created_by == user.id).first():
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "This user created roster versions and cannot be permanently deleted."
+        )
+
+    if member:
+        if db.query(TeamAssignment).filter(TeamAssignment.team_member_id == member.id).first():
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "Remove this member from all teams before deleting the user."
+            )
+
+        if db.query(RosterEntryMember).filter(RosterEntryMember.team_member_id == member.id).first():
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "This member is used in roster entries and cannot be deleted."
+            )
+
+    try:
+        username = user.username
+        member_id = member.id if member else None
+
+        # Preserve historical records while removing their user references.
+        db.query(AuditLog).filter(AuditLog.user_id == user.id).update(
+            {AuditLog.user_id: None}, synchronize_session=False
+        )
+        for report_model in (SdcmReport, AiccReport, SlaReport):
+            db.query(report_model).filter(report_model.uploaded_by == user.id).update(
+                {report_model.uploaded_by: None}, synchronize_session=False
+            )
+
+        write_audit(
+            db,
+            current.id,
+            "USER_PERMANENTLY_DELETED",
+            {"deletedUserId": user.id, "username": username, "memberId": member_id},
+        )
+
+        if member:
+            deactivate_member_in_snapshots(db, member.id)
+            db.delete(member)
+
+        db.delete(user)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
