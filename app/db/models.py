@@ -2,7 +2,7 @@
 is the source of truth (created once with psql), SQLAlchemy just describes it
 here so Python code can query/insert without writing raw SQL everywhere."""
 from sqlalchemy import (
-    Column, Integer, String, Boolean, Text, Date, DateTime, ForeignKey,
+    Column, Integer, BigInteger, String, Boolean, Text, Date, Time, DateTime, ForeignKey,
     UniqueConstraint, CheckConstraint, func
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -234,3 +234,64 @@ class RosterVersion(Base):
         "User",
         foreign_keys=[published_by],
     )
+
+
+class OnCallUpload(Base):
+    __tablename__ = "oncall_uploads"
+
+    id = Column(Integer, primary_key=True)
+    file_key = Column(String(191), nullable=False)
+    original_name = Column(String(255), nullable=False)
+    stored_name = Column(String(150), nullable=False, default="")
+    source_type = Column(String(30), nullable=False)
+    source_group = Column(String(100), nullable=False)
+    period_start = Column(Date)
+    period_end = Column(Date)
+    rows_count = Column(Integer, nullable=False, default=0)
+    file_sha256 = Column(String(64), nullable=False, default="")
+    report = Column(JSONB)
+    is_current = Column(Boolean, nullable=False, default=True)
+    uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
+    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    uploader = relationship("User")
+    entries = relationship(
+        "OnCallEntry",
+        back_populates="upload",
+        cascade="all, delete-orphan",
+    )
+
+
+class OnCallEntry(Base):
+    __tablename__ = "oncall_entries"
+
+    id = Column(BigInteger, primary_key=True)
+    upload_id = Column(
+        Integer,
+        ForeignKey("oncall_uploads.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    source_group = Column(String(100), nullable=False)
+    team = Column(String(150), nullable=False)
+    duty_date = Column(Date, nullable=False)
+    shift_start = Column(Time)
+    shift_end = Column(Time)
+    person_name = Column(String(150), nullable=False, default="")
+    role = Column(String(50), nullable=False, default="")
+    phone = Column(String(30), nullable=False, default="")
+    email = Column(String(150), nullable=False, default="")
+    note = Column(String(255), nullable=False, default="")
+    is_superseded = Column(Boolean, nullable=False, default=False)
+
+    upload = relationship("OnCallUpload", back_populates="entries")
+
+
+class OnCallSetting(Base):
+    __tablename__ = "oncall_settings"
+
+    setting_key = Column(String(100), primary_key=True)
+    setting_value = Column(JSONB, nullable=False)
+    updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    updater = relationship("User")
