@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>On-Call Finder</title>
+<link rel="stylesheet" href="assets/app.css">
+<style>
+body{direction:ltr;text-align:left;background:#f5f7fb;color:#1e293b;font-family:Arial,sans-serif}
+.oc-app{max-width:1440px;margin:0 auto;padding:24px}
+.oc-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}
+.oc-head h1{margin:0;font-size:24px}.oc-muted{color:#64748b;font-size:13px}
+.oc-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #dce3ec;margin-bottom:20px}
+.oc-tab{border:0;background:transparent;padding:12px 16px;cursor:pointer;color:#64748b;font-weight:600;border-bottom:2px solid transparent}
+.oc-tab.active{color:#0f766e;border-color:#0f766e}
+.oc-panel{display:none}.oc-panel.active{display:block}
+.oc-box{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:16px}
+.oc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;align-items:end}
+.oc-field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.oc-field input,.oc-field select,.oc-field textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:7px;padding:10px;background:#fff;color:#1e293b;font:inherit}
+.oc-field textarea{min-height:180px;resize:vertical}
+.oc-btn{border:1px solid #cbd5e1;border-radius:7px;padding:9px 14px;background:#fff;color:#334155;cursor:pointer;font-weight:600}
+.oc-btn.primary{background:#0f766e;border-color:#0f766e;color:#fff}.oc-btn.danger{color:#b91c1c;border-color:#fecaca}
+.oc-btn:disabled{opacity:.5;cursor:not-allowed}
+.oc-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.oc-status{padding:11px 14px;border-radius:8px;background:#f1f5f9;color:#475569;margin:12px 0;font-size:13px;white-space:pre-wrap}
+.oc-status.error{background:#fef2f2;color:#b91c1c}.oc-status.success{background:#ecfdf5;color:#047857}
+.oc-updates{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.oc-pill{background:#e2e8f0;border-radius:20px;padding:5px 10px;font-size:12px}
+.oc-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-top:16px}
+.oc-day{border:1px solid #e2e8f0;border-radius:8px;padding:9px 4px;text-align:center;text-decoration:none;color:#475569;background:#fff;cursor:pointer}
+.oc-day.active{background:#0f766e;color:#fff;border-color:#0f766e}
+.oc-day small{display:block;margin-top:4px}
+.oc-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.oc-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
+.oc-card header{padding:15px;display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e2e8f0}
+.oc-card h3{margin:0 0 7px;font-size:16px}.oc-card ul{list-style:none;padding:0;margin:0}
+.oc-card li{padding:12px 15px;border-bottom:1px solid #f1f5f9}.oc-card li:last-child{border:0}
+.oc-person{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:600}
+.oc-role,.oc-badge{font-size:11px;border-radius:20px;padding:3px 8px;background:#e0f2fe;color:#0369a1}
+.oc-phone{display:flex;gap:7px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.oc-small{font-size:12px;color:#64748b;display:block;margin-top:5px}
+.oc-table-wrap{overflow:auto}
+.oc-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+.oc-table th,.oc-table td{padding:11px;border-bottom:1px solid #e2e8f0;text-align:left}
+.oc-table th{background:#f8fafc;color:#475569}
+.oc-drop{border:2px dashed #cbd5e1;border-radius:10px;padding:30px;text-align:center;background:#f8fafc}
+.oc-drop.drag{border-color:#0f766e;background:#f0fdfa}
+.oc-empty{text-align:center;color:#64748b;padding:32px}
+.oc-hidden{display:none!important}
+.oc-switch{display:flex;align-items:center;gap:10px;margin:12px 0}
+.oc-switch input{width:18px;height:18px}
+@media(max-width:640px){.oc-app{padding:14px}.oc-head{align-items:flex-start;flex-direction:column}.oc-days{gap:3px}.oc-day{font-size:11px;padding:7px 2px}.oc-box{padding:13px}}
+</style>
+</head>
+<body>
+<main class="oc-app">
+  <div class="oc-head">
+    <div><h1>On-Call Finder</h1><div class="oc-muted">Service Desk · Workforce</div></div>
+    <div class="oc-actions"><span id="oc-now" class="oc-muted"></span><button class="oc-btn" id="oc-refresh">Refresh</button></div>
+  </div>
+  <nav class="oc-tabs" aria-label="On-Call sections">
+    <button class="oc-tab active" data-view="find">Find On-Call</button>
+    <button class="oc-tab" data-view="upload" data-permission="oncall.import">Upload Files</button>
+    <button class="oc-tab" data-view="manual" data-permission="oncall.manual_import">Manual Paste</button>
+    <button class="oc-tab" data-view="history" data-permission="oncall.history.view">Upload History</button>
+  </nav>
+  <section class="oc-panel active" id="view-find">
+    <div class="oc-updates" id="oc-updates"></div>
+    <div class="oc-box">
+      <form id="oc-filter" class="oc-grid">
+        <label class="oc-field">View<select id="oc-mode"><option value="now">Now</option><option value="date">Specific date</option><option value="all">All dates</option></select></label>
+        <label class="oc-field" id="oc-date-wrap">Date<input type="date" id="oc-date"></label>
+        <label class="oc-field">Group<select id="oc-group"><option value="">All groups</option></select></label>
+        <label class="oc-field">Service / Server type<select id="oc-team"><option value="">All services</option></select></label>
+        <label class="oc-field">Search<input type="search" id="oc-q" placeholder="e.g. DBA or 0912..." autocomplete="off"></label>
+        <div class="oc-actions"><button class="oc-btn primary" type="submit">Search</button><button class="oc-btn" type="reset" id="oc-reset">Reset</button></div>
+      </form>
+      <div class="oc-days" id="oc-days"></div>
+      <div class="oc-actions" style="justify-content:space-between;margin-top:12px"><button class="oc-btn" id="oc-prev">← Previous week</button><button class="oc-btn" id="oc-next">Next week →</button></div>
+    </div>
+    <p class="oc-muted" id="oc-result-info"></p>
+    <div class="oc-cards" id="oc-results"></div>
+  </section>
+  <section class="oc-panel" id="view-upload">
+    <div class="oc-box">
+      <h2>Upload schedule files</h2>
+      <p class="oc-muted">Select up to 20 Excel (.xlsx, .xlsm) or Outlook (.msg) files. Maximum 10 MB per file.</p>
+      <form id="oc-upload-form">
+        <label class="oc-field">Group override (optional)<input name="group" maxlength="100" placeholder="Leave blank to detect automatically"></label>
+        <div class="oc-drop" id="oc-drop" style="margin:14px 0">
+          <p>Drop files here or choose files</p><input type="file" id="oc-files" multiple accept=".xlsx,.xlsm,.msg">
+        </div>
+        <div id="oc-file-list" class="oc-muted"></div>
+        <button class="oc-btn primary" type="submit" id="oc-upload-btn">Upload files</button>
+      </form>
+      <div id="oc-upload-status" class="oc-status oc-hidden"></div>
+    </div>
+  </section>
+  <section class="oc-panel" id="view-manual">
+    <div class="oc-box">
+      <h2>Manual Paste</h2>
+      <p class="oc-muted">Paste schedule text, copied tables, or email content. Dates can be detected automatically or entered below.</p>
+      <form id="oc-manual-form">
+        <div class="oc-grid">
+          <label class="oc-field">Group<input name="group" value="SAEI VAS" maxlength="100" required></label>
+          <label class="oc-field">From date<input type="date" name="from_date"></label>
+          <label class="oc-field">To date<input type="date" name="to_date"></label>
+          <label class="oc-field">Shift start<input type="time" name="shift_start" value="08:00"></label>
+          <label class="oc-field">Shift end<input type="time" name="shift_end" value="08:00"></label>
+        </div>
+        <label class="oc-field" style="margin-top:14px">Schedule text<textarea name="text" maxlength="200000" required placeholder="Paste schedule content here..."></textarea></label>
+        <div class="oc-actions" style="margin-top:12px"><button class="oc-btn primary" type="submit" id="oc-manual-btn">Import schedule</button></div>
+      </form>
+      <div id="oc-manual-status" class="oc-status oc-hidden"></div>
+    </div>
+  </section>
+  <section class="oc-panel" id="view-history">
+    <div class="oc-box">
+      <div class="oc-head"><h2>Upload History</h2><button class="oc-btn" id="oc-history-refresh">Refresh</button></div>
+      <div class="oc-table-wrap"><table class="oc-table"><thead><tr><th>Uploaded at</th><th>File</th><th>Group</th><th>Type</th><th>Date range</th><th>Records</th><th>By</th><th>Status</th><th>Actions</th></tr></thead><tbody id="oc-history-body"></tbody></table></div>
+      <div id="oc-history-status" class="oc-status oc-hidden"></div>
+    </div>
+    <div class="oc-box oc-hidden" id="oc-detail"><h2>Upload details</h2><div id="oc-detail-content"></div></div>
+  </section>
+
+  <div id="oc-global-status" class="oc-status oc-hidden" role="status"></div>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>
