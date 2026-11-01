@@ -12,8 +12,8 @@ CREATE TABLE users (
   display_name  VARCHAR(120) NOT NULL,
   password_hash TEXT,
   ad_username   VARCHAR(120) UNIQUE,
-  role          VARCHAR(20) NOT NULL DEFAULT 'agent'
-                  CHECK (role IN ('admin','team_leader','supervisor','agent')),
+  role          VARCHAR(20) NOT NULL DEFAULT 'engineer'
+                  CHECK (role IN ('admin','team_leader','supervisor','engineer')),
   is_active     BOOLEAN NOT NULL DEFAULT TRUE,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -74,7 +74,7 @@ CREATE TABLE role_permissions (
   allowed       BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (role, permission_id),
   CONSTRAINT role_permissions_role_check
-    CHECK (role IN ('admin','team_leader','supervisor','agent'))
+    CHECK (role IN ('admin','team_leader','supervisor','engineer'))
 );
 
 -- ---------- Per-user permission overrides ----------
@@ -123,7 +123,7 @@ VALUES
    'Delete teams', 'Teams', TRUE),
 
   (12, 'teams.members.manage', 'Manage Team Members',
-   'Add or remove agents from teams', 'Teams', TRUE),
+   'Add or remove engineers from teams', 'Teams', TRUE),
 
   (13, 'roster.view', 'View Published Roster',
    'View the currently published roster.', 'roster', TRUE),
@@ -236,9 +236,9 @@ WHERE permission_key IN (
   'roster.history.view'
 );
 
--- Agent: published roster/report/dashboard access only.
+-- Engineer: published roster/report/dashboard access only.
 INSERT INTO role_permissions (role, permission_id, allowed)
-SELECT 'agent', id, TRUE
+SELECT 'engineer', id, TRUE
 FROM permissions
 WHERE permission_key IN (
   'dashboard.view',
