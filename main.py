@@ -21,6 +21,7 @@ from app.routers.admin_router import router as admin_router
 from app.routers.permissions_router import router as permissions_router
 from app.routers.teams_router import router as teams_router
 from app.routers.members_router import router as members_router
+from app.routers.oncall_router import router as oncall_router
 
 app = FastAPI(title="Service Desk Hub API")
 
@@ -58,6 +59,7 @@ app.include_router(admin_router)
 app.include_router(permissions_router)
 app.include_router(teams_router)
 app.include_router(members_router)
+app.include_router(oncall_router)
 
 
 @app.get("/api/health")
@@ -73,6 +75,7 @@ def root():
 # Serves public/admin/index.html at http://localhost:4000/admin — a quick way to
 # confirm the whole stack (DB + API + auth) works before wiring up the real dashboard.
 public_dir = Path(__file__).parent / "public"
+app.mount("/assets", StaticFiles(directory=public_dir / "assets"), name="assets")
 app.mount("/admin", StaticFiles(directory=public_dir / "admin", html=True), name="admin")
 
 # Serves the full dashboard suite (hub shell + SDCM/AICC/SLA reports + Shift Roster)
