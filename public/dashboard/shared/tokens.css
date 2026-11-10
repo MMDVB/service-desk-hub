@@ -1,0 +1,52 @@
+/* =========================================
+   Service Desk Hub — Shared Design Tokens
+   ========================================= */
+
+:root {
+
+  /* Core Colors */
+  --bg: #FFFFFF;
+  --panel: #FFFFFF;
+  --panel-alt: #F1F4F9;
+  --border: #E3E8F0;
+
+  /* Typography */
+  --text: #1E293B;
+  --muted: #64748B;
+
+  /* Brand Colors */
+  --teal: #0D9488;
+  --teal-dark: #0B7A70;
+  --primary: var(--teal);
+  --primary-dark: var(--teal-dark);
+
+  /* Semantic Colors */
+  --red: #DC2626;
+  --amber: #D97706;
+  --blue: #2563EB;
+
+  /* Shadows */
+  --shadow: 0 1px 2px rgba(15,23,42,.04),
+            0 2px 8px rgba(15,23,42,.05);
+
+  --shadow-lg: 0 8px 24px rgba(15,23,42,.10),
+               0 2px 6px rgba(15,23,42,.06);
+
+  /* Layout */
+  --sidebar-w: 272px;
+  --topbar-h: 68px;
+
+  /* HUB Module */
+  --hub-bg: #f5f7fb;
+  --hub-sidebar: 214px;
+  --hub-indigo: #4f46e5;
+  --hub-navy: #071b49;
+
+  /* Shift Roster Module */
+  --rc-blue: #2563EB;
+  --rc-blue-bg: #EEF3FF;
+  --rc-holiday: #DC2626;
+  --rc-holiday-bg: #FEF2F2;
+  --rc-today-bg: #ECFDF9;
+
+}

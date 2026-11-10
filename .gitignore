@@ -67,3 +67,14 @@ backups/
 *.backup
 
 sql/003_teams_permissions.before-user-link.sql
+
+# On-Call uploaded files (sensitive data)
+/storage/oncall/
+
+# Backup files with suffixes
+*.bak-*
+*.pre-migration-backup
+
+# Local test samples
+sample_oosla.xlsx
+sample_pit.xlsx

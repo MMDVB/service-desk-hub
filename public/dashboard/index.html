@@ -13,13 +13,7 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 <link rel="stylesheet" href="shared/tokens.css">
 <style>
-  :root{
-    --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F1F4F9; --border:#E3E8F0;
-    --text:#1E293B; --muted:#64748B; --teal:#0D9488; --teal-dark:#0B7A70; --amber:#D97706; --red:#DC2626; --blue:#2563EB;
-    --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 2px 8px rgba(15,23,42,0.05);
-    --shadow-lg: 0 8px 24px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.06);
-    --sidebar-w: 272px; --topbar-h: 68px;
-  }
+
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{ margin:0; background:var(--panel-alt); color:var(--text); font-family:'Vazirmatn','Inter','Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
@@ -56,12 +50,12 @@
   .lead-btn:hover{ transform:translateY(-1px); }
   .lead-btn.unlocked{ background:linear-gradient(135deg,#14B8A6,#0D9488); box-shadow:0 4px 14px rgba(13,148,136,0.35); }
   .version{ font-size:10px; color:#4B5768; text-align:center; }
-  .sdw-user-profile{ display:flex; align-items:center; gap:9px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:9px 10px; }
-  .sdw-up-avatar{ width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#14B8A6); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
+  .sdw-user-profile{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#102b52,#071b3b);border:1px solid rgba(96,165,250,.32);border-radius:16px;padding:14px 12px;min-height:94px;box-shadow:0 8px 22px rgba(0,0,0,.2);}
+  .sdw-up-avatar{width:62px;height:62px;border-radius:50%;background:linear-gradient(145deg,#20d6c3,#079b91);border:3px solid rgba(45,212,191,.45);box-shadow:0 0 0 6px rgba(20,184,166,.12);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase;}
   .sdw-up-avatar.offline{ background:#334155; }
   .sdw-up-meta{ flex:1; min-width:0; }
-  .sdw-up-meta b{ display:block; font-size:12px; color:#fff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .sdw-up-meta span{ display:block; font-size:10px; color:#8CA0B3; }
+  .sdw-up-meta b{display:block;font-size:14px;color:#fff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sdw-up-meta span{display:block;font-size:11px;color:#a9bfdc;margin-top:4px;}
   .sdw-up-action{ background:transparent; border:none; color:#8CA0B3; font-size:11px; font-weight:700; cursor:pointer; padding:4px 6px; }
   .sdw-up-action:hover{ color:#fff; }
   .sidebar-close{ display:none; margin-inline-start:auto; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; border-radius:8px; width:28px; height:28px; cursor:pointer; }
@@ -258,6 +252,44 @@
   .jalali-select-row input{ width:64px !important; text-align:center !important; }
 
 /* === Visual refresh only: preserve HUB markup, tabs, iframes and existing logic === */
+/* HUB sidebar on the left */
+
+/* Lucide sidebar icon alignment */
+.sidebar .nav-item{
+  direction:ltr!important;
+  text-align:left!important;
+  gap:12px!important;
+}
+.sidebar .nav-icon{
+  width:24px!important;
+  min-width:24px!important;
+  height:24px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:#aebfe0!important;
+}
+.sidebar .nav-icon svg{
+  width:19px!important;
+  height:19px!important;
+  stroke-width:1.8!important;
+}
+.sidebar .nav-label{
+  direction:ltr!important;
+  text-align:left!important;
+}
+.sidebar .nav-item.active .nav-icon{
+  color:#ffffff!important;
+}
+
+.shell{direction:ltr!important;}
+.sidebar{direction:rtl!important;}
+.main{direction:rtl!important;}
+@media(max-width:900px){
+  .sidebar{left:0!important;right:auto!important;transform:translateX(-100%)!important;box-shadow:10px 0 30px rgba(0,0,0,.25)!important;}
+  .sidebar.open{transform:translateX(0)!important;}
+}
+
 :root{--hub-sidebar:214px;--hub-bg:#f5f7fb;--hub-indigo:#4f46e5;--hub-navy:#071b49;}
 html,body{background:var(--hub-bg)!important;}
 .shell{background:var(--hub-bg)!important;min-height:100vh;}
@@ -307,6 +339,142 @@ html,body{background:var(--hub-bg)!important;}
   .opit-status{font-size:12px;color:var(--muted);line-height:1.7}
   @media(max-width:650px){.opit-upload-grid{grid-template-columns:1fr}.opit-panel{padding:16px}}
 
+
+/* Sidebar footer refinement */
+.sidebar-footer{gap:9px!important;padding:12px!important}
+.date-chip{width:100%!important;min-height:36px!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:space-between!important;direction:ltr!important;padding:7px 11px!important}
+.date-chip i{width:17px!important;height:17px!important;flex:0 0 17px!important}
+.lead-btn{width:100%!important;height:42px!important;min-height:42px!important;box-sizing:border-box!important;padding:0 14px!important;display:flex!important;flex-direction:row!important;direction:ltr!important;align-items:center!important;justify-content:center!important;gap:8px!important;font-size:12.5px!important;line-height:1!important}
+.lead-btn i{width:17px!important;height:17px!important;flex:0 0 17px!important}
+.sdw-user-profile{width:100%!important;min-height:94px!important;box-sizing:border-box!important;direction:rtl!important;gap:12px!important;padding:12px!important}
+.sdw-up-meta{min-width:0!important;flex:1 1 auto!important}
+.sdw-up-action{width:42px!important;height:42px!important;min-width:42px!important;flex:0 0 42px!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:8px!important;background:rgba(255,255,255,.09)!important;color:#fff!important;cursor:pointer!important}
+.sdw-up-action i{width:21px!important;height:21px!important}
+.version{margin-top:1px!important;line-height:1.4!important}
+
+
+/* Compact HUB profile */
+.sdw-user-profile{
+  min-height:70px!important;
+  height:70px!important;
+  padding:7px 8px!important;
+  gap:8px!important;
+  border-radius:13px!important;
+}
+.sdw-up-avatar{
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  font-size:15px!important;
+  border-width:2px!important;
+  box-shadow:0 0 0 3px rgba(20,184,166,.10)!important;
+}
+.sdw-up-meta b{font-size:12px!important}
+.sdw-up-meta span{font-size:9px!important;margin-top:2px!important}
+.sdw-up-action{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  flex-basis:32px!important;
+  border-radius:7px!important;
+}
+.sdw-up-action i{width:16px!important;height:16px!important}
+
+
+/* Final compact profile layout */
+.sdw-user-profile{
+  height:76px!important;min-height:76px!important;
+  padding:7px 8px!important;gap:9px!important;
+  border-radius:13px!important;direction:rtl!important;
+  display:flex!important;align-items:center!important;
+}
+.sdw-up-avatar{
+  width:42px!important;height:42px!important;min-width:42px!important;
+  font-size:14px!important;border-width:2px!important;
+  box-shadow:0 0 0 3px rgba(20,184,166,.12)!important;
+}
+.sdw-up-meta{flex:1!important;min-width:0!important;text-align:center!important}
+.sdw-up-meta b{font-size:11px!important;line-height:16px!important}
+.sdw-up-meta .sdw-up-role{font-size:9px!important;color:#a9bfdc!important;margin-top:1px!important}
+.sdw-up-meta .sdw-up-status{display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;font-size:9px!important;color:#9eead5!important;margin-top:3px!important}
+.sdw-up-status i{width:6px;height:6px;border-radius:50%;background:#34e6a0;display:inline-block}
+.sdw-up-action{width:32px!important;height:32px!important;min-width:32px!important;flex:0 0 32px!important;border-radius:7px!important}
+.sdw-up-action i{width:16px!important;height:16px!important}
+
+
+/* Final profile sizing */
+.sdw-user-profile{
+  width:100%!important;
+  height:78px!important;
+  min-height:78px!important;
+  padding:8px 9px!important;
+  gap:8px!important;
+  box-sizing:border-box!important;
+  border-radius:13px!important;
+  overflow:hidden!important;
+}
+.sdw-up-avatar{
+  width:44px!important;height:44px!important;min-width:44px!important;
+  font-size:15px!important;
+}
+.sdw-up-meta{flex:1 1 0!important;min-width:0!important;text-align:center!important}
+.sdw-up-meta b{font-size:12px!important;line-height:18px!important}
+.sdw-up-meta .sdw-up-role{font-size:10px!important;line-height:14px!important}
+.sdw-up-meta .sdw-up-status{font-size:10px!important;line-height:14px!important;margin-top:2px!important}
+.sdw-up-action{
+  width:34px!important;height:34px!important;min-width:34px!important;
+  flex:0 0 34px!important;border-radius:8px!important;
+}
+.sdw-up-action i{width:18px!important;height:18px!important}
+
+
+
+/* Language-aware HUB overview alignment */
+html[dir="ltr"] .main,
+html[dir="ltr"] .main .content,
+html[dir="ltr"] #tab-overview,
+html[dir="ltr"] #tab-overview .hero,
+html[dir="ltr"] #tab-overview .hero-eyebrow,
+html[dir="ltr"] #tab-overview .hero h1,
+html[dir="ltr"] #tab-overview .hero p,
+html[dir="ltr"] #tab-overview .section-title,
+html[dir="ltr"] #tab-overview .report-card,
+html[dir="ltr"] #tab-overview .rc-title,
+html[dir="ltr"] #tab-overview .rc-desc,
+html[dir="ltr"] #tab-overview .rc-meta,
+html[dir="ltr"] #tab-overview .rc-cta {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+html[dir="rtl"] .main,
+html[dir="rtl"] .main .content,
+html[dir="rtl"] #tab-overview,
+html[dir="rtl"] #tab-overview .hero,
+html[dir="rtl"] #tab-overview .hero-eyebrow,
+html[dir="rtl"] #tab-overview .hero h1,
+html[dir="rtl"] #tab-overview .hero p,
+html[dir="rtl"] #tab-overview .section-title,
+html[dir="rtl"] #tab-overview .report-card,
+html[dir="rtl"] #tab-overview .rc-title,
+html[dir="rtl"] #tab-overview .rc-desc,
+html[dir="rtl"] #tab-overview .rc-meta,
+html[dir="rtl"] #tab-overview .rc-cta {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+
+/* English report card spacing and arrow direction */
+html[dir="ltr"] #tab-overview .report-card .rc-badge + .rc-icon {
+  margin-top: 26px !important;
+}
+
+html[dir="ltr"] #tab-overview .rc-cta span:last-child {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+
 </style>
 </head>
 <body>
@@ -327,47 +495,52 @@ html,body{background:var(--hub-bg)!important;}
       <div class="nav-group-label" data-i18n="navGroupWorkforce">Workforce</div>
 
       <button class="nav-item active" data-tab="overview">
-        <span class="nav-icon">🏠</span>
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
         <span class="nav-label"><b data-i18n="navOverview">Overview</b><small data-i18n="navOverviewSub">Summary & guide</small></span>
       </button>
 
       <button class="nav-item" data-tab="roster">
-        <span class="nav-icon">🗓️</span>
+        <span class="nav-icon"><i data-lucide="calendar-days"></i></span>
         <span class="nav-label"><b data-i18n="navRoster">Shift Roster</b><small data-i18n="navRosterSub">Plan agent shifts</small></span>
+      </button>
+
+      <button class="nav-item" data-tab="oncall">
+        <span class="nav-icon"><i data-lucide="phone-call"></i></span>
+        <span class="nav-label"><b data-i18n="navOncall">On-Call Finder</b><small data-i18n="navOncallSub">Find on-call contacts</small></span>
       </button>
 
       <div class="nav-group-label" data-i18n="navGroupReports">Reports</div>
 
       <button class="nav-item" data-tab="sdcm">
-        <span class="nav-icon">📋</span>
+        <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
         <span class="nav-label"><b data-i18n="navSdcm">SDCM Registration</b><small data-i18n="navSdcmSub">Inbound / outbound calls</small></span>
         <span class="nav-dot" id="nav-dot-sdcm"></span>
       </button>
 
       <button class="nav-item" data-tab="aicc">
-        <span class="nav-icon">📞</span>
+        <span class="nav-icon"><i data-lucide="phone"></i></span>
         <span class="nav-label"><b data-i18n="navAicc">AICC Performance</b><small data-i18n="navAiccSub">Answer & occupancy rate</small></span>
         <span class="nav-dot" id="nav-dot-aicc"></span>
       </button>
 
       <button class="nav-item" data-tab="sla">
-        <span class="nav-icon">⏱️</span>
+        <span class="nav-icon"><i data-lucide="timer"></i></span>
         <span class="nav-label"><b data-i18n="navSla">SLA Incident</b><small data-i18n="navSlaSub">Incident & OOSLA distribution</small></span>
         <span class="nav-dot" id="nav-dot-sla"></span>
       </button>
 
       <button class="nav-item" data-tab="oosla-pit">
-        <span class="nav-icon">📊</span>
+        <span class="nav-icon"><i data-lucide="chart-column"></i></span>
         <span class="nav-label"><b data-i18n="navOoslaPit">OOSLA / PIT Report</b><small data-i18n="navOoslaPitSub">Upload Excel files & generate</small></span>
       </button>
 
     </nav>
 
     <div class="sidebar-footer">
-      <div class="date-chip">📅 <span id="today-str">—</span></div>
+      <div class="date-chip"><i data-lucide="calendar-days"></i><span id="today-str">—</span></div>
       <div class="sdw-user-profile" id="sdwUserProfile"></div>
-      <button class="lead-btn" id="manageBtn" style="display:none; align-items:center; justify-content:center; gap:6px;">🔧 Manage</button>
-      <a href="admin-panel.html" id="adminPanelLink" class="lead-btn" style="display:none; background:linear-gradient(135deg,#334155,#1E293B); text-decoration:none; align-items:center; justify-content:center; gap:6px;">⚙️ Admin Panel</a>
+      <button class="lead-btn" id="manageBtn" style="display:none; align-items:center; justify-content:center; gap:6px;"><i data-lucide="wrench"></i><span>Manage</span></button>
+      <a href="admin-panel.html" id="adminPanelLink" class="lead-btn" style="display:none; background:linear-gradient(135deg,#334155,#1E293B); text-decoration:none; align-items:center; justify-content:center; gap:6px;"><i data-lucide="shield-check"></i><span>Admin Panel</span></a>
       <div class="version">v3.2 — Service Desk Analytics</div>
     </div>
   </aside>
@@ -584,6 +757,22 @@ html,body{background:var(--hub-bg)!important;}
         </div>
       </div>
 
+      <div class="tab-panel" id="tab-oncall">
+        <div class="frame-head">
+          <div class="frame-head-text">
+            <h2>📟 On-Call Finder</h2>
+            <p>Find on-call contacts, upload schedules and manage upload history.</p>
+          </div>
+          <div class="frame-actions">
+            <button class="tbtn" data-fullscreen="frame-oncall">⛶ Fullscreen</button>
+            <a class="tbtn" href="oncall/index.html" target="_blank" rel="noopener">↗ Open in new tab</a>
+          </div>
+        </div>
+        <div class="frame-wrap" id="frame-oncall">
+          <iframe id="iframe-oncall" data-src="oncall/index.html" title="On-Call Finder"></iframe>
+        </div>
+      </div>
+
     </section>
   </main>
 </div>
@@ -603,6 +792,8 @@ html,body{background:var(--hub-bg)!important;}
 
 <div class="toast" id="toast" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0F172A; color:#fff; padding:10px 18px; border-radius:10px; font-size:12.5px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:300;"></div>
 
+<script src="/assets/vendor/lucide.min.js"></script>
+<script src="/assets/icons/init.js"></script>
 <script>
 /* =========================================================================
    I18N
@@ -627,6 +818,7 @@ const SHELL_I18N = {
     opitSuccess:"Report generated successfully. Your download should start shortly.",
     opitGenericError:"An error occurred while generating the report.",
     navGroupTeam:"Team", navRoster:"Shift Roster", navRosterSub:"Plan agent shifts",
+    navOncall:"On-Call Finder", navOncallSub:"Find on-call contacts",
     leadBtnLocked:"Leadership", leadBtnUnlocked:"Leadership (unlocked)",
     heroEyebrow:"Service Desk Reporting Platform",
     heroTitle:"Four reports, one Service Desk control center",
@@ -703,6 +895,7 @@ const SHELL_I18N = {
     opitSuccess:"گزارش با موفقیت تولید شد. دانلود فایل به‌زودی آغاز می‌شود.",
     opitGenericError:"هنگام تولید گزارش خطایی رخ داد.",
     navGroupTeam:"تیم", navRoster:"راستر شیفت", navRosterSub:"چیدمان شیفت پرسنل",
+    navOncall:"آن‌کال", navOncallSub:"جستجوی اطلاعات آن‌کال",
     leadBtnLocked:"لیدرشیپ", leadBtnUnlocked:"لیدرشیپ (باز)",
     heroEyebrow:"پلتفرم گزارش‌گیری سرویس دسک",
     heroTitle:"چهار گزارش مستقل، یک مرکز کنترل سرویس دسک",
@@ -767,6 +960,7 @@ function t(key){ return (SHELL_I18N[currentLang] && SHELL_I18N[currentLang][key]
 
 function applyI18n(){
   document.documentElement.setAttribute('lang', currentLang);
+  document.documentElement.setAttribute('dir', currentLang === 'fa' ? 'rtl' : 'ltr');
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder'))); });
   document.getElementById('langEnBtn').classList.toggle('active', currentLang==='en');
@@ -795,7 +989,7 @@ const navItems=document.querySelectorAll('.nav-item');
 const cards=document.querySelectorAll('.report-card');
 const panels=document.querySelectorAll('.tab-panel');
 const crumbTitle=document.getElementById('crumb-title');
-const TAB_I18N_KEY={ overview:'navOverview', sdcm:'navSdcm', aicc:'navAicc', sla:'navSla', 'oosla-pit':'navOoslaPit', roster:'navRoster' };
+const TAB_I18N_KEY={ overview:'navOverview', sdcm:'navSdcm', aicc:'navAicc', sla:'navSla', 'oosla-pit':'navOoslaPit', roster:'navRoster', oncall:'navOncall' };
 let currentTab='overview';
 
 function ensureIframeLoaded(tab){
@@ -1082,8 +1276,9 @@ function renderUserProfile(){
   const t = sdwGetTokenObj();
   if (t){
     el.innerHTML = `<div class="sdw-up-avatar">${sdwInitials(t.username)}</div>
-      <div class="sdw-up-meta"><b>${t.username||'—'}</b><span>${t.role||'user'} · <span style="color:#2DD4BF;">●</span> online</span></div>
-      <button class="sdw-up-action" id="sdwLogoutBtn" title="Disconnect">⏻</button>`;
+      <div class="sdw-up-meta"><b>${t.username||'—'}</b><span class="sdw-up-role">${t.role||'user'}</span><span class="sdw-up-status"><i></i> Online</span></div>
+      <button class="sdw-up-action" id="sdwLogoutBtn" aria-label="Disconnect"><i data-lucide="log-out"></i></button>`;
+    window.initHubIcons?.(el);
     document.getElementById('sdwLogoutBtn').addEventListener('click', ()=>{ sdwClearToken(); renderUserProfile(); updateManageButtonVisibility(); });
   } else {
     el.innerHTML = `<div class="sdw-up-avatar offline">?</div>
